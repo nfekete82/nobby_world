@@ -14,19 +14,41 @@ A standalone browser-based dark-forest action-RPG exploration prototype.
 - Forest trees, stones and plants use the **uploaded** `pixel_16_woods v2 free` spritesheet (`assets/woods.png`).
 - The hero remains a programmatically animated placeholder because the pack contains **no character sprites or animation frames**.
 
-## Start
+## Local development (Docker Compose, recommended)
 
-Run from the `nobby_world` directory:
+Requires [Docker Desktop](https://www.docker.com/products/docker-desktop/) running on macOS.
 
 ```sh
-python3 -m http.server 8080
+cd ~/Projects/nobby_world
+git pull --ff-only origin main
+docker compose up -d
 ```
 
-Open http://localhost:8080 . Alternatively, open `index.html` in a browser.
+Play at **http://localhost:8088/**. The project has its own Compose name (`nobby-world`) and serves only `index.html` and `assets/` through Nginx. The port is accessible **only from your Mac** (`127.0.0.1`), not the LAN.
+
+Commands:
+
+```sh
+docker compose ps                # status
+docker compose logs -f game      # logs
+docker compose restart           # restart
+docker compose down              # stop
+```
+
+Changes to `index.html` and files in `assets/` are served immediately: just reload the browser. No rebuild is required.
+
+**Without Docker**, from the same directory:
+
+```sh
+python3 -m http.server 8088
+```
+
+Then open http://localhost:8088/ (only one of these servers may use the port at a time).
 
 ## Project layout
 
 - `index.html`: fully playable canvas/JavaScript game (no npm or build required)
+- `compose.yaml`: Nginx container, local port 8088 with live bind mounts
 - `assets/woods.png`: original forest sprite sheet, 352 × 192 px
 - `CREDITS.md`: asset and license notes
 
