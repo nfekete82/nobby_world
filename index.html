@@ -765,8 +765,8 @@
       for(const m of enemies){
         if(m.hp<=0)continue;
         if(m.kind==='boss'){
-          if(Math.abs(x-m.x)<112&&y<=m.y+12&&y>=m.y-480){
-            const d=Math.abs(x-m.x)+Math.abs(y-(m.y-210))*.15;
+          if(Math.abs(x-m.x)<112&&y<=m.y+12&&y>=m.y-290){
+            const d=Math.abs(x-m.x)+Math.abs(y-(m.y-120))*.15;
             if(d<best){best=d;closest=m;}
           }
           continue;
@@ -1248,7 +1248,9 @@
       }else if(m.state==='chase')frame=[0,1,7,1][Math.floor(time*3+m.phase)%4];
       else frame=Math.floor(time*1.8+m.phase)%2===0?0:7;
       // Original 682px sprite frames have different grounded silhouettes.
-      const foot=[415,418,416,416,367,365,344,426][frame];
+      // Exact last opaque pixel of each frame from the uploaded boss sheet.
+      // Former values ~415 anchored transparent padding and made him fly.
+      const foot=[329,329,330,350,363,354,338,329][frame];
       const h=560,w=h*160/426;
       const y=m.y-h*foot/426;
       ctx.save();ctx.imageSmoothingEnabled=false;
@@ -1340,7 +1342,7 @@
       }
       ctx.restore();
       const bw=boss?220:elite?120:67;
-      const by=m.y-(boss&&rendered?510:boss?250:elite&&rendered?334:elite?184:
+      const by=m.y-(boss&&rendered?338:boss?250:elite&&rendered?334:elite?184:
         raider?130:m.kind==='goblin'&&rendered?133:110)-bounce;
       const fraction=clamp(m.hp/m.maxHp,0,1);
       ctx.fillStyle='#15202ddf';ctx.fillRect(m.x-bw/2-3,by-3,bw+6,15);
