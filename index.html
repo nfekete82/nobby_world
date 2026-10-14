@@ -2233,8 +2233,8 @@
     }
     function nobbySpriteLoaded(key){
       const img=nobbySprites[key],frames=NOBBY_FRAMES[key];
-      return !!img&&img.complete&&img.naturalWidth===NOBBY_FRAME*frames
-        &&img.naturalHeight===NOBBY_FRAME;
+      return !!(img&&img.complete&&img.naturalWidth===NOBBY_FRAME*frames
+        &&img.naturalHeight===NOBBY_FRAME);
     }
     function drawNobbySprite(){
       const animation=nobbyAnimationFrame();
