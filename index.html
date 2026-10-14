@@ -193,10 +193,8 @@
   <div class="spellbar" role="group" aria-label="Zauberauswahl">
     <button class="spell-choice" id="spell-fire" type="button" aria-pressed="true" title="1 – Blaue Feuerkugel, 9 Mana">
       <span class="spell-icon">✦</span><span class="spell-name">Arkane Kugel</span><span class="spell-key">1 · 9 Mana</span></button>
-    <button class="spell-choice" id="spell-ice" type="button" aria-pressed="false" title="2 – Frostlanze, 14 Mana">
-      <span class="spell-icon">❄</span><span class="spell-name">Frostlanze</span><span class="spell-key">2 · 14 Mana</span></button>
-    <button class="spell-choice" id="spell-nova" type="button" aria-pressed="false" title="3 – Arkaner Schlag, 22 Mana">
-      <span class="spell-icon">✧</span><span class="spell-name">Arkanstoß</span><span class="spell-key">3 · 22 Mana</span></button>
+    <button class="spell-choice" id="spell-ice" type="button" aria-pressed="false" title="2 – Verlangsamen (3 Sekunden, 0 Schaden), 14 Mana">
+      <span class="spell-icon">❄</span><span class="spell-name">Verlangsamen</span><span class="spell-key">2 · 14 Mana · 0 Schaden</span></button>
   </div>
   <div class="treasure-counter" aria-label="Gesammelte Münzen">◈ <strong id="gold-count">0</strong></div>
   <button type="button" id="inventory-open" class="inventory-open" title="Inventar (I)" aria-label="Inventar öffnen">◈ Inventar [I]</button>
@@ -342,14 +340,12 @@
     };
     const spellSpecs={
       fire:{id:'fire',name:'Arkane Kugel',cost:9,damage:26,cooldown:.29,color:'#63ceff'},
-      ice:{id:'ice',name:'Frostlanze',cost:14,damage:20,cooldown:.44,color:'#a9f6ff'},
-      nova:{id:'nova',name:'Arkanstoß',cost:22,damage:19,cooldown:.75,color:'#bfabff'}
+      ice:{id:'ice',name:'Verlangsamen',cost:14,damage:0,cooldown:.44,color:'#a9f6ff'}
     };
     let selectedSpell='fire',inventoryOpen=false;
     const spellUI={
       fire:document.getElementById('spell-fire'),
-      ice:document.getElementById('spell-ice'),
-      nova:document.getElementById('spell-nova')
+      ice:document.getElementById('spell-ice')
     };
     let audioEnabled=true,audioVolume=.38,audioContext=null;
     const audioToggle=document.getElementById('audio-toggle');
@@ -375,7 +371,7 @@
         const gain=audioContext.createGain();
         const config={
           cast:[650,1100,.13,'sine',.11],ice:[1040,370,.24,'triangle',.10],
-          nova:[230,670,.3,'sawtooth',.085],hit:[220,78,.13,'triangle',.11],
+          hit:[220,78,.13,'triangle',.11],
           loot:[620,970,.11,'sine',.075],hurt:[175,68,.18,'sawtooth',.07],
           level:[550,1040,.45,'sine',.09],buy:[430,870,.22,'triangle',.10]
         }[kind]||[500,700,.12,'sine',.08];
@@ -600,7 +596,7 @@
         if(collides(x,y))continue;
         enemies.push({
           id:i,x,y,homeX:x,homeY:y,hp:66,maxHp:66,
-          phase:i*1.76,speed:43+i%3*7,attackAt:time+2.5,
+          phase:i*1.76,speed:78+i%3*9,attackAt:time+2.5,
           hitUntil:0,respawnAt:0,deadAt:0,selectedUntil:0,slowUntil:0,
           aggroUntil:0,staggerUntil:0,state:'idle'
         });
@@ -647,8 +643,8 @@
       route=[];target=null;hero.walking=false;
       m.selectedUntil=time+.55;
       fireballs.push({x:hero.x,y:hero.y-53,targetId:m.id,age:0,trail:[],
-        spell:spec.id,damage:spec.damage+(equipped.focus?10:0)});
-      burst(hero.x,hero.y-53,spec.color,spec.id==='nova'?13:7);
+        spell:spec.id,damage:spec.id==='fire'?spec.damage+(equipped.focus?10:0):0});
+      burst(hero.x,hero.y-53,spec.color,12);
       playSfx(spec.id==='fire'?'cast':spec.id);
     }
     function damageHero(amount){
@@ -766,7 +762,16 @@
     }
     function hurtMonster(m,damage=FIREBALL_DAMAGE+(equipped.focus?10:0),kind='fire'){
       if(m.hp<=0)return;
-      if(kind==='ice')m.slowUntil=Math.max(m.slowUntil||0,time+2.6);
+      if(kind==='ice'){
+        // Crowd control only: never damage, kill, earn XP, stagger or knock back.
+        m.slowUntil=Math.max(m.slowUntil||0,time+3);
+        m.aggroUntil=Math.max(m.aggroUntil,time+3);
+        m.selectedUntil=time+.5;
+        floatNumber(m.x,m.y-86,'LANGSAM!','#b2f8ff');
+        burst(m.x,m.y-36,'#b7f8ff',24);
+        playSfx('ice');
+        return;
+      }
       m.hp=Math.max(0,m.hp-damage);
       m.hitUntil=time+.17;
       m.selectedUntil=time+.45;
@@ -778,8 +783,8 @@
         const nx=m.x+(m.x-hero.x)/push*11,ny=m.y+(m.y-hero.y)/push*11;
         if(!collides(nx,ny)){m.x=nx;m.y=ny;}
       }
-      floatNumber(m.x,m.y-78,'-'+damage,kind==='ice'?'#b1fbff':kind==='nova'?'#d3b7ff':'#a1eaff');
-      burst(m.x,m.y-34,kind==='ice'?'#a7f5fc':kind==='nova'?'#b89bff':'#51bffb',16);
+      floatNumber(m.x,m.y-78,'-'+damage,'#a1eaff');
+      burst(m.x,m.y-34,'#51bffb',22);
       playSfx('hit');
       if(m.hp<=0){
         m.deadAt=time;m.respawnAt=time+10;
@@ -825,7 +830,7 @@
           if(length>.001){
             const dx=(destination.x-m.x)/length,dy=(destination.y-m.y)/length;
             const chilled=time<(m.slowUntil||0);
-          const step=m.speed*(retreating?1.3:1)*(chilled?.48:1)*dt;
+          const step=m.speed*(retreating?1.3:1)*(chilled?.34:1)*dt;
             if(!collides(m.x+dx*step,m.y))m.x+=dx*step;
             if(!collides(m.x,m.y+dy*step))m.y+=dy*step;
           }
@@ -852,14 +857,8 @@
         const dx=m.x-p.x,dy=m.y-32-p.y,d=Math.hypot(dx,dy);
         const step=FIREBALL_SPEED*dt;
         if(d<=step+16){
-          hurtMonster(m,p.damage||FIREBALL_DAMAGE+(equipped.focus?10:0),p.spell||'fire');
-          if(p.spell==='nova'){
-            for(const other of enemies){
-              if(other!==m&&other.hp>0&&dist(other.x,other.y,m.x,m.y)<110)
-                hurtMonster(other,Math.round((p.damage||19)*.6),'novaSplash');
-            }
-            burst(m.x,m.y-32,'#b88aff',30);
-          }
+          if(p.spell==='ice')hurtMonster(m,0,'ice');
+          else hurtMonster(m,p.damage??FIREBALL_DAMAGE+(equipped.focus?10:0),'fire');
           fireballs.splice(i,1);
         }else{
           p.trail.push({x:p.x,y:p.y});if(p.trail.length>8)p.trail.shift();
@@ -954,16 +953,15 @@
           ctx.fillStyle='rgba(38,143,255,'+(a*.30)+')';
           ctx.beginPath();ctx.arc(t.x,t.y,2+a*5,0,TAU);ctx.fill();
         }
-        const ice=p.spell==='ice',nova=p.spell==='nova';
-        const radius=nova?32:ice?20:24;
+        const ice=p.spell==='ice',radius=ice?29:34;
         const glow=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,radius);
-        glow.addColorStop(0,nova?'#f9edff':ice?'#e6ffff':'#e6fbff');
-        glow.addColorStop(.2,nova?'#d4a2ff':ice?'#acf9ff':'#8fe9ff');
-        glow.addColorStop(.48,nova?'#8543ecb5':ice?'#45e1f2b5':'#168effb5');
+        glow.addColorStop(0,'#f2ffff');
+        glow.addColorStop(.2,ice?'#acf9ff':'#8fe9ff');
+        glow.addColorStop(.48,ice?'#45e1f2b5':'#168effb5');
         glow.addColorStop(1,'#168eff00');
         ctx.fillStyle=glow;ctx.beginPath();ctx.arc(p.x,p.y,radius,0,TAU);ctx.fill();
-        ctx.fillStyle=nova?'#efe0ff':ice?'#e1ffff':'#e2fbff';
-        ctx.beginPath();ctx.arc(p.x,p.y,nova?7:ice?4:5.2,0,TAU);ctx.fill();
+        ctx.fillStyle=ice?'#e1ffff':'#e2fbff';
+        ctx.beginPath();ctx.arc(p.x,p.y,ice?6:8.5,0,TAU);ctx.fill();
       }
       for(const p of combatParticles){
         ctx.globalAlpha=Math.max(0,1-p.age/p.life);
@@ -1561,8 +1559,8 @@
       if(key==='i'&&!e.repeat){openInventory();return;}
       if(key==='b'&&!e.repeat){openShop();return;}
       if(key==='m'&&!e.repeat){audioToggle.click();return;}
-      if((key==='1'||key==='2'||key==='3')&&!e.repeat){
-        selectSpell({1:'fire',2:'ice',3:'nova'}[key]);return;
+      if((key==='1'||key==='2')&&!e.repeat){
+        selectSpell({1:'fire',2:'ice'}[key]);return;
       }
       if(key==='4'&&!e.repeat){drinkPotion();return;}
       if(key==='f'&&!e.repeat)toggleFull();
