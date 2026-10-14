@@ -764,10 +764,22 @@
       let closest=null,best=Infinity;
       for(const m of enemies){
         if(m.hp<=0)continue;
-        const centerY=m.y-(m.kind==='boss'?55:m.kind==='elite'?39:26);
-        const d=dist(x,y,m.x,centerY);
-        const limit=m.radius+12;
-        if(d<limit&&d<best){best=d;closest=m;}
+        if(m.kind==='boss'){
+          if(Math.abs(x-m.x)<112&&y<=m.y+12&&y>=m.y-480){
+            const d=Math.abs(x-m.x)+Math.abs(y-(m.y-210))*.15;
+            if(d<best){best=d;closest=m;}
+          }
+          continue;
+        }
+        if(m.kind==='elite'){
+          if(Math.abs(x-m.x)<76&&y<=m.y+12&&y>=m.y-315){
+            const d=Math.abs(x-m.x)+Math.abs(y-(m.y-140))*.2;
+            if(d<best){best=d;closest=m;}
+          }
+          continue;
+        }
+        const centerY=m.y-26,d=dist(x,y,m.x,centerY);
+        if(d<m.radius+12&&d<best){best=d;closest=m;}
       }
       return closest;
     }
@@ -1058,6 +1070,8 @@
         const rangeNow=dist(hero.x,hero.y,m.x,m.y);
         if(m.state==='chase'&&time>=m.attackAt&&time>=m.staggerUntil){
           if(m.kind==='boss'&&rangeNow<225){
+            m.attackAnimStart=time;
+            m.attackAnimUntil=time+.85;
             // One dodgeable boss ground-slam per cooldown, tracked in world coords.
             bossZones.push({x:hero.x,y:hero.y,age:0,
               windup:m.bossPhase===2?.55:.80,
@@ -1221,6 +1235,27 @@
       return true;
     }
 
+    // Player-provided eight-frame forest boss, significantly larger than the elite.
+    const forestBossSheet=new Image();
+    forestBossSheet.src='assets/custom/forest_boss.png';
+    function drawForestBossSprite(m){
+      if(!forestBossSheet.complete||forestBossSheet.naturalWidth!==1280
+        ||forestBossSheet.naturalHeight!==426)return false;
+      const attacking=time<(m.attackAnimUntil||0);
+      let frame;
+      if(attacking){
+        frame=Math.min(6,2+Math.floor(Math.max(0,time-m.attackAnimStart)/.12));
+      }else if(m.state==='chase')frame=[0,1,7,1][Math.floor(time*3+m.phase)%4];
+      else frame=Math.floor(time*1.8+m.phase)%2===0?0:7;
+      // Original 682px sprite frames have different grounded silhouettes.
+      const foot=[415,418,416,416,367,365,344,426][frame];
+      const h=560,w=h*160/426;
+      const y=m.y-h*foot/426;
+      ctx.save();ctx.imageSmoothingEnabled=false;
+      if(hero.x<m.x){ctx.translate(m.x*2,0);ctx.scale(-1,1);}
+      ctx.drawImage(forestBossSheet,frame*160,0,160,426,m.x-w/2,y,w,h);
+      ctx.restore();return true;
+    }
     function drawAdventureEnemy(m){
       if(m.kind==='slime'){drawSlime(m);return;}
       if(m.hp<=0&&time-m.deadAt>.45)return;
@@ -1238,7 +1273,8 @@
       // custom cartoon opponent if those sprite files are unavailable.
       const key=m.kind==='goblin'?(m.state==='chase'?'redWarriorRun':'redWarrior'):
         raider?(m.state==='chase'?'redArcherRun':'redArcher'):null;
-      let rendered=m.kind==='goblin'?drawForestGoblinSprite(m,bounce):
+      let rendered=boss?drawForestBossSprite(m):
+        m.kind==='goblin'?drawForestGoblinSprite(m,bounce):
         elite?drawRootGuardianSprite(m,bounce):false;
       if(!rendered&&key&&tiny[key]){
         const fw=192,fh=192,sz=raider?167:158;
@@ -1303,8 +1339,8 @@
         }
       }
       ctx.restore();
-      const bw=boss?200:elite?120:67;
-      const by=m.y-(boss?420:elite&&rendered?334:elite?184:
+      const bw=boss?220:elite?120:67;
+      const by=m.y-(boss&&rendered?510:boss?250:elite&&rendered?334:elite?184:
         raider?130:m.kind==='goblin'&&rendered?133:110)-bounce;
       const fraction=clamp(m.hp/m.maxHp,0,1);
       ctx.fillStyle='#15202ddf';ctx.fillRect(m.x-bw/2-3,by-3,bw+6,15);
