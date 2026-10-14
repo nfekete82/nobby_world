@@ -1,6 +1,6 @@
 # Nobby World 🌲
 
-**v0.8.0 – Expanded World, Desert, New Enemies & Forest Boss** · Private browser game with a controllable, animated magic hero.
+**v0.8.1 – Animated Forest Goblin (User Sprite)** · Private browser game with a controllable, animated magic hero.
 
 ## Start in OrbStack (port 8088)
 
@@ -160,11 +160,11 @@ Trees are **roughly 25% sparser per forest area** than before, with a broad main
 
 The **Moorkönig** has its own top-center health bar when approached. His area attack draws an expanding warning circle before it can hit. Move out of the circle to dodge. Below 50% health he becomes faster and his attack becomes more dangerous. Defeating him grants **200 XP**, a large gold shower and a healing potion. The elite and boss have longer respawn intervals.
 
-**Graphics:** Goblins and raiders try to use animated **red Warrior and Archer** units from the locally imported Tiny Swords Free Pack. If those specific sprites cannot load, dedicated hand-drawn Canvas alternatives appear automatically. Scarabs, the root guardian and the crowned forest boss currently have custom, stylized Canvas visuals; the paid Tiny Swords Enemy Pack is **not included or redistributed**. <https://pixelfrog-assets.itch.io/tiny-swords>
+**Graphics:** The forest goblin now uses the **user-supplied eight-frame transparent PNG sheet** at `assets/custom/forest_goblin.png`, committed with this project. Its idle, pursuit and spear-strike animations are frame-selected in-game and automatically face the hero. If the custom PNG is unavailable, the existing Tiny Swords red Warrior (or Canvas art) remains the fallback. The desert raider still uses the red Archer unit from the locally imported Tiny Swords Free Pack when available. Scarabs, the root guardian and the crowned forest boss currently have custom, stylized Canvas visuals; the paid Tiny Swords Enemy Pack is **not included or redistributed**. <https://pixelfrog-assets.itch.io/tiny-swords>
 
 **Preserved systems:** two-spell combat (Arkane Kugel damages, Verlangsamen deals exactly zero damage), aggressive ranged-hit pursuit, trader, inventory, XP, loot, savegames, OrbStack/Docker, and `localhost:8088`.
 
-Run `npm test` for **39 logic and regression tests**. A visual/frame-rate check in the actual browser is still recommended for the larger map.
+Run `npm test` for **41 logic and regression tests**, including forest-goblin sprite loading and spear frames. A visual/frame-rate check in the actual browser is still recommended for the larger map.
 
 ## Graphics implemented
 
@@ -185,10 +185,11 @@ The supplied current **Free Pack** is cartoon fantasy pixel art, not Diablo's gr
 - `compose.yaml`: OrbStack / Docker Compose Nginx, localhost port 8088, no bind mounts
 - `scripts/import_tiny_swords.py`: local ZIP extraction; no Python dependencies
 - `assets/tiny-swords/`: imported user-owned assets, intentionally gitignored
+- `assets/custom/forest_goblin.png`: user-provided forest-goblin eight-frame artwork, committed to the repository; optimized PNG retains the original 2048 × 682 frame layout
 - `CREDITS.md`: credit, license and link
 
 ## Next
 
-With the combat UX simplified, expand to quests, a small boss encounter, upgraded monster sprite sheets and world locations. A savegame export/import and optional music track may be added later.
+With the combat UX simplified and the forest goblin illustrated, extend the same sprite treatment to other monsters, then add quests, item drops and boss polish. A savegame export/import and optional music track may be added later.
 
 **Authoring project:** [nfekete82/nobby_world](https://github.com/nfekete82/nobby_world) (private).
