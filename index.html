@@ -2090,8 +2090,34 @@
       ctx.fillText(text,merchant.x,merchant.y-113+bob);
       ctx.restore();
     }
+    // User-supplied 8-column x 7-row mage sheet, optimized to 1000x1001.
+    // Rows: front idle/cast, side idle/run/cast, back idle/cast.
+    const playerMageSheet=new Image();
+    playerMageSheet.src='assets/custom/player_mage.png';
+    function drawPlayerMageSprite(){
+      if(!playerMageSheet.complete||playerMageSheet.naturalWidth!==1000
+        ||playerMageSheet.naturalHeight!==1001)return false;
+      const casting=time<castUntil||time<shotCastUntil;
+      const side=hero.dir===1||hero.dir===3;
+      const back=hero.dir===2;
+      const row=back?(casting?6:5):side?(casting?4:hero.walking?3:2):(casting?1:0);
+      const startCast=time<castUntil?castStart:shotCastStart;
+      const frame=casting?Math.min(7,Math.max(0,Math.floor((time-startCast)*13))):
+        hero.walking?Math.floor(hero.walkCycle*.67)%8:Math.floor(time*2.3)%8;
+      const fw=125,fh=143,h=121,w=h*fw/fh;
+      // Source's last row ends above the atlas tile bottom.
+      const feet=[136,140,139,139,139,137,85][row];
+      ctx.save();
+      ctx.fillStyle='#07191b66';ctx.beginPath();
+      ctx.ellipse(hero.x,hero.y+1,19,7,0,0,TAU);ctx.fill();
+      ctx.imageSmoothingEnabled=false;
+      if(hero.dir===3){ctx.translate(hero.x*2,0);ctx.scale(-1,1);}
+      ctx.drawImage(playerMageSheet,frame*fw,row*fh,fw,fh,
+        hero.x-w/2,hero.y-h*feet/fh,w,h);
+      ctx.restore();return true;
+    }
     function drawHero(){
-
+      if(drawPlayerMageSprite())return;
       if(tinyReady&&tiny.monkIdle){
         const casting=time<castUntil||time<shotCastUntil;
         const key=casting?'monkHeal':hero.walking?'monkRun':'monkIdle';
