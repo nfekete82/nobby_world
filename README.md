@@ -39,8 +39,12 @@ The Nginx image **contains** the game and the locally imported Tiny Swords asset
 | Walk | WASD / arrow keys |
 | Walk to destination | Click / tap |
 | Sprint | Shift |
-| Magical heal animation | E |
+| Heal spell (25 mana; restores up to 35 HP) | E |
 | Fullscreen | F |
+
+## Health & mana HUD
+
+A compact, centered HUD above the controls displays **Health (red)** and **Mana (blue)**, both starting at **100 / 100**. Mana regenerates at **8 points per second** while playing, and healing with **E** spends **25 mana** to restore up to **35 health**. Healing does not activate without enough mana. The red health bar stays full until damage mechanics are implemented. The interface updates live and works at desktop and mobile widths.
 
 ## Graphics implemented
 
