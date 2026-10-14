@@ -1,8 +1,8 @@
 {
   "name": "nobby_world",
   "private": true,
-  "version": "0.4.0",
-  "description": "Nobby World – forest RPG prototype with magic, smart slimes, XP and loot",
+  "version": "0.5.0",
+  "description": "Nobby World – dark forest RPG prototype with merchant, equipment and browser savegame",
   "scripts": {
     "start": "python3 -m http.server 8088",
     "test": "node --test tests/*.test.mjs"
