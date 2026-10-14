@@ -1,6 +1,6 @@
 # Nobby World 🌲
 
-**v0.2 – Tiny Swords Forest** · Private browser game with a controllable, animated magic hero.
+**v0.3 – Tiny Swords Forest Combat** · Private browser game with a controllable, animated magic hero.
 
 ## Start in OrbStack (port 8088)
 
@@ -37,7 +37,8 @@ The Nginx image **contains** the game and the locally imported Tiny Swords asset
 | Action | Key |
 | --- | --- |
 | Walk | WASD / arrow keys |
-| Walk to destination | Click / tap |
+| Walk to destination | Left-click / tap on ground |
+| Fire blue magic at slime | Left-click / tap a monster |
 | Sprint | Shift |
 | Heal spell (25 mana; restores up to 35 HP) | E |
 | Fullscreen | F |
@@ -45,6 +46,18 @@ The Nginx image **contains** the game and the locally imported Tiny Swords asset
 ## Health & mana HUD
 
 A compact, centered HUD above the controls displays **Health (red)** and **Mana (blue)**, both starting at **100 / 100**. Mana regenerates at **8 points per second** while playing, and healing with **E** spends **25 mana** to restore up to **35 health**. Healing does not activate without enough mana. The red health bar stays full until damage mechanics are implemented. The interface updates live and works at desktop and mobile widths.
+
+## First combat prototype
+
+- Nine animated **violet forest slimes** with overhead HP bars, approaching the hero when nearby
+- Click/tap a slime to cast a **small blue homing fireball**, with glowing trail, burst and floating damage
+- 26 damage per hit, 9 mana per spell, 290ms firing cooldown, maximum range 690 world units
+- Slimes deal 8 contact damage (with a short player invulnerability period); hero respawns after defeat
+- Slimes reappear after 10 seconds
+- Normal clicks on empty terrain still use the existing A* pathfinding
+- The slimes are drawn in Canvas (no separate monster sprites were included in Tiny Swords Free Pack)
+
+Run regression tests (Node.js 22+): `npm test` or `node --test tests/combat.test.mjs`.
 
 ## Graphics implemented
 
@@ -56,7 +69,7 @@ A compact, centered HUD above the controls displays **Health (red)** and **Mana 
 
 ### Visual constraints
 
-The supplied current **Free Pack** is cartoon fantasy pixel art, not Diablo's grim realistic style. The Monk animations face one primary direction; horizontal mirroring is a stopgap, not true 8-direction animation. Do not claim directional sprites exist when they don't. Combat, monsters, inventory and RPG progression are not yet implemented.
+The supplied current **Free Pack** is cartoon fantasy pixel art, not Diablo's grim realistic style. The Monk animations face one primary direction; horizontal mirroring is a stopgap, not true 8-direction animation. Do not claim directional sprites exist when they don't. Full RPG progression, loot and inventory are not yet implemented. Basic slime combat is playable.
 
 ## Project structure
 
@@ -69,6 +82,6 @@ The supplied current **Free Pack** is cartoon fantasy pixel art, not Diablo's gr
 
 ## Next
 
-Choose a genuine player-wizard character sheet with directional animations, then develop interactions, combat and progression after animation and collision polish.
+Choose a genuine player-wizard character sheet with directional animations, then develop richer monster AI, loot, quests and progression after animation and collision polish.
 
 **Authoring project:** [nfekete82/nobby_world](https://github.com/nfekete82/nobby_world) (private).
