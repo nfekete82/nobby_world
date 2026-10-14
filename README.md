@@ -1,6 +1,6 @@
 # Nobby World 🌲
 
-**v0.9.0 – Grounded Monsters, Giant Forest Boss, Real Roads, Lakes & Mountains** · Private browser game with a controllable, animated magic hero.
+**v0.9.1 – Directional Mage, Grounded Boss, Natural Mountains & Seamless Roads** · Private browser game with a controllable, animated magic hero.
 
 ## Start in OrbStack (port 8088)
 
@@ -137,20 +137,31 @@ Use `npm test` to run all **32 headless logic tests**. Full visual and audio che
 - Frozen monsters still deal no spell damage and move at 34% speed for three seconds, even while provoked.
 - Ranged-aggro state does not change saved progression and resets on monster respawn.
 
+## Art and terrain corrections (v0.9.1)
+
+Four small commits refine the world based on actual gameplay screenshots:
+
+1. **New hero:** `assets/custom/player_mage.png` is the uploaded blue-robed wizard, optimized to 1000×1001 for quick loading. It contains **8 columns and 7 directional/action rows** (front idle/cast, side idle/run/cast, back idle/cast). Walk direction uses the proper rows, the hero mirrors horizontally for left-facing movement, and casting either the arcane orb or frost uses the matching attack row. Feet and ground shadow are explicitly aligned; the old Tiny Swords monk remains as a safe loading fallback.
+2. **No floating boss:** All eight forest-boss frames now anchor to their *measured nontransparent bottom pixels*, not the sprite frame bottom or unused transparent padding. This moves the visible feet onto the shadow, and the large name/HP label and clickable hitbox have been repositioned.
+3. **Organic hills instead of green boxes:** Both mountain plateaus use shared irregular ridge and southern cliff profiles. Rounded sides, natural grass textures, sprite-covered rock faces and centered built-in stair sprites eliminate the hard rectangular outline. The same `plateauBand()` shape drives drawing, height collision, movement and A* routing. Traversing between elevations remains possible only at the actual staircase corridor.
+4. **Unbroken roads:** The uploaded road artwork is now sampled as a dirt **texture** from `road_tiles.png`, clipped to a continuous, soft-edged ribbon following `pathAt()`. Disconnected square road pieces and their ugly tile seams are gone. Roadside ink and color gradually blend from forest into the desert.
+
+Existing browser saves, combat, boss AI, merchant, loot, mountains and lakes remain compatible. Run `npm test` for **55 logic tests**, including directional hero frames, cast rows, correct boss foot positioning, organic ridges and real stair collisions. Actual in-browser visual inspection on macOS is still recommended.
+
 ## Environment and art pass (v0.9.0)
 
 All four **user-supplied spritesheets** are now committed as web-optimized transparent PNG assets, with the original art preserved in style:
 
-- `assets/custom/road_tiles.png` – **828×828** atlas from the supplied road set. The winding main road now uses repeated road pieces rotated to follow the local path tangent. The old vector dirt-road layers remain a fallback only if sprites fail to load.
+- `assets/custom/road_tiles.png` – **828×828** atlas from the supplied road set. The winding main road uses a clipped, continuous dirt texture sampled from this atlas. The old vector dirt-road layers remain a fallback only if sprites fail to load.
 - `assets/custom/lake_tiles.png` – **828×828** shore/water atlas. **Four 3×3/4×3 forest lakes** use corners, bank edges and water-center tiles. Water is impassable to both WASD movement and A* navigation.
-- `assets/custom/cliff_tiles.png` – **828×828** mountain and staircase atlas. **Two elevated plateaus** appear in the forest/badlands, with rock ledges, staircase sprites, and real `heightAt()` + `canTraverse()` navigation rules. Walking directly across a cliff wall is rejected; crossing elevation levels is allowed **only in each plateau's southern stair corridor**. Click-to-move automatically plans via the stair; goblin/monster route movement respects elevation too.
-- `assets/custom/forest_boss.png` – **1280×426** sprite strip from the supplied woodland boss sheet. The Moorkönig is now a **560px-high animated treant**, substantially taller than the **340px Wurzelhüter**. Wind-up, charge, impact and recovery use distinct frames, with foot-aligned shadows, a higher HP label and a larger click target.
+- `assets/custom/cliff_tiles.png` – **828×828** mountain and staircase atlas. **Two organically contoured elevated plateaus** appear in the forest/badlands, with rock ledges, staircase sprites, and real `heightAt()` + `canTraverse()` navigation rules. Walking directly across a cliff wall is rejected; crossing elevation levels is allowed **only in each plateau's southern stair corridor**. Click-to-move automatically plans via the stair; goblin/monster route movement respects elevation too.
+- `assets/custom/forest_boss.png` – **1280×426** sprite strip from the supplied woodland boss sheet. The Moorkönig is a **560px-high animated treant**, substantially taller than the **340px Wurzelhüter**, with measured per-frame foot pivots. Wind-up, charge, impact and recovery use distinct frames, with foot-aligned shadows, a higher HP label and a larger click target.
 
 **Sprite grounding fixed:** the uploaded goblin contains a large transparent strip under its feet (its last opaque pixel is at source y≈444, **not** 682), so its world-space pivot has been corrected. Root Guardian foot positions vary per frame and are likewise anchored per-frame. The 340px elite and 560px boss cast corresponding floor shadows instead of appearing to float.
 
 Existing saved levels, XP, equipment and map positions remain compatible. The game still uses `localStorage` and does not require a backend. All terrain art includes a Canvas fallback if image loading fails.
 
-**Test status:** `npm test` runs **52 logic/regression cases** in a headless Canvas/DOM harness covering sprite grounding, road/water/cliff sheet drawing, solid lakes, both manual and pathfinding stair-only elevation crossing, plus the previous gameplay and save regression tests. The tests do not replace an actual GPU/browser visual check.
+**Test status:** `npm test` runs **55 logic/regression cases** in a headless Canvas/DOM harness covering sprite grounding, road/water/cliff sheet drawing, solid lakes, both manual and pathfinding stair-only elevation crossing, plus the previous gameplay and save regression tests. The tests do not replace an actual GPU/browser visual check.
 
 ## The larger adventure world (v0.8.0)
 
@@ -181,7 +192,7 @@ The **Moorkönig** has its own top-center health bar when approached. His area a
 
 **Preserved systems:** two-spell combat (Arkane Kugel damages, Verlangsamen deals exactly zero damage), aggressive ranged-hit pursuit, trader, inventory, XP, loot, savegames, OrbStack/Docker, and `localhost:8088`.
 
-Run `npm test` for **52 logic and regression tests**, covering existing systems plus the new terrain/elevation rendering and grounded enemies. A visual/frame-rate check in the actual browser is still recommended for the larger map.
+Run `npm test` for **55 logic and regression tests**, covering existing systems plus the new terrain/elevation rendering and grounded enemies. A visual/frame-rate check in the actual browser is still recommended for the larger map.
 
 ## Graphics implemented
 
@@ -204,6 +215,7 @@ The supplied current **Free Pack** is cartoon fantasy pixel art, not Diablo's gr
 - `assets/tiny-swords/`: imported user-owned assets, intentionally gitignored
 - `assets/custom/forest_goblin.png`: user-provided forest-goblin eight-frame artwork, committed to the repository; optimized PNG retains the original 2048 × 682 frame layout
 - `assets/custom/root_guardian.png`: user-provided eight-frame Wurzelhüter artwork, committed and resampled to 1280 × 426 for smaller browser downloads while preserving transparent alpha
+- `assets/custom/player_mage.png`: user-provided blue-cloaked wizard, optimized 8×7 frame animation atlas
 - `assets/custom/forest_boss.png`: user-provided, animated giant treant / forest boss
 - `assets/custom/road_tiles.png`: winding route texture from the user road sprite set
 - `assets/custom/cliff_tiles.png`: plateau rock walls, grass-topped elevations and stairs
@@ -212,6 +224,6 @@ The supplied current **Free Pack** is cartoon fantasy pixel art, not Diablo's gr
 
 ## Next
 
-Visual polish the transitions and terrain collisions in a real browser; then build quests, elevation-specific encounters, and additional biome monsters. A savegame export/import and optional music track may be added later.
+Validate the improved mountains/roads and new wizard in the actual browser; then build quests, elevation-specific encounters and additional biome monsters. A savegame export/import and optional music track may be added later.
 
 **Authoring project:** [nfekete82/nobby_world](https://github.com/nfekete82/nobby_world) (private).
