@@ -1,6 +1,6 @@
 # Nobby World 🌲
 
-**v0.9.1 – Directional Mage, Grounded Boss, Natural Mountains & Seamless Roads** · Private browser game with a controllable, animated magic hero.
+**v0.9.2 – Correctly Aligned Mage Animations & Sprite Atlas** · Private browser game with a controllable, animated magic hero.
 
 ## Start in OrbStack (port 8088)
 
@@ -137,11 +137,37 @@ Use `npm test` to run all **32 headless logic tests**. Full visual and audio che
 - Frozen monsters still deal no spell damage and move at 34% speed for three seconds, even while provoked.
 - Ranged-aggro state does not change saved progression and resets on monster respawn.
 
+## Corrected mage animation atlas (v0.9.2)
+
+The previous blue mage had incorrectly cropped, floating or disjointed parts in the back and casting rows. The supplied original **1254 × 1254 transparent PNG** did NOT use uniformly spaced frame rows, even though it looks like an 8 × 7 sprite grid. Dividing height by seven wrongly mixed character heads, coats and magic VFX between animation rows.
+
+To fix the artwork, we repacked the original directly into **independent, aligned 192 × 192 pixel sprites** in `assets/custom/player_mage_aligned.png` (**1536 × 1344, eight columns × seven rows**). Each character sprite is centered and has the same real feet anchor, pixel **Y=173** within its cell. Foreign fragments from neighboring frames are removed, including effects spilling across their original grid boundaries. The final transparent indexed PNG is approximately 526 KB; the previous `player_mage.png` remains available as a backup.
+
+The runtime now uses the corrected atlas for:
+- Front idle/run (row 0), front cast (row 1)
+- Right/left side idle (row 2), side run (row 3), side cast (row 4; clean pose frames)
+- Back idle/run (row 5), back cast (row 6; clean pose frames)
+
+Facing left mirrors the side animation. Cast frames advance across the active spell duration. Walking, idling, healing and blue projectile casting share one stable feet position and no longer splice unrelated animation rows. If the new image fails to load, the previous Tiny Swords/Cavas fallback remains available.
+
+### Preferred artwork specifications for future submissions
+
+| Asset type | Recommended canvas per frame | Preferred export |
+| --- | --- | --- |
+| Playable characters | **256 × 256 px** | Transparent RGBA PNG, **8 columns × 7 rows = 2048 × 1792 px** |
+| Small/medium monsters | 192 × 192 or 256 × 256 px | One horizontal strip, 6–8 frames, stable ground anchor |
+| Large elite/boss | 384 × 384 or 512 × 512 px | 6–8 frames, with room for limbs and spell VFX |
+| Roads/ground/water tiles | 128 × 128 px | Separate seamlessly matching tile cells plus corners and junctions |
+
+**Critical:** each sprite lives entirely within its own identical-size transparent cell; leave 12–24 px of internal padding for its motion/effects. Keep **the visible feet aligned** at the same Y value in every walking, resting and casting frame (for 256px canvas, a practical baseline is Y≈230). Avoid overlapping neighboring rows/columns or shifting the character centre. Genuine straight-edged, exact-sized atlas exports are much easier to integrate than a collage of images without a precise grid. PNG transparency is preferred; avoid JPEG and black nontransparent backgrounds.
+
+**Tests:** `npm test` runs **57 regression cases**, including the corrected 192px cell positions, front/side/back animations, cast timing, consistent feet and missing-asset fallback. Visual verification on a real browser remains useful.
+
 ## Art and terrain corrections (v0.9.1)
 
 Four small commits refine the world based on actual gameplay screenshots:
 
-1. **New hero:** `assets/custom/player_mage.png` is the uploaded blue-robed wizard, optimized to 1000×1001 for quick loading. It contains **8 columns and 7 directional/action rows** (front idle/cast, side idle/run/cast, back idle/cast). Walk direction uses the proper rows, the hero mirrors horizontally for left-facing movement, and casting either the arcane orb or frost uses the matching attack row. Feet and ground shadow are explicitly aligned; the old Tiny Swords monk remains as a safe loading fallback.
+1. **New hero:** The supplied blue-robed wizard is now rendered via `assets/custom/player_mage_aligned.png`; see the v0.9.2 correction above for exact frame crop and grounding. The old Tiny Swords monk remains as a safe loading fallback.
 2. **No floating boss:** All eight forest-boss frames now anchor to their *measured nontransparent bottom pixels*, not the sprite frame bottom or unused transparent padding. This moves the visible feet onto the shadow, and the large name/HP label and clickable hitbox have been repositioned.
 3. **Organic hills instead of green boxes:** Both mountain plateaus use shared irregular ridge and southern cliff profiles. Rounded sides, natural grass textures, sprite-covered rock faces and centered built-in stair sprites eliminate the hard rectangular outline. The same `plateauBand()` shape drives drawing, height collision, movement and A* routing. Traversing between elevations remains possible only at the actual staircase corridor.
 4. **Unbroken roads:** The uploaded road artwork is now sampled as a dirt **texture** from `road_tiles.png`, clipped to a continuous, soft-edged ribbon following `pathAt()`. Disconnected square road pieces and their ugly tile seams are gone. Roadside ink and color gradually blend from forest into the desert.
@@ -192,7 +218,7 @@ The **Moorkönig** has its own top-center health bar when approached. His area a
 
 **Preserved systems:** two-spell combat (Arkane Kugel damages, Verlangsamen deals exactly zero damage), aggressive ranged-hit pursuit, trader, inventory, XP, loot, savegames, OrbStack/Docker, and `localhost:8088`.
 
-Run `npm test` for **55 logic and regression tests**, covering existing systems plus the new terrain/elevation rendering and grounded enemies. A visual/frame-rate check in the actual browser is still recommended for the larger map.
+Run `npm test` for **57 logic and regression tests**, covering existing systems plus the new terrain/elevation rendering and grounded enemies. A visual/frame-rate check in the actual browser is still recommended for the larger map.
 
 ## Graphics implemented
 
@@ -215,7 +241,8 @@ The supplied current **Free Pack** is cartoon fantasy pixel art, not Diablo's gr
 - `assets/tiny-swords/`: imported user-owned assets, intentionally gitignored
 - `assets/custom/forest_goblin.png`: user-provided forest-goblin eight-frame artwork, committed to the repository; optimized PNG retains the original 2048 × 682 frame layout
 - `assets/custom/root_guardian.png`: user-provided eight-frame Wurzelhüter artwork, committed and resampled to 1280 × 426 for smaller browser downloads while preserving transparent alpha
-- `assets/custom/player_mage.png`: user-provided blue-cloaked wizard, optimized 8×7 frame animation atlas
+- `assets/custom/player_mage_aligned.png`: **active** 1536×1344 transparent mage atlas, clean 192px cells (8×7) with shared foot anchor
+- `assets/custom/player_mage.png`: previous optimized mage image retained as a backup (inactive)
 - `assets/custom/forest_boss.png`: user-provided, animated giant treant / forest boss
 - `assets/custom/road_tiles.png`: winding route texture from the user road sprite set
 - `assets/custom/cliff_tiles.png`: plateau rock walls, grass-topped elevations and stairs
