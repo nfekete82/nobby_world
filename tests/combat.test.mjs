@@ -13,7 +13,7 @@ const bootAnchor = 'drawGround();generateForest();buildNav();spawnMonsters();res
 assert.ok(script.includes(bootAnchor), 'game initialization changed; adjust test hook');
 const instrumented = script.replace(
   bootAnchor,
-  bootAnchor + '\nwindow.__test={enemies,fireballs,resources,progress,loot,hero,merchant,WORLD,BIOMES,trees,details,biomeAt,pathAt,drawAdventureEnemy,drawForestGoblinSprite,forestGoblinSheet,drawRootGuardianSprite,rootGuardianSheet,drawForestBossSprite,forestBossSheet,plateaus,heightAt,stairCrossing,canTraverse,moveHero,collides,lakes,lakeContains,drawLakeTiles,drawMountainTiles,paintRoadTiles,roadAtlas,lakeAtlas,cliffAtlas,groundCtx:g,bossZones,enemyShots,equipment,equipped,bag,selectSpell,openInventory,closeInventory,toggleEquipment,drinkPotion,spellSpecs,camera,update,castFireball,provokeMonster,routeTo,hurtMonster,grantXP,damageHero,drawCombatEffects,drawMerchant,openShop,closeShop,buyItem,saveGame,route:()=>route,target:()=>target,shopState:()=>shopOpen};'
+  bootAnchor + '\nwindow.__test={enemies,fireballs,resources,progress,loot,hero,merchant,WORLD,BIOMES,trees,details,biomeAt,pathAt,drawAdventureEnemy,drawForestGoblinSprite,forestGoblinSheet,drawRootGuardianSprite,rootGuardianSheet,drawForestBossSprite,forestBossSheet,drawPlayerMageSprite,playerMageSheet,plateaus,heightAt,stairCrossing,canTraverse,moveHero,collides,lakes,lakeContains,drawLakeTiles,drawMountainTiles,plateauBand,paintRoadTiles,roadAtlas,lakeAtlas,cliffAtlas,groundCtx:g,bossZones,enemyShots,equipment,equipped,bag,selectSpell,openInventory,closeInventory,toggleEquipment,drinkPotion,spellSpecs,camera,update,castFireball,provokeMonster,routeTo,hurtMonster,grantXP,damageHero,drawCombatEffects,drawMerchant,openShop,closeShop,buyItem,saveGame,route:()=>route,target:()=>target,shopState:()=>shopOpen};'
 );
 
 function boot(initialSave = null) {
@@ -657,7 +657,7 @@ test('user-provided giant forest boss animation renders on its actual feet', () 
   const c=drawCalls.find(v=>v[0]===img);
   assert.ok(c);assert.equal(c[8],560);
   assert.equal(c[3],160);assert.equal(c[4],426);
-  assert.ok(Math.abs(c[6]+c[8]*415/426-m.y)<.1,'boss feet must meet ground shadow');
+  assert.ok(Math.abs(c[6]+c[8]*329/426-m.y)<.1,'boss feet must meet ground shadow');
 });
 
 test('road sheet replaces drawn roads when present, including true image draw calls', () => {
@@ -666,7 +666,8 @@ test('road sheet replaces drawn roads when present, including true image draw ca
   const atlas=g.roadAtlas;
   atlas.complete=true;atlas.naturalWidth=828;
   g.paintRoadTiles(g.groundCtx);
-  assert.ok(drawCalls.filter(v=>v[0]===atlas).length>20);
+  assert.equal(drawCalls.filter(v=>v[0]===atlas).length,1,
+    'the atlas must be sampled once as a clipped road texture, not repeatedly stamped');
 });
 
 test('water sprite atlas draws shoreline cells and four solid lakes block pathing', () => {
@@ -685,14 +686,15 @@ test('water sprite atlas draws shoreline cells and four solid lakes block pathin
 
 test('mountain plateau levels cannot be climbed through cliff walls', () => {
   const {g}=boot();assert.equal(g.plateaus.length,2);
-  const p=g.plateaus[0], lip=p.y+p.h;
+  const p=g.plateaus[0], lip=g.plateauBand(p,p.stairsX).lip;
   assert.equal(g.heightAt(p.stairsX,lip+1),0);
   assert.equal(g.heightAt(p.stairsX,lip-1),1);
   assert.equal(g.canTraverse(p.stairsX,lip+1,p.stairsX,lip-1),true);
-  assert.equal(g.canTraverse(p.x+70,lip+1,p.x+70,lip-1),false);
-  g.hero.x=p.x+70;g.hero.y=lip+4;
+  const wallX=p.x+70, wallLip=g.plateauBand(p,wallX).lip;
+  assert.equal(g.canTraverse(wallX,wallLip+4,wallX,wallLip-8),false);
+  g.hero.x=wallX;g.hero.y=wallLip+4;
   g.moveHero(0,-12);
-  assert.ok(g.hero.y>=lip,'manual WASD cannot walk through solid cliff wall');
+  assert.ok(g.hero.y>=wallLip,'manual WASD cannot walk through an irregular cliff wall');
   g.hero.x=p.stairsX;g.hero.y=lip+4;
   g.moveHero(0,-12);
   assert.ok(g.hero.y<lip,'manual WASD can climb at stairs');
@@ -713,4 +715,47 @@ test('the uploaded cliff sprites are used when a mountain becomes visible', () =
   g.camera.x=p.x-150;g.camera.y=p.y-150;
   g.drawMountainTiles();
   assert.ok(drawCalls.some(v=>v[0]===g.cliffAtlas));
+});
+
+test('custom mage spritesheet uses front, side and back frames at grounded positions',()=>{
+  const {g,drawCalls}=boot();
+  const img=g.playerMageSheet;
+  assert.equal(img.url,'assets/custom/player_mage.png');
+  assert.equal(g.drawPlayerMageSprite(),false,'fallback before loading');
+  img.complete=true;img.naturalWidth=1000;img.naturalHeight=1001;
+  for(const [direction,walking,expectedRow] of [[0,false,0],[1,true,3],[2,false,5],[3,false,2]]){
+    g.hero.dir=direction;g.hero.walking=walking;
+    drawCalls.length=0;
+    assert.equal(g.drawPlayerMageSprite(),true);
+    const call=drawCalls.find(x=>x[0]===img);
+    assert.ok(call);
+    assert.equal(call[3],125);assert.equal(call[4],143);
+    assert.equal(call[2],expectedRow*143);
+    const foot=[136,140,139,139,139,137,85][expectedRow];
+    assert.ok(Math.abs(call[6]+call[8]*foot/143-g.hero.y)<.2);
+  }
+});
+
+test('new mage uses casting animation from uploaded character sheet',()=>{
+  const {g,drawCalls}=boot();const img=g.playerMageSheet;
+  img.complete=true;img.naturalWidth=1000;img.naturalHeight=1001;
+  g.castFireball(g.enemies[0]);
+  g.hero.dir=0;drawCalls.length=0;
+  assert.equal(g.drawPlayerMageSprite(),true);
+  let call=drawCalls.find(x=>x[0]===img);
+  assert.ok(call);
+  assert.equal(call[2],143,'front-facing casts use mage casting row');
+  g.hero.dir=2;drawCalls.length=0;
+  g.drawPlayerMageSprite();
+  call=drawCalls.find(x=>x[0]===img);
+  assert.equal(call[2],6*143,'back-facing casts use rear spell frames');
+});
+
+test('irregular mountain contours are not rectangular and still allow the southern stairs',()=>{
+  const {g}=boot();const p=g.plateaus[0];
+  const mid=g.plateauBand(p,p.stairsX);
+  const edge=g.plateauBand(p,p.x+15);
+  assert.ok(mid&&edge&&edge.top>mid.top+30,'mountain ridge should narrow near its sides');
+  assert.ok(edge.lip<mid.lip-35,'south lip must be organically rounded');
+  assert.equal(g.canTraverse(p.stairsX,mid.lip+3,p.stairsX,mid.lip-3),true);
 });
