@@ -1006,8 +1006,13 @@
         }else if(m.state==='chase')m.state='return';
         else if(m.state==='return'&&homeD<16)m.state='idle';
         const resting=m.state==='idle';
-        const moving=m.state==='chase'&&d>38;
+        const moving=m.state==='chase'&&d>(m.kind==='boss'?117:m.ranged?175:m.reach-4);
         const retreating=m.state==='return'&&homeD>7;
+        if(m.kind==='boss'&&m.hp<m.maxHp*.5&&m.bossPhase===1){
+          m.bossPhase=2;m.speed*=1.20;
+          floatNumber(m.x,m.y-135,'PHASE 2: WUT!','#ffb78f');
+          burst(m.x,m.y-55,'#ff8c90',40);
+        }
         if(time>=m.staggerUntil&&(moving||retreating)){
           let destination=moving?{x:hero.x,y:hero.y}:{x:m.homeX,y:m.homeY};
           if(moving&&m.provoked){
@@ -1041,9 +1046,44 @@
           }
         }
         const rangeNow=dist(hero.x,hero.y,m.x,m.y);
-        if(rangeNow<42&&time>=m.attackAt&&m.state==='chase'&&time>=m.staggerUntil){
-          damageHero(8);
-          m.attackAt=time+1.35;
+        if(m.state==='chase'&&time>=m.attackAt&&time>=m.staggerUntil){
+          if(m.kind==='boss'&&rangeNow<225){
+            // One dodgeable boss ground-slam per cooldown, tracked in world coords.
+            bossZones.push({x:hero.x,y:hero.y,age:0,
+              windup:m.bossPhase===2?.55:.80,
+              radius:m.bossPhase===2?126:106,
+              damage:m.bossPhase===2?25:18,owner:m.id});
+            m.attackAt=time+(m.bossPhase===2?1.85:2.7);
+          }else if(m.ranged&&rangeNow<330&&rangeNow>60){
+            const dx=(hero.x-m.x)/rangeNow,dy=(hero.y-m.y)/rangeNow;
+            enemyShots.push({x:m.x,y:m.y-43,vx:dx*285,vy:dy*285,
+              damage:m.damage,age:0,life:2.1,kind:m.kind});
+            m.attackAt=time+m.attackDelay;
+          }else if(rangeNow<m.reach){
+            damageHero(m.damage);
+            m.attackAt=time+m.attackDelay;
+          }
+        }
+      }
+      for(let i=bossZones.length-1;i>=0;i--){
+        const zone=bossZones[i];zone.age+=dt;
+        if(zone.age>=zone.windup){
+          if(resources.health>0&&dist(hero.x,hero.y,zone.x,zone.y)<zone.radius)
+            damageHero(zone.damage);
+          burst(zone.x,zone.y,'#f2a57b',32);
+          impactBursts.push({x:zone.x,y:zone.y,age:0,life:.55,kind:'fire'});
+          bossZones.splice(i,1);
+        }
+      }
+      for(let i=enemyShots.length-1;i>=0;i--){
+        const shot=enemyShots[i];shot.age+=dt;
+        shot.x+=shot.vx*dt;shot.y+=shot.vy*dt;
+        if(shot.age>shot.life||collides(shot.x,shot.y)){
+          enemyShots.splice(i,1);continue;
+        }
+        if(resources.health>0&&dist(shot.x,shot.y,hero.x,hero.y-20)<24){
+          damageHero(shot.damage);burst(shot.x,shot.y,'#ffa16d',12);
+          enemyShots.splice(i,1);
         }
       }
       for(let i=fireballs.length-1;i>=0;i--){
@@ -1062,6 +1102,16 @@
         }
       }
       updateLoot(dt);
+      const boss=enemies.find(m=>m.kind==='boss');
+      if(boss){
+        const visible=boss.hp>0&&dist(hero.x,hero.y,boss.x,boss.y)<710;
+        bossUI.panel.hidden=!visible;
+        if(visible){
+          bossUI.name.textContent=boss.name+(boss.bossPhase===2?' · PHASE 2':'');
+          bossUI.value.textContent=Math.ceil(boss.hp)+' / '+boss.maxHp;
+          bossUI.fill.style.width=Math.max(0,100*boss.hp/boss.maxHp)+'%';
+        }
+      }
       for(let i=impactBursts.length-1;i>=0;i--){
         const impact=impactBursts[i];impact.age+=dt;
         if(impact.age>=impact.life)impactBursts.splice(i,1);
@@ -1184,6 +1234,23 @@
         }
         ctx.restore();
       }
+      for(const zone of bossZones){
+        const pct=Math.min(1,zone.age/zone.windup);
+        ctx.save();
+        ctx.strokeStyle='rgba(255,111,102,'+(.40+pct*.60)+')';
+        ctx.lineWidth=3+pct*4;
+        ctx.fillStyle='rgba(234,62,80,'+(.08+pct*.28)+')';
+        ctx.beginPath();ctx.arc(zone.x,zone.y,zone.radius,0,TAU);
+        ctx.fill();ctx.stroke();
+        ctx.beginPath();ctx.arc(zone.x,zone.y,zone.radius*pct,0,TAU);ctx.stroke();
+        ctx.restore();
+      }
+      for(const shot of enemyShots){
+        const glow=ctx.createRadialGradient(shot.x,shot.y,0,shot.x,shot.y,17);
+        glow.addColorStop(0,'#fff3ce');glow.addColorStop(.3,'#ffa951');glow.addColorStop(1,'#c7441800');
+        ctx.fillStyle=glow;ctx.beginPath();ctx.arc(shot.x,shot.y,17,0,TAU);ctx.fill();
+        ctx.fillStyle='#ffe2ae';ctx.beginPath();ctx.arc(shot.x,shot.y,4,0,TAU);ctx.fill();
+      }
       for(const p of fireballs){
         for(let k=0;k<p.trail.length;k++){
           const t=p.trail[k],a=(k+1)/p.trail.length;
@@ -1277,6 +1344,10 @@
       rock4:"Terrain/Decorations/Rocks/Rock4.png",
       monkIdle:"Units/Blue Units/Monk/Idle.png",
       merchantIdle:"Units/Blue Units/Pawn/Pawn_Idle Gold.png",
+      redWarrior:"Units/Red Units/Warrior/Idle.png",
+      redWarriorRun:"Units/Red Units/Warrior/Run.png",
+      redArcher:"Units/Red Units/Archer/Idle.png",
+      redArcherRun:"Units/Red Units/Archer/Run.png",
       monkRun:"Units/Blue Units/Monk/Run.png",
       monkHeal:"Units/Blue Units/Monk/Heal.png",
       monkEffect:"Units/Blue Units/Monk/Heal_Effect.png",
