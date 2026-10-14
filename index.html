@@ -1655,6 +1655,8 @@
     roadAtlas.src='assets/custom/road_tiles.png';
     lakeAtlas.src='assets/custom/lake_tiles.png';
     cliffAtlas.src='assets/custom/cliff_tiles.png';
+    const organicPlateauImage=new Image();
+    organicPlateauImage.src='assets/custom/organic_plateau.png';
     // Elevation 0 = woodland ground, 1 = walkable plateau. The only
     // height-changing portals are the actual staircase tiles on the SOUTH lip.
     const plateaus=[
@@ -1667,10 +1669,11 @@
       if(x<hill.x||x>=hill.x+hill.w)return null;
       const t=(x-hill.x)/hill.w, side=Math.abs(2*t-1);
       const round=Math.pow(side,3);
-      const wave=Math.sin(t*13+hill.x*.013)*5*(1-round);
+      const wave=Math.sin(t*13+hill.x*.013)*4*(1-round);
+      // Same landing/lip as the illustrated organic plateau asset.
       return {
-        top:hill.y+17+68*round+Math.sin(t*16)*7*(1-round),
-        lip:hill.y+hill.h-78*round+wave*Math.min(1,Math.abs(x-hill.stairsX)/90)
+        top:hill.y+10+75*round+Math.sin(t*12)*4*(1-round),
+        lip:hill.y+hill.h-38-108*round+wave*Math.min(1,Math.abs(x-hill.stairsX)/90)
       };
     }
     function plateauAt(x,y){
@@ -1718,8 +1721,25 @@
         const x=hill.x,y=hill.y,w=hill.w,h=hill.h,edge=plateauBand(hill,hill.stairsX).lip;
         if(x>camera.x+viewport.w/ZOOM+200||x+w<camera.x-200
           ||y>camera.y+viewport.h/ZOOM+200||y+h+160<camera.y-200)continue;
+        // One seamless illustrated cliff asset replaces the mismatched tiles
+        // and the old polygon/grass rectangle. Keep fallback for missing PNG.
+        if(organicPlateauImage.complete
+          &&organicPlateauImage.naturalWidth===1024
+          &&organicPlateauImage.naturalHeight===1024){
+          ctx.save();
+          ctx.imageSmoothingEnabled=true;
+          ctx.drawImage(organicPlateauImage,hill.x-55,hill.y-53,
+            hill.w+110,hill.h+220);
+          ctx.font='900 12px "Trebuchet MS",sans-serif';
+          ctx.textAlign='center';ctx.lineWidth=3;
+          ctx.strokeStyle='#233b29';ctx.fillStyle='#ffeaca';
+          ctx.strokeText('↑ TREPPE',hill.stairsX,edge+117);
+          ctx.fillText('↑ TREPPE',hill.stairsX,edge+117);
+          ctx.restore();
+          continue;
+        }
         ctx.save();
-        // Irregular brown cliff foundation, not a dark rectangular box.
+        // Previous procedural terrain remains as a missing-asset fallback.
         tracePlateau(hill,115);
         ctx.fillStyle='#433e30bb';ctx.fill();
         tracePlateau(hill,103);
