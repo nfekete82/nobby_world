@@ -1,6 +1,6 @@
 # Nobby World 🌲
 
-**v0.9.2 – Correctly Aligned Mage Animations & Sprite Atlas** · Private browser game with a controllable, animated magic hero.
+**v0.9.3 – Newly Generated Mage & Organic Mountain Artwork** · Private browser game with a controllable, animated magic hero.
 
 ## Start in OrbStack (port 8088)
 
@@ -137,6 +137,15 @@ Use `npm test` to run all **32 headless logic tests**. Full visual and audio che
 - Frozen monsters still deal no spell damage and move at 34% speed for three seconds, even while provoked.
 - Ranged-aggro state does not change saved progression and resets on monster respawn.
 
+## Newly generated character and organic mountain (v0.9.3)
+
+The mage and mountain artworks have now been created within ChatGPT and **directly committed** to this repository. No user re-upload is needed.
+
+- **New playable mage:** `assets/custom/player_mage_v2.png` (1536×1344 transparent PNG, 8 columns × 7 rows of 192px frames). The newly generated sprite art was re-cropped at the true transparent gaps between animation rows and normalized to a consistent 174px foot position. Existing front, side and back animation directions are kept, including blue spell-casting frames and left-facing mirroring.
+- **No accidental movement in idle:** The player uses precisely **frame 0** when stationary, regardless of game time. Only actual walking changes the frame. Casting animates separately. This deliberately prevents the earlier standing twitch and wandering feet.
+- **New plateau:** `assets/custom/organic_plateau.png` (1024×1024 transparent PNG) is a standalone illustrated grassy rocky island with integrated stairs. Both raised map areas use this one-piece image rather than separate rectangular grass polygons and repeated stone sprite stamps. If the image cannot load, the prior procedural/cliff-atlas rendering remains as fallback. Existing world elevations, stair-only transitions, pathfinding and saves are preserved.
+- **Regression safety:** `npm test` runs **60 headless game tests** including idle-frame stability after elapsed time, the rendered new hill image and legal/illegal level crossings. In-browser visual checking is still recommended.
+
 ## Corrected mage animation atlas (v0.9.2)
 
 The previous blue mage had incorrectly cropped, floating or disjointed parts in the back and casting rows. The supplied original **1254 × 1254 transparent PNG** did NOT use uniformly spaced frame rows, even though it looks like an 8 × 7 sprite grid. Dividing height by seven wrongly mixed character heads, coats and magic VFX between animation rows.
@@ -161,7 +170,7 @@ Facing left mirrors the side animation. Cast frames advance across the active sp
 
 **Critical:** each sprite lives entirely within its own identical-size transparent cell; leave 12–24 px of internal padding for its motion/effects. Keep **the visible feet aligned** at the same Y value in every walking, resting and casting frame (for 256px canvas, a practical baseline is Y≈230). Avoid overlapping neighboring rows/columns or shifting the character centre. Genuine straight-edged, exact-sized atlas exports are much easier to integrate than a collage of images without a precise grid. PNG transparency is preferred; avoid JPEG and black nontransparent backgrounds.
 
-**Tests:** `npm test` runs **57 regression cases**, including the corrected 192px cell positions, front/side/back animations, cast timing, consistent feet and missing-asset fallback. Visual verification on a real browser remains useful.
+**Tests:** `npm test` runs **60 regression cases**, including the corrected 192px cell positions, front/side/back animations, cast timing, consistent feet and missing-asset fallback. Visual verification on a real browser remains useful.
 
 ## Art and terrain corrections (v0.9.1)
 
@@ -218,7 +227,7 @@ The **Moorkönig** has its own top-center health bar when approached. His area a
 
 **Preserved systems:** two-spell combat (Arkane Kugel damages, Verlangsamen deals exactly zero damage), aggressive ranged-hit pursuit, trader, inventory, XP, loot, savegames, OrbStack/Docker, and `localhost:8088`.
 
-Run `npm test` for **57 logic and regression tests**, covering existing systems plus the new terrain/elevation rendering and grounded enemies. A visual/frame-rate check in the actual browser is still recommended for the larger map.
+Run `npm test` for **60 logic and regression tests**, covering existing systems plus the new terrain/elevation rendering and grounded enemies. A visual/frame-rate check in the actual browser is still recommended for the larger map.
 
 ## Graphics implemented
 
@@ -241,7 +250,9 @@ The supplied current **Free Pack** is cartoon fantasy pixel art, not Diablo's gr
 - `assets/tiny-swords/`: imported user-owned assets, intentionally gitignored
 - `assets/custom/forest_goblin.png`: user-provided forest-goblin eight-frame artwork, committed to the repository; optimized PNG retains the original 2048 × 682 frame layout
 - `assets/custom/root_guardian.png`: user-provided eight-frame Wurzelhüter artwork, committed and resampled to 1280 × 426 for smaller browser downloads while preserving transparent alpha
-- `assets/custom/player_mage_aligned.png`: **active** 1536×1344 transparent mage atlas, clean 192px cells (8×7) with shared foot anchor
+- `assets/custom/player_mage_v2.png`: **active** newly generated 1536×1344 mage atlas, 192px cells (8×7) with fixed idle pose and grounded animations
+- `assets/custom/organic_plateau.png`: **active** single-piece 1024×1024 plateau/cliff artwork, grass and embedded stair illustration
+- `assets/custom/player_mage_aligned.png`: former mage atlas retained as a fallback/backup (inactive)
 - `assets/custom/player_mage.png`: previous optimized mage image retained as a backup (inactive)
 - `assets/custom/forest_boss.png`: user-provided, animated giant treant / forest boss
 - `assets/custom/road_tiles.png`: winding route texture from the user road sprite set
@@ -251,6 +262,6 @@ The supplied current **Free Pack** is cartoon fantasy pixel art, not Diablo's gr
 
 ## Next
 
-Validate the improved mountains/roads and new wizard in the actual browser; then build quests, elevation-specific encounters and additional biome monsters. A savegame export/import and optional music track may be added later.
+Verify the new mage idle and organic mountain in the browser; then build quests, elevation-specific encounters and additional biome monsters. A savegame export/import and optional music track may be added later.
 
 **Authoring project:** [nfekete82/nobby_world](https://github.com/nfekete82/nobby_world) (private).
