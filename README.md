@@ -1,62 +1,66 @@
 # Nobby World 🌲
 
-A standalone browser-based dark-forest action-RPG exploration prototype.
+**v0.2 – Tiny Swords Forest** · Private browser game with a controllable, animated magic hero.
 
-## Current version
+## Start in OrbStack (port 8088)
 
-**v0.1: one hero walking through a forest.** This is the initial milestone, not a finished Diablo clone.
+You already have the repository in `~/Projects/nobby_world`. Pull the changes:
 
-- Mouse click / tap: automatic pathfinding to a destination
-- WASD / arrow keys: move
-- Shift: sprint
-- F / fullscreen button: fullscreen mode
-- Trees have collision; camera follows the hero; map renders in depth order.
-- Forest trees, stones and plants use the **uploaded** `pixel_16_woods v2 free` spritesheet (`assets/woods.png`).
-- The hero remains a programmatically animated placeholder because the pack contains **no character sprites or animation frames**.
-
-## Local development (Docker Compose, recommended)
-
-Requires [Docker Desktop](https://www.docker.com/products/docker-desktop/) running on macOS.
-
-```sh
+```bash
 cd ~/Projects/nobby_world
 git pull --ff-only origin main
+python3 scripts/import_tiny_swords.py
 docker compose up -d
 ```
 
-Play at **http://localhost:8088/**. The project has its own Compose name (`nobby-world`) and serves only `index.html` and `assets/` through Nginx. The port is accessible **only from your Mac** (`127.0.0.1`), not the LAN.
+Open **http://localhost:8088/**. If the old graphics remain cached, reload with **Cmd+Shift+R**.
 
-Commands:
+**Important:** the importer requires your original, personally obtained `Tiny Swords (Free Pack).zip` in `~/Downloads/` (or specify the full path as an argument). It imports **all 428 usable PNG/Aseprite files**, ignoring macOS metadata. Only the required sprites are rendered in v0.2; the others are available for future levels. The pack is intentionally not committed to Git because its license prohibits redistributing standalone assets.
 
-```sh
-docker compose ps                # status
-docker compose logs -f game      # logs
-docker compose restart           # restart
-docker compose down              # stop
+If you don't yet have the ZIP on your Mac: [download the original from Pixel Frog](https://pixelfrog-assets.itch.io/tiny-swords).
+
+### Commands
+
+```bash
+docker compose ps
+docker compose logs -f game
+docker compose down
 ```
 
-Changes to `index.html` and files in `assets/` are served immediately: just reload the browser. No rebuild is required.
+The files in `assets/` are bind-mounted into Nginx, so no image rebuild is needed after importing.
 
-**Without Docker**, from the same directory:
+## Controls
 
-```sh
-python3 -m http.server 8088
-```
+| Action | Key |
+| --- | --- |
+| Walk | WASD / arrow keys |
+| Walk to destination | Click / tap |
+| Sprint | Shift |
+| Magical heal animation | E |
+| Fullscreen | F |
 
-Then open http://localhost:8088/ (only one of these servers may use the port at a time).
+## Graphics implemented
 
-## Project layout
+- Pixel Frog Tiny Swords 64px grass tiles cut from the original terrain tileset, with a natural winding path
+- Animated original Tiny Swords trees (four variants), bushes and rocks
+- Animated Monk as the **wizard-like protagonist**, with idle, run and heal animations, plus an optional magical effect
+- Tiny Swords houses and fire FX as forest landmarks
+- Existing camera, click-to-move, collisions and nav-grid retained
 
-- `index.html`: fully playable canvas/JavaScript game (no npm or build required)
-- `compose.yaml`: Nginx container, local port 8088 with live bind mounts
-- `assets/woods.png`: original forest sprite sheet, 352 × 192 px
-- `CREDITS.md`: asset and license notes
+### Visual constraints
 
-## Next iteration
+The supplied current **Free Pack** is cartoon fantasy pixel art, not Diablo's grim realistic style. The Monk animations face one primary direction; horizontal mirroring is a stopgap, not true 8-direction animation. Do not claim directional sprites exist when they don't. Combat, monsters, inventory and RPG progression are not yet implemented.
 
-1. Decide on the final art style. This pack is **16-pixel pixel art**, not a high-resolution Diablo-style isometric art set.
-2. Add a hero sprite sheet with 8-direction walk and idle animations that matches the selected art direction.
-3. Move to a modular game framework (Phaser + TypeScript, or Godot for 2.5D lighting) after the visual direction is locked.
-4. Add richer terrain layers, lighting, animation, then combat and loot.
+## Project structure
 
-Repository: `nfekete82/nobby_world` (intended independent **private** GitHub repo). No relation to `panda-ape-adventure`.
+- `index.html`: game and canvas renderer, no build step
+- `compose.yaml`: OrbStack / Docker Compose Nginx, localhost port 8088
+- `scripts/import_tiny_swords.py`: local ZIP extraction; no Python dependencies
+- `assets/tiny-swords/`: imported user-owned assets, intentionally gitignored
+- `CREDITS.md`: credit, license and link
+
+## Next
+
+Choose a genuine player-wizard character sheet with directional animations, then develop interactions, combat and progression after animation and collision polish.
+
+**Authoring project:** [nfekete82/nobby_world](https://github.com/nfekete82/nobby_world) (private).
