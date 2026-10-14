@@ -1,6 +1,6 @@
 # Nobby World 🌲
 
-**v0.7 – Tiny Swords Comic Combat & Two Spells** · Private browser game with a controllable, animated magic hero.
+**v0.7.1 – Faster Slimes & Immediate Ranged Aggro** · Private browser game with a controllable, animated magic hero.
 
 ## Start in OrbStack (port 8088)
 
@@ -38,7 +38,7 @@ The Nginx image **contains** the game and the locally imported Tiny Swords asset
 | --- | --- |
 | Walk | WASD / arrow keys |
 | Walk to destination | Left-click / tap on ground |
-| Fire blue magic at slime | Left-click / tap a monster |
+| Cast selected spell at slime and immediately alert it | Left-click / tap a monster |
 | Sprint | Shift |
 | Heal spell (25 mana; restores up to 35 HP) | E |
 | Open Galdor's shop nearby | B or click the merchant |
@@ -57,7 +57,7 @@ A larger comic-fantasy HUD with thick dark outlines, golden accents and vivid **
 
 - Nine animated **violet forest slimes** with overhead HP bars, approaching the hero when nearby
 - Click/tap a slime to cast a **small blue homing fireball**, with glowing trail, burst and floating damage
-- 26 damage per hit, 9 mana per spell, 290ms firing cooldown, maximum range 690 world units
+- 26 damage per hit, 9 mana per orb, 290ms firing cooldown; ranged targeting is no longer artificially limited to 690 world units
 - Slimes deal 8 contact damage (with a short player invulnerability period); hero respawns after defeat
 - Slimes reappear after 10 seconds
 - Normal clicks on empty terrain still use the existing A* pathfinding
@@ -74,8 +74,8 @@ Run regression tests (Node.js 22+): `npm test` or `node --test tests/combat.test
 - Loot is animated, lasts 40 seconds, and automatically flies to the hero at close range.
 - Gold total is shown at the upper right. **Gold, XP and levels are now stored locally in the browser.**
 - A blue casting ring and sparks appear around the wizard's hand at the start of each fireball.
-- Slimes patrol their territory, chase within a bounded radius, return if they wander too far,
-  stagger on impact and telegraph incoming melee strikes with a red ring.
+- Unprovoked slimes patrol their territory and use a limited sight radius. Once attacked,
+  they pursue the hero continuously, plan routes around trees, stagger on impact and telegraph melee strikes with a red ring.
 
 **Note:** The game is still a small single-player prototype; the slimes are drawn in Canvas.
 
@@ -110,7 +110,7 @@ The merchant has no player-versus-monster collision damage while the shop is ope
 | `1` Arkane Kugel (Blue Arcane Orb) | 9 | 26 direct damage (36 with equipped Arcane Focus), fast cooldown |
 | `2` Verlangsamen (Frost Slow) | 14 | **0 damage**, slows the target to 34% of its usual movement speed for **3 seconds** |
 
-**Important:** Frost never deals damage, never triggers knockback, XP or loot, and **Arcane Focus does not increase its damage**. There is no third combat spell. Slime base movement speed increased from **43–61** to **78–96 world units/second**. Frost controls their increased pressure; its translucent crystalline aura lasts until the debuff expires. Existing saved `nova` spell selections transparently fall back to the Arcane Orb without losing purchased equipment or progress.
+**Important:** Frost never deals damage, never triggers knockback, XP or loot, and **Arcane Focus does not increase its damage**. There is no third combat spell. Slime base movement speed is now **90–110 world units/second** (roughly 15% faster than v0.7). Frost controls their increased pressure; its translucent crystalline aura lasts until the debuff expires. Existing saved `nova` spell selections transparently fall back to the Arcane Orb without losing purchased equipment or progress.
 
 **Comic styling:** Health and mana bars are now larger with chunky dark outlines, segmented vivid fills and a stylized XP bar. The two oversized magic buttons feature brighter fantasy-frame ornaments, distinctive ice/arcane colors and active-state glow. In combat, projectiles have prominent energy glints; spell impacts flash as a comic starburst; damage, healing and XP numbers pop with stronger outlines. Floating frost text explicitly reads `LANGSAM!` rather than showing fake damage.
 
@@ -122,7 +122,17 @@ Every fourth slime kill drops one green **healing potion** in addition to normal
 
 **Persistence:** v0.7 retains the same browser key `nobby_world_save_v1` and loads old v0.5 saves. New fields contain equipped states, healing potions, selected spell and sound preferences. Existing purchases from v0.5 are treated as equipped by default, so their bonuses survive upgrading. No external backend or database is needed.
 
-Use `npm test` to run all **26 headless logic tests**. Full visual and audio checks still require opening the game in a real browser.
+Use `npm test` to run all **32 headless logic tests**. Full visual and audio checks still require opening the game in a real browser.
+
+## More aggressive monster AI (v0.7.1)
+
+- Slimes have slightly increased base movement speeds: 90 / 100 / 110 world units per second.
+- A valid arcane or frost cast **immediately provokes the target**, before the projectile lands.
+- Once provoked, the slime actively chases the player **regardless of its former home leash and vision distance**. It stays aggressive until defeated or the player dies. Ordinary unprovoked slimes still return to their own territory.
+- Monsters use cached, periodically refreshed A* routes to the player when provoked, avoiding tree obstacles. Pathfinding is throttled per monster to protect frame rate.
+- Projectile range checks were removed for clicked visible monsters; projectiles get enough flight lifetime to cross a distant part of the level.
+- Frozen monsters still deal no spell damage and move at 34% speed for three seconds, even while provoked.
+- Ranged-aggro state does not change saved progression and resets on monster respawn.
 
 ## Graphics implemented
 
