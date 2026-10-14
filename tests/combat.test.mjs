@@ -13,7 +13,7 @@ const bootAnchor = 'drawGround();generateForest();buildNav();spawnMonsters();res
 assert.ok(script.includes(bootAnchor), 'game initialization changed; adjust test hook');
 const instrumented = script.replace(
   bootAnchor,
-  bootAnchor + '\nwindow.__test={enemies,fireballs,resources,progress,loot,hero,merchant,WORLD,BIOMES,trees,details,biomeAt,pathAt,drawAdventureEnemy,drawForestGoblinSprite,forestGoblinSheet,drawRootGuardianSprite,rootGuardianSheet,drawForestBossSprite,forestBossSheet,drawPlayerMageSprite,playerMageSheet,plateaus,heightAt,stairCrossing,canTraverse,moveHero,collides,lakes,lakeContains,drawLakeTiles,drawMountainTiles,plateauBand,paintRoadTiles,roadAtlas,lakeAtlas,cliffAtlas,groundCtx:g,bossZones,enemyShots,equipment,equipped,bag,selectSpell,openInventory,closeInventory,toggleEquipment,drinkPotion,spellSpecs,camera,update,castFireball,provokeMonster,routeTo,hurtMonster,grantXP,damageHero,drawCombatEffects,drawMerchant,openShop,closeShop,buyItem,saveGame,route:()=>route,target:()=>target,shopState:()=>shopOpen};'
+  bootAnchor + '\nwindow.__test={enemies,fireballs,resources,progress,loot,hero,merchant,WORLD,BIOMES,trees,details,biomeAt,pathAt,drawAdventureEnemy,drawForestGoblinSprite,forestGoblinSheet,drawRootGuardianSprite,rootGuardianSheet,drawForestBossSprite,forestBossSheet,drawPlayerMageSprite,mageAnimationFrame,playerMageSheet,plateaus,heightAt,stairCrossing,canTraverse,moveHero,collides,lakes,lakeContains,drawLakeTiles,drawMountainTiles,plateauBand,paintRoadTiles,roadAtlas,lakeAtlas,cliffAtlas,groundCtx:g,bossZones,enemyShots,equipment,equipped,bag,selectSpell,openInventory,closeInventory,toggleEquipment,drinkPotion,spellSpecs,camera,update,castFireball,provokeMonster,routeTo,hurtMonster,grantXP,damageHero,drawCombatEffects,drawMerchant,openShop,closeShop,buyItem,saveGame,route:()=>route,target:()=>target,shopState:()=>shopOpen};'
 );
 
 function boot(initialSave = null) {
@@ -717,38 +717,68 @@ test('the uploaded cliff sprites are used when a mountain becomes visible', () =
   assert.ok(drawCalls.some(v=>v[0]===g.cliffAtlas));
 });
 
-test('custom mage spritesheet uses front, side and back frames at grounded positions',()=>{
+
+test('repacked mage atlas has exact 192px cells and consistent foot anchors',()=>{
   const {g,drawCalls}=boot();
   const img=g.playerMageSheet;
-  assert.equal(img.url,'assets/custom/player_mage.png');
-  assert.equal(g.drawPlayerMageSprite(),false,'fallback before loading');
-  img.complete=true;img.naturalWidth=1000;img.naturalHeight=1001;
-  for(const [direction,walking,expectedRow] of [[0,false,0],[1,true,3],[2,false,5],[3,false,2]]){
+  assert.equal(img.url,'assets/custom/player_mage_aligned.png');
+  assert.equal(g.drawPlayerMageSprite(),false,'fallback while asset is loading');
+  img.complete=true;img.naturalWidth=1536;img.naturalHeight=1344;
+  for(const [direction,walking,expectedRow] of
+    [[0,false,0],[0,true,0],[1,false,2],[1,true,3],[2,false,5],[2,true,5],[3,false,2]]){
     g.hero.dir=direction;g.hero.walking=walking;
     drawCalls.length=0;
     assert.equal(g.drawPlayerMageSprite(),true);
     const call=drawCalls.find(x=>x[0]===img);
-    assert.ok(call);
-    assert.equal(call[3],125);assert.equal(call[4],143);
-    assert.equal(call[2],expectedRow*143);
-    const foot=[136,140,139,139,139,137,85][expectedRow];
-    assert.ok(Math.abs(call[6]+call[8]*foot/143-g.hero.y)<.2);
+    assert.ok(call,'repacked atlas must render');
+    assert.equal(call[3],192);assert.equal(call[4],192);
+    assert.equal(call[2],expectedRow*192);
+    assert.ok(call[1]>=0&&call[1]<1536);
+    assert.equal(call[7],150);assert.equal(call[8],150);
+    assert.ok(Math.abs(call[6]+call[8]*173/192-g.hero.y)<.2,
+      'every view has exactly the same real-world ground pivot');
   }
 });
 
-test('new mage uses casting animation from uploaded character sheet',()=>{
+test('mage casting uses isolated front side back rows without cropped-out heads',()=>{
   const {g,drawCalls}=boot();const img=g.playerMageSheet;
-  img.complete=true;img.naturalWidth=1000;img.naturalHeight=1001;
+  img.complete=true;img.naturalWidth=1536;img.naturalHeight=1344;
   g.castFireball(g.enemies[0]);
-  g.hero.dir=0;drawCalls.length=0;
-  assert.equal(g.drawPlayerMageSprite(),true);
-  let call=drawCalls.find(x=>x[0]===img);
-  assert.ok(call);
-  assert.equal(call[2],143,'front-facing casts use mage casting row');
-  g.hero.dir=2;drawCalls.length=0;
-  g.drawPlayerMageSprite();
-  call=drawCalls.find(x=>x[0]===img);
-  assert.equal(call[2],6*143,'back-facing casts use rear spell frames');
+  for(const [direction,expectedRow] of [[0,1],[1,4],[2,6],[3,4]]){
+    g.hero.dir=direction;drawCalls.length=0;
+    assert.equal(g.drawPlayerMageSprite(),true);
+    const call=drawCalls.find(x=>x[0]===img);
+    assert.ok(call);
+    assert.equal(call[2],expectedRow*192);
+    assert.ok(call[1]>=0&&call[1]<=7*192);
+    assert.ok(Math.abs(call[6]+call[8]*173/192-g.hero.y)<.2);
+  }
+  g.hero.dir=2;
+  assert.ok(g.mageAnimationFrame().frame>=3,
+    'back-facing spell frames must skip cells contaminated by neighboring effects');
+});
+
+test('mage cast animation advances within its own row and keeps the foot pivot',()=>{
+  const {g,drawCalls}=boot(),img=g.playerMageSheet;
+  img.complete=true;img.naturalWidth=1536;img.naturalHeight=1344;
+  g.castFireball(g.enemies[0]);
+  g.hero.dir=2;
+  const first=g.mageAnimationFrame();
+  g.update(.13);
+  const second=g.mageAnimationFrame();
+  assert.equal(first.row,6);
+  assert.equal(second.row,6);
+  assert.ok(second.frame>=first.frame,'animation should advance through safe cast poses');
+  drawCalls.length=0;g.drawPlayerMageSprite();
+  const draw=drawCalls.find(x=>x[0]===img);
+  assert.equal(draw[2],6*192);
+  assert.equal(draw[1],second.frame*192);
+});
+
+test('wrong-sized or absent mage atlas renders the original safe fallback',()=>{
+  const {g}=boot(),img=g.playerMageSheet;
+  img.complete=true;img.naturalWidth=1000;img.naturalHeight=1001;
+  assert.equal(g.drawPlayerMageSprite(),false);
 });
 
 test('irregular mountain contours are not rectangular and still allow the southern stairs',()=>{
