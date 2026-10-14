@@ -411,7 +411,7 @@
         return;
       }
       resources.mana=Math.max(0,resources.mana-FIREBALL_COST);
-      updateResourceHUD();
+      updateResourceHUD();markSaveDirty();
       nextFireballAt=time+FIREBALL_COOLDOWN;
       shotCastStart=time;shotCastUntil=time+.27;
       // Face the target, keep the character stationary only during this initial cast.
@@ -428,7 +428,7 @@
       heroInvulnerableUntil=time+.7;
       floatNumber(hero.x,hero.y-95,'-'+amount,'#ff8a7c');
       burst(hero.x,hero.y-44,'#fa777e',9);
-      updateResourceHUD();
+      updateResourceHUD();markSaveDirty();
       if(resources.health<=0){
         route=[];target=null;heroRespawnAt=time+2.2;
         floatNumber(hero.x,hero.y-120,'Wiederbelebung ...','#ffffff');
@@ -451,7 +451,7 @@
         burst(hero.x,hero.y-60,'#b8f6ff',25);
       }
       updateProgressHUD();
-      updateResourceHUD();
+      updateResourceHUD();markSaveDirty();
     }
     function dropLoot(m){
       // The items remain on the ground even while the monster is respawning.
@@ -491,7 +491,7 @@
             progress.gold+=item.value;
             floatNumber(hero.x,hero.y-80,'+'+item.value+' Gold','#fce38d');
             burst(item.x,item.y,'#ffda72',5);
-            updateProgressHUD();
+            updateProgressHUD();markSaveDirty();
           }else{
             resources.mana=Math.min(resources.maxMana,resources.mana+item.value);
             floatNumber(hero.x,hero.y-75,'+'+item.value+' Mana','#7edfff');
@@ -525,7 +525,8 @@
     }
     function hurtMonster(m){
       if(m.hp<=0)return;
-      m.hp=Math.max(0,m.hp-FIREBALL_DAMAGE);
+      const damage=FIREBALL_DAMAGE+(equipment.focus?10:0);
+      m.hp=Math.max(0,m.hp-damage);
       m.hitUntil=time+.17;
       m.selectedUntil=time+.45;
       m.aggroUntil=time+4;
@@ -536,7 +537,7 @@
         const nx=m.x+(m.x-hero.x)/push*11,ny=m.y+(m.y-hero.y)/push*11;
         if(!collides(nx,ny)){m.x=nx;m.y=ny;}
       }
-      floatNumber(m.x,m.y-78,'-'+FIREBALL_DAMAGE,'#a1eaff');
+      floatNumber(m.x,m.y-78,'-'+damage,'#a1eaff');
       burst(m.x,m.y-34,'#51bffb',16);
       if(m.hp<=0){
         m.deadAt=time;m.respawnAt=time+10;
@@ -764,6 +765,7 @@
       rock3:"Terrain/Decorations/Rocks/Rock3.png",
       rock4:"Terrain/Decorations/Rocks/Rock4.png",
       monkIdle:"Units/Blue Units/Monk/Idle.png",
+      merchantIdle:"Units/Blue Units/Pawn/Pawn_Idle Gold.png",
       monkRun:"Units/Blue Units/Monk/Run.png",
       monkHeal:"Units/Blue Units/Monk/Heal.png",
       monkEffect:"Units/Blue Units/Monk/Heal_Effect.png",
@@ -1009,6 +1011,32 @@
       ctx.drawImage(asset,t.x-145*t.scale+sway,t.y-256*t.scale,w,h);
       if(obscuresHero)ctx.restore();
     }
+    function drawMerchant(){
+      const bob=Math.sin(time*4)*1.4;
+      ctx.save();
+      ctx.fillStyle='#08171592';ctx.beginPath();
+      ctx.ellipse(merchant.x,merchant.y+4,29,11,0,0,TAU);ctx.fill();
+      // Merchant's mat, pennant and golden overhead identification.
+      ctx.fillStyle='#62503a';ctx.fillRect(merchant.x-37,merchant.y-13,74,15);
+      ctx.fillStyle='#ceb374';ctx.fillRect(merchant.x-35,merchant.y-11,70,2);
+      ctx.restore();
+      if(!sprite('merchantIdle',Math.floor(time*7)%8,192,192,
+           merchant.x-81,merchant.y-122+bob,162,162)){
+        ctx.save();ctx.translate(merchant.x,merchant.y);
+        ctx.fillStyle='#af8551';ctx.fillRect(-14,-31,28,28);
+        ctx.fillStyle='#efd7a8';ctx.beginPath();ctx.arc(0,-40,12,0,TAU);ctx.fill();
+        ctx.fillStyle='#e1b754';ctx.beginPath();ctx.arc(14,-13,8,0,TAU);ctx.fill();
+        ctx.restore();
+      }
+      const near=dist(hero.x,hero.y,merchant.x,merchant.y)<160;
+      ctx.save();ctx.textAlign='center';
+      ctx.font='bold 12px system-ui, sans-serif';ctx.lineWidth=3;
+      ctx.strokeStyle='#112019';ctx.fillStyle=near?'#ffe5a5':'#d2bd90';
+      const text=near?'GALDOR · HÄNDLER [B]':'GALDOR · HÄNDLER';
+      ctx.strokeText(text,merchant.x,merchant.y-113+bob);
+      ctx.fillText(text,merchant.x,merchant.y-113+bob);
+      ctx.restore();
+    }
     function drawHero(){
 
       if(tinyReady&&tiny.monkIdle){
@@ -1078,6 +1106,7 @@
     }
     function collides(x,y){
       if(x<25||y<32||x>WORLD.w-25||y>WORLD.h-25)return true;
+      if(dist(x,y,merchant.x,merchant.y)<24)return true;
       for(const t of trees)if(Math.abs(t.x-x)<62 && Math.abs(t.y-y)<62 && dist(x,y,t.x,t.y)<t.r+12)return true;
       return false;
     }
@@ -1143,6 +1172,7 @@
       return simplified;
     }
     function update(dt){
+      if(shopOpen)return; // Stop combat and movement while trading.
       time+=dt;hero.breath+=dt;
       if(resources.mana<resources.maxMana){
         resources.mana=Math.min(resources.maxMana,resources.mana+MANA_REGEN_PER_SECOND*dt);
@@ -1165,7 +1195,7 @@
       hero.walking=len>.2;
       if(hero.walking){
         dx/=len;dy/=len;
-        const speed=hero.speed*(keyboard.has('shift')?1.64:1);
+        const speed=hero.speed*(equipment.boots?1.2:1)*(keyboard.has('shift')?1.64:1);
         const oldx=hero.x,oldy=hero.y;
         moveHero(dx*speed*dt,dy*speed*dt);
         if(Math.abs(hero.x-oldx)+Math.abs(hero.y-oldy)<.005){hero.walking=false;}
@@ -1174,6 +1204,10 @@
         else hero.dir=dy>0?0:2;
       }
       updateCombat(dt);
+      if(pendingMerchant&&dist(hero.x,hero.y,merchant.x,merchant.y)<140){
+        pendingMerchant=false;openShop();
+      }
+      if(saveDirty&&time>=nextSaveAt)saveGame();
       targetAnimation+=dt;
       const viewW=viewport.w/ZOOM,viewH=viewport.h/ZOOM;
       const tx=clamp(hero.x-viewW/2,0,Math.max(0,WORLD.w-viewW));
@@ -1203,6 +1237,10 @@
       for(const m of enemies)if(m.hp>0||time-m.deadAt<.45){
         if(m.x>camera.x-70&&m.x<camera.x+viewW+70&&m.y>camera.y-90&&m.y<camera.y+viewH+70)
           renderables.push({y:m.y,draw:()=>drawSlime(m)});
+      }
+      if(merchant.x>camera.x-100&&merchant.x<camera.x+viewW+100
+         &&merchant.y>camera.y-180&&merchant.y<camera.y+viewH+90){
+        renderables.push({y:merchant.y,draw:drawMerchant});
       }
       renderables.push({y:hero.y,draw:()=>{
         ctx.save();
@@ -1259,25 +1297,42 @@
     window.addEventListener('keydown',e=>{
       const key=e.key.toLowerCase();
       if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(key))e.preventDefault();
+      if(shopOpen){if(key==='escape'||key==='b')closeShop();return;}
+      if(key==='b'&&!e.repeat){openShop();return;}
       if(key==='f'&&!e.repeat)toggleFull();
       if(key==='e'&&!e.repeat&&time>=castUntil&&resources.mana>=HEAL_MANA_COST){
         resources.mana-=HEAL_MANA_COST;
         resources.health=Math.min(resources.maxHealth,resources.health+HEAL_AMOUNT);
         castStart=time;castUntil=time+1.1;route=[];target=null;
-        updateResourceHUD();
+        updateResourceHUD();markSaveDirty();
       }
       keyboard.add(key);
     });
     window.addEventListener('keyup',e=>keyboard.delete(e.key.toLowerCase()));
     window.addEventListener('blur',()=>{keyboard.clear();paused=true;});
     window.addEventListener('focus',()=>{paused=false;last=performance.now();});
-    document.addEventListener('visibilitychange',()=>{paused=document.hidden;last=performance.now();});
+    document.addEventListener('visibilitychange',()=>{
+      paused=document.hidden;last=performance.now();
+      if(document.hidden&&saveDirty)saveGame();
+    });
+    window.addEventListener('pagehide',()=>saveGame());
     canvas.addEventListener('pointerdown',e=>{
+      if(shopOpen)return;
       if(e.pointerType==='mouse'&&e.button!==0)return;
       e.preventDefault();
       const rect=canvas.getBoundingClientRect();
       const x=clamp((e.clientX-rect.left)/ZOOM+camera.x,26,WORLD.w-26);
       const y=clamp((e.clientY-rect.top)/ZOOM+camera.y,33,WORLD.h-26);
+      if(dist(x,y,merchant.x,merchant.y-46)<54){
+        if(!openShop()){
+          route=routeTo(merchant.x,merchant.y+57);
+          pendingMerchant=route.length>0;
+          target=route.length?route[route.length-1]:null;
+          targetAnimation=0;
+        }
+        return;
+      }
+      pendingMerchant=false;
       const monster=findMonsterAt(x,y);
       if(monster){
         castFireball(monster);
@@ -1294,6 +1349,7 @@
     }
     document.getElementById('full').addEventListener('click',toggleFull);
     drawGround();generateForest();buildNav();spawnMonsters();resize();
+    restoreGame();
     requestAnimationFrame(frame);
     const loading=document.getElementById('loading');loading.classList.add('hide');
     setTimeout(()=>loading.remove(),850);
