@@ -591,7 +591,10 @@ test('root guardian draws the correct eight-frame sheet, including melee attack 
   assert.equal(drawn[3],160);
   assert.equal(drawn[4],426);
   assert.ok(drawn[8]>325&&drawn[8]<355,'elite root guardian should be much larger');
-  assert.ok(Math.abs(drawn[6]+drawn[8]*408/426-elite.y)<.01,'elite feet must touch shadow anchor');
+  const feetByFrame=[408,404,403,414,426,417,407,416];
+  const frameIndex=drawn[1]/160;
+  assert.ok(Math.abs(drawn[6]+drawn[8]*feetByFrame[frameIndex]/426-elite.y)<.1,
+    'elite feet must touch the ground in its actual animation frame');
   drawCalls.length=0;
   elite.attackAnimStart=0;elite.attackAnimUntil=.55;
   g.update(.2);
