@@ -707,13 +707,37 @@
     let target=null,route=[],targetAnimation=0;
     let time=0,last=0,paused=false;
     // Forest combat: independent from navigation so ground clicks always remain click-to-move.
-    const enemies=[],fireballs=[],combatParticles=[],floatingNumbers=[],loot=[],impactBursts=[];
+    const enemies=[],fireballs=[],enemyShots=[],bossZones=[],combatParticles=[],floatingNumbers=[],loot=[],impactBursts=[];
     let nextLootId=0;
     const FIREBALL_COST=9,FIREBALL_DAMAGE=26,FIREBALL_SPEED=540,FIREBALL_COOLDOWN=.29;
     let nextFireballAt=0,shotCastUntil=0,shotCastStart=0,shotSpell='fire',heroInvulnerableUntil=0,heroRespawnAt=0;
     let defeatedMonsters=0;
+    function addMonster(kind,x,y,overrides={}){
+      const archetypes={
+        slime:{name:'Waldschleim',hp:66,speed:90,damage:8,reach:42,attackDelay:1.35,respawn:10,xp:15,radius:32},
+        goblin:{name:'Waldkobold',hp:112,speed:112,damage:12,reach:46,attackDelay:1.1,respawn:15,xp:25,radius:40},
+        raider:{name:'Dünenräuber',hp:135,speed:98,damage:8,reach:39,attackDelay:2.4,respawn:18,xp:32,radius:41,ranged:true},
+        scarab:{name:'Sandkäfer',hp:118,speed:131,damage:10,reach:40,attackDelay:1.05,respawn:16,xp:28,radius:35},
+        elite:{name:'Wurzelhüter · ELITE',hp:255,speed:95,damage:18,reach:62,attackDelay:1.75,respawn:28,xp:70,radius:63},
+        boss:{name:'MOORKÖNIG · WALDBOSS',hp:560,speed:83,damage:20,reach:72,attackDelay:2.8,respawn:60,xp:200,radius:85}
+      };
+      const spec={...archetypes[kind],...overrides};
+      const id=enemies.length;
+      x=clamp(x,55,WORLD.w-55);y=clamp(y,65,WORLD.h-55);
+      if(collides(x,y))y=pathAt(x);
+      const m={id,kind,name:spec.name,x,y,homeX:x,homeY:y,
+        hp:spec.hp,maxHp:spec.hp,speed:spec.speed,damage:spec.damage,
+        reach:spec.reach,radius:spec.radius,xp:spec.xp,
+        attackDelay:spec.attackDelay,respawn:spec.respawn,ranged:!!spec.ranged,
+        phase:id*1.76,attackAt:time+2.5,
+        hitUntil:0,respawnAt:0,deadAt:0,selectedUntil:0,slowUntil:0,
+        aggroUntil:0,staggerUntil:0,state:'idle',provoked:false,bossPhase:1,
+        chasePath:[],nextRepathAt:0,pathHeroX:x,pathHeroY:y};
+      enemies.push(m);
+      return m;
+    }
     function spawnMonsters(){
-      // Safe starting area; slimes remain on or near the woodland path.
+      // The nine original slimes remain first so progression/test expectations survive.
       const spots=[
         [-265,-12],[245,14],[385,-55],[-430,34],[580,19],
         [-665,-32],[815,-16],[-945,35],[1040,20]
@@ -721,25 +745,27 @@
       enemies.length=0;
       for(let i=0;i<spots.length;i++){
         const x=clamp(start.x+spots[i][0],50,WORLD.w-50);
-        let y=clamp(pathAt(x)+spots[i][1],55,WORLD.h-55);
-        // Keep collision and click targets on reachable ground.
-        if(collides(x,y))y=pathAt(x);
-        if(collides(x,y))continue;
-        enemies.push({
-          id:i,x,y,homeX:x,homeY:y,hp:66,maxHp:66,
-          phase:i*1.76,speed:90+i%3*10,attackAt:time+2.5,
-          hitUntil:0,respawnAt:0,deadAt:0,selectedUntil:0,slowUntil:0,
-          aggroUntil:0,staggerUntil:0,state:'idle',provoked:false,
-          chasePath:[],nextRepathAt:0,pathHeroX:x,pathHeroY:y
-        });
+        addMonster('slime',x,pathAt(x)+spots[i][1],{speed:90+i%3*10});
       }
+      // Distinct enemy classes in each area: sword-bearing goblins, ranged
+      // raiders, desert beetles, one roaming elite and the named forest boss.
+      for(const x of [700,2120,2540,3060])
+        addMonster('goblin',x,pathAt(x)+(x%2?90:-80));
+      for(const x of [3750,4150,4640])
+        addMonster('raider',x,pathAt(x)+(x%2?85:-90));
+      for(const x of [4040,4440,4880,5080])
+        addMonster('scarab',x,pathAt(x)+(x%2?105:-85));
+      addMonster('elite',2430,pathAt(2430)-205);
+      addMonster('boss',2860,pathAt(2860)-190);
     }
     function findMonsterAt(x,y){
-      let closest=null,best=36;
+      let closest=null,best=Infinity;
       for(const m of enemies){
         if(m.hp<=0)continue;
-        const d=dist(x,y,m.x,m.y-26);
-        if(d<best){best=d;closest=m;}
+        const centerY=m.y-(m.kind==='boss'?55:m.kind==='elite'?39:26);
+        const d=dist(x,y,m.x,centerY);
+        const limit=m.radius+12;
+        if(d<limit&&d<best){best=d;closest=m;}
       }
       return closest;
     }
@@ -828,8 +854,9 @@
       updateResourceHUD();markSaveDirty();
     }
     function dropLoot(m){
-      // The items remain on the ground even while the monster is respawning.
-      const count=2+progress.kills%2;
+      // Stronger enemies and bosses drop noticeably richer loot.
+      const count=m.kind==='boss'?18:m.kind==='elite'?8:
+        m.kind==='goblin'||m.kind==='scarab'||m.kind==='raider'?5:2+progress.kills%2;
       for(let i=0;i<count;i++){
         const angle=TAU*i/count+rand()*.35;
         const speed=38+rand()*42;
@@ -843,7 +870,7 @@
         loot.push({id:++nextLootId,kind:'mana',value:18,x:m.x,y:m.y-10,
           vx:32,vy:-50,age:0,life:40});
       }
-      if(progress.kills%4===0){
+      if(progress.kills%4===0||m.kind==='elite'||m.kind==='boss'){
         loot.push({id:++nextLootId,kind:'potion',value:1,x:m.x,y:m.y-10,
           vx:-38,vy:-42,age:0,life:40});
       }
@@ -937,11 +964,15 @@
       impactBursts.push({x:m.x,y:m.y-34,age:0,life:.4,kind:'fire'});
       playSfx('hit');
       if(m.hp<=0){
-        m.deadAt=time;m.respawnAt=time+10;
+        m.deadAt=time;m.respawnAt=time+m.respawn;
         m.state='dead';
-        defeatedMonsters++; progress.kills++;
-        grantXP(15);
-        floatNumber(m.x,m.y-110,'+15 EP','#a1e9e6');
+        defeatedMonsters++;progress.kills++;
+        grantXP(m.xp);
+        floatNumber(m.x,m.y-110,'+'+m.xp+' EP','#a1e9e6');
+        if(m.kind==='boss'){
+          floatNumber(m.x,m.y-175,'BOSS BESIEGT!','#ffe4a2');
+          burst(m.x,m.y-65,'#ffd189',60);
+        }
         dropLoot(m);
         burst(m.x,m.y-24,'#af8be9',16);
       }
@@ -958,6 +989,7 @@
           if(time>=m.respawnAt){
             m.x=m.homeX;m.y=m.homeY;m.hp=m.maxHp;m.attackAt=time+1.3;
             m.aggroUntil=0;m.staggerUntil=0;m.slowUntil=0;m.state='idle';
+          m.bossPhase=1;
             m.provoked=false;m.chasePath=[];m.nextRepathAt=0;
           }
           continue;
