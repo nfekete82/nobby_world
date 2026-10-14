@@ -285,21 +285,59 @@ test('B opens the shop from spawn, Escape closes, and navigation remains usable'
   assert.ok(g.route().length>0);
 });
 
-test('Frostlanze costs mana, hits and slows the monster', () => {
+test('Frost slow consumes 14 mana but deals absolutely no damage or XP', () => {
   const {g,click}=boot();const m=g.enemies[0];
+  g.equipment.focus=true;g.equipped.focus=true; // Focus must not add frost damage.
   assert.equal(g.selectSpell('ice'),true);click(m.x,m.y-26);
   assert.equal(g.resources.mana,86);
   assert.equal(g.fireballs[0].spell,'ice');
+  assert.equal(g.fireballs[0].damage,0);
   for(let i=0;i<30;i++)g.update(.05);
-  assert.equal(m.hp,46);assert.ok(m.slowUntil>0);
+  assert.equal(m.hp,66);
+  assert.equal(g.progress.kills,0);
+  assert.equal(g.progress.xp,0);
+  assert.ok(m.slowUntil>1.5);
 });
 
-test('Arkanstoß damages another monster in its splash radius', () => {
-  const {g,click}=boot();const a=g.enemies[0],b=g.enemies[1];
-  b.x=a.x+28;b.y=a.y;g.selectSpell('nova');click(a.x,a.y-26);
-  assert.equal(g.resources.mana,78);
-  for(let i=0;i<30;i++)g.update(.05);
-  assert.equal(a.hp,47);assert.ok(b.hp<66,'splash damage not applied');
+test('only two spells are available and the removed third spell cannot be selected', () => {
+  const {g,keydown}=boot();
+  assert.equal(Object.keys(g.spellSpecs).length,2);
+  assert.equal(g.spellSpecs.fire.damage,26);
+  assert.equal(g.spellSpecs.ice.damage,0);
+  assert.equal(g.selectSpell('nova'),false);
+  keydown('3');
+  assert.equal(g.selectSpell('fire'),true);
+  assert.ok(!html.includes('id="spell-nova"'));
+});
+
+test('slimes move faster normally but become significantly slower when frozen', () => {
+  const normal=boot().g;
+  const a=normal.enemies[0];
+  assert.ok(a.speed>=78,'base enemy speed must exceed previous 43-61');
+  a.x=normal.hero.x-160;a.y=normal.hero.y;
+  a.homeX=a.x;a.homeY=a.y;
+  normal.update(.1);const regular=a.x-(normal.hero.x-160);
+  const frozen=boot().g;const b=frozen.enemies[0];
+  b.x=frozen.hero.x-160;b.y=frozen.hero.y;
+  b.homeX=b.x;b.homeY=b.y;
+  b.slowUntil=5;
+  frozen.update(.1);const slowed=b.x-(frozen.hero.x-160);
+  assert.ok(regular>1,'normal slime must advance');
+  assert.ok(slowed>0,'frozen slime should still move');
+  assert.ok(slowed<regular*.45,'frost should reduce movement below 45%');
+});
+
+test('removed Arkanstoß in v0.6 save is migrated to arcane orb', () => {
+  const {g,stored}=boot({
+    version:1,progress:{level:2,xp:7,gold:12,kills:4},
+    equipment:{focus:true,boots:false,charm:false},
+    selectedSpell:'nova',resources:{health:105,mana:52},hero:{x:1600,y:1200}
+  });
+  assert.equal(g.selectSpell('nova'),false);
+  assert.equal(g.resources.health,105);
+  assert.equal(g.progress.gold,12);
+  assert.equal(g.saveGame(),true);
+  assert.equal(JSON.parse(stored.get('nobby_world_save_v1')).selectedSpell,'fire');
 });
 
 test('equipped charm can be removed and re-equipped in inventory', () => {
