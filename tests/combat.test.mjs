@@ -13,7 +13,7 @@ const bootAnchor = 'drawGround();generateForest();buildNav();spawnMonsters();res
 assert.ok(script.includes(bootAnchor), 'game initialization changed; adjust test hook');
 const instrumented = script.replace(
   bootAnchor,
-  bootAnchor + '\nwindow.__test={enemies,fireballs,resources,progress,loot,hero,merchant,WORLD,BIOMES,trees,details,biomeAt,pathAt,drawAdventureEnemy,drawForestGoblinSprite,forestGoblinSheet,drawRootGuardianSprite,rootGuardianSheet,drawForestBossSprite,forestBossSheet,drawPlayerMageSprite,mageAnimationFrame,playerMageSheet,plateaus,heightAt,stairCrossing,canTraverse,moveHero,collides,lakes,lakeContains,drawLakeTiles,drawMountainTiles,plateauBand,paintRoadTiles,roadAtlas,lakeAtlas,cliffAtlas,groundCtx:g,bossZones,enemyShots,equipment,equipped,bag,selectSpell,openInventory,closeInventory,toggleEquipment,drinkPotion,spellSpecs,camera,update,castFireball,provokeMonster,routeTo,hurtMonster,grantXP,damageHero,drawCombatEffects,drawMerchant,openShop,closeShop,buyItem,saveGame,route:()=>route,target:()=>target,shopState:()=>shopOpen};'
+  bootAnchor + '\nwindow.__test={enemies,fireballs,resources,progress,loot,hero,merchant,WORLD,BIOMES,trees,details,biomeAt,pathAt,drawAdventureEnemy,drawForestGoblinSprite,forestGoblinSheet,drawRootGuardianSprite,rootGuardianSheet,drawForestBossSprite,forestBossSheet,drawPlayerMageSprite,mageAnimationFrame,playerMageSheet,plateaus,heightAt,stairCrossing,canTraverse,moveHero,collides,lakes,lakeContains,drawLakeTiles,drawMountainTiles,organicPlateauImage,plateauBand,paintRoadTiles,roadAtlas,lakeAtlas,cliffAtlas,groundCtx:g,bossZones,enemyShots,equipment,equipped,bag,selectSpell,openInventory,closeInventory,toggleEquipment,drinkPotion,spellSpecs,camera,update,castFireball,provokeMonster,routeTo,hurtMonster,grantXP,damageHero,drawCombatEffects,drawMerchant,openShop,closeShop,buyItem,saveGame,route:()=>route,target:()=>target,shopState:()=>shopOpen};'
 );
 
 function boot(initialSave = null) {
@@ -721,7 +721,7 @@ test('the uploaded cliff sprites are used when a mountain becomes visible', () =
 test('repacked mage atlas has exact 192px cells and consistent foot anchors',()=>{
   const {g,drawCalls}=boot();
   const img=g.playerMageSheet;
-  assert.equal(img.url,'assets/custom/player_mage_aligned.png');
+  assert.equal(img.url,'assets/custom/player_mage_v2.png');
   assert.equal(g.drawPlayerMageSprite(),false,'fallback while asset is loading');
   img.complete=true;img.naturalWidth=1536;img.naturalHeight=1344;
   for(const [direction,walking,expectedRow] of
@@ -754,8 +754,8 @@ test('mage casting uses isolated front side back rows without cropped-out heads'
     assert.ok(Math.abs(call[6]+call[8]*173/192-g.hero.y)<.2);
   }
   g.hero.dir=2;
-  assert.ok(g.mageAnimationFrame().frame>=3,
-    'back-facing spell frames must skip cells contaminated by neighboring effects');
+  assert.ok([0,4,7].includes(g.mageAnimationFrame().frame),
+    'back-facing casts choose poses from the new sprite sheet');
 });
 
 test('mage cast animation advances within its own row and keeps the foot pivot',()=>{
@@ -788,4 +788,52 @@ test('irregular mountain contours are not rectangular and still allow the southe
   assert.ok(mid&&edge&&edge.top>mid.top+30,'mountain ridge should narrow near its sides');
   assert.ok(edge.lip<mid.lip-35,'south lip must be organically rounded');
   assert.equal(g.canTraverse(p.stairsX,mid.lip+3,p.stairsX,mid.lip-3),true);
+});
+
+test('standing still displays the exact same mage frame at any game time', () => {
+  const {g,drawCalls}=boot();
+  const img=g.playerMageSheet;
+  img.complete=true;img.naturalWidth=1536;img.naturalHeight=1344;
+  for(const direction of [0,1,2,3]){
+    g.hero.dir=direction;g.hero.walking=false;
+    const before=g.mageAnimationFrame();
+    for(let i=0;i<90;i++)g.update(.04);
+    g.hero.walking=false;
+    const after=g.mageAnimationFrame();
+    assert.equal(after.row,before.row);
+    assert.equal(after.frame,0,'idle frame cannot cycle with elapsed time');
+    assert.equal(before.frame,0);
+    drawCalls.length=0;
+    g.drawPlayerMageSprite();
+    const call=drawCalls.find(c=>c[0]===img);
+    assert.ok(call);
+    assert.equal(call[1],0);
+  }
+});
+
+test('new organic hill sprite replaces rectangular cliff assembly when available', () => {
+  const {g,drawCalls}=boot();
+  const sprite=g.organicPlateauImage;
+  assert.equal(sprite.url,'assets/custom/organic_plateau.png');
+  sprite.complete=true;sprite.naturalWidth=1024;sprite.naturalHeight=1024;
+  const hill=g.plateaus[0];
+  g.camera.x=hill.x-150;g.camera.y=hill.y-180;
+  drawCalls.length=0;
+  g.drawMountainTiles();
+  const calls=drawCalls.filter(c=>c[0]===sprite);
+  assert.ok(calls.length>0,'draw the user's newly generated hill artwork');
+  const draw=calls[0];
+  assert.equal(draw[1],hill.x-55);
+  assert.equal(draw[2],hill.y-53);
+  assert.equal(draw[3],hill.w+110);
+  assert.equal(draw[4],hill.h+220);
+});
+
+test('new hill still forbids wall climbing but permits stairs', () => {
+  const {g}=boot();
+  const hill=g.plateaus[0],mid=g.plateauBand(hill,hill.stairsX);
+  const edgeX=hill.x+54,edge=g.plateauBand(hill,edgeX);
+  assert.ok(edge.top>mid.top,'plateau shape remains organic');
+  assert.equal(g.canTraverse(hill.stairsX,mid.lip+3,hill.stairsX,mid.lip-3),true);
+  assert.equal(g.canTraverse(edgeX,edge.lip+3,edgeX,edge.lip-3),false);
 });
