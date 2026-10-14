@@ -388,7 +388,7 @@
         const d=dist(hero.x,hero.y,m.x,m.y);
         const homeD=dist(m.x,m.y,m.homeX,m.homeY);
         // Finite-state pursuit: sight, chase, lose target, return to spawn.
-        if(homeD>270||d>385)m.state='return';
+        if(homeD>390||d>385)m.state='return';
         else if(d<235||(m.state==='chase'&&d<325)||time<m.aggroUntil){
           m.state='chase';
           m.aggroUntil=Math.max(m.aggroUntil,time+.35);
