@@ -97,6 +97,52 @@
       .shop-symbol { width:34px; height:34px; font-size:18px; }
       .shop-buy { min-width:75px; padding:0 7px; }
     }
+    /* Action RPG hotbar, inventory and compact audio controls. */
+    .spellbar { position:fixed; left:50%; bottom:calc(200px + env(safe-area-inset-bottom));
+      transform:translateX(-50%); display:flex; align-items:center; gap:7px; z-index:5; }
+    .spell-choice { width:65px; height:58px; border:1px solid #9c876399; border-radius:11px;
+      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+      background:linear-gradient(#1a3032e8,#0c1b23f2); box-shadow:0 4px 14px #0009; }
+    .spell-choice[aria-pressed="true"] { border-color:#9ce8ff; background:linear-gradient(#28536be8,#142b43f2);
+      box-shadow:0 0 0 2px #45b9ec40,0 5px 15px #000a; }
+    .spell-icon { font-size:22px; line-height:1; } .spell-name { font-size:10px; color:#d9e7e5; }
+    .spell-key { font-size:9px; color:#8aa9b7; font-variant-numeric:tabular-nums; }
+    .inventory-open { position:fixed; top:clamp(73px,8vw,120px); right:clamp(20px,4vw,40px);
+      z-index:6; border-radius:9px; width:auto; height:33px; padding:0 11px; font-size:12px; }
+    .audio-control { display:flex; align-items:center; gap:6px;
+      border:1px solid #d4bb8660; background:#102621d8; padding:3px 7px;
+      border-radius:20px; box-shadow:0 2px 10px #0006; }
+    .audio-toggle { width:27px; height:27px; border:0; background:none; font-size:16px; }
+    .audio-volume { width:67px; height:16px; cursor:pointer; accent-color:#a3dced; }
+    .inventory-overlay[hidden] { display:none; }
+    .inventory-overlay { position:fixed; inset:0; z-index:12; display:grid; place-items:center;
+      padding:16px; background:#06100dc9; backdrop-filter:blur(8px); }
+    .inventory-dialog { width:min(570px,100%); max-height:90vh; overflow-y:auto;
+      border:1px solid #c1a87599; border-radius:17px; padding:23px;
+      background:linear-gradient(145deg,#28382ef7,#111c1bef);
+      box-shadow:0 18px 90px #000c; }
+    .inventory-heading { display:flex; justify-content:space-between; gap:10px; align-items:start; }
+    .inventory-heading h2 { font:normal 30px Georgia,serif; color:#f5e7bf; margin:6px 0 0; }
+    .inventory-brief { color:#abc7bc; font-size:12px; margin:7px 0 15px; line-height:1.5; }
+    .inventory-section-title { color:#d9c38e; font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+      margin:14px 0 8px; }
+    .inventory-line { display:flex; align-items:center; gap:10px; border:1px solid #b9a77e40;
+      background:#0c1c1ab9; border-radius:10px; margin-bottom:8px; padding:10px; }
+    .inventory-symbol { display:grid; place-items:center; flex:none; width:36px; height:36px;
+      border:1px solid #8e816b80; border-radius:9px; background:#1a2a2a; font-size:20px; }
+    .inventory-description { flex:1; min-width:0; }
+    .inventory-description strong { display:block; color:#efe4c8; font-size:13px; }
+    .inventory-description span { display:block; color:#9cbaae; font-size:11px; margin-top:4px; }
+    .inventory-action { width:auto; min-width:88px; height:35px; padding:0 10px;
+      border-radius:8px; background:#c4a976; color:#1b251c; font-size:11px; font-weight:bold; }
+    .inventory-action:disabled { background:#2d3c34; color:#90a295; cursor:default; }
+    @media (max-width:680px) {
+      .spellbar { bottom:calc(195px + env(safe-area-inset-bottom)); gap:5px; }
+      .spell-choice { width:59px; height:54px; }
+      .audio-volume { width:42px; }
+      .inventory-open { top:70px; }
+      .inventory-dialog { padding:16px; }
+    }
     .mobile-hint { display:none; }
     @media (max-width:680px) { .mobile-hint {display:inline;} }
     .footer { position:fixed; bottom:max(24px,env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:15px; padding:10px 17px; border:1px solid #d9eac522; background:#0c211bc4; backdrop-filter:blur(12px); border-radius:100px; color:#d1decf; white-space:nowrap; font-size:12px; line-height:1; box-shadow:0 12px 34px #09130d50; pointer-events:none; }
@@ -121,7 +167,13 @@
     <h1>Nobby World</h1>
     <div class="subtitle">Erkunde den Wald · Monster anklicken zum Angreifen</div>
   </div>
-  <div class="topright"><button id="full" aria-label="Vollbild umschalten" title="Vollbild (F)">⛶</button></div>
+  <div class="topright">
+    <div class="audio-control" aria-label="Soundeffekte">
+      <button type="button" id="audio-toggle" class="audio-toggle" aria-label="Sound ein- oder ausschalten" title="Sound (M)">♫</button>
+      <input id="audio-volume" class="audio-volume" type="range" min="0" max="100" value="38" aria-label="Sound-Lautstärke">
+    </div>
+    <button id="full" aria-label="Vollbild umschalten" title="Vollbild (F)">⛶</button>
+  </div>
   <section class="resource-hud" aria-label="Status des Magiers">
     <div class="resource resource-health">
       <div class="resource-top"><span class="resource-name">Leben</span><span class="resource-value" id="health-value">100 / 100</span></div>
@@ -138,7 +190,39 @@
       <span class="xp-count" id="xp-count">0 / 40 EP</span>
     </div>
   </section>
+  <div class="spellbar" role="group" aria-label="Zauberauswahl">
+    <button class="spell-choice" id="spell-fire" type="button" aria-pressed="true" title="1 – Blaue Feuerkugel, 9 Mana">
+      <span class="spell-icon">✦</span><span class="spell-name">Arkane Kugel</span><span class="spell-key">1 · 9 Mana</span></button>
+    <button class="spell-choice" id="spell-ice" type="button" aria-pressed="false" title="2 – Frostlanze, 14 Mana">
+      <span class="spell-icon">❄</span><span class="spell-name">Frostlanze</span><span class="spell-key">2 · 14 Mana</span></button>
+    <button class="spell-choice" id="spell-nova" type="button" aria-pressed="false" title="3 – Arkaner Schlag, 22 Mana">
+      <span class="spell-icon">✧</span><span class="spell-name">Arkanstoß</span><span class="spell-key">3 · 22 Mana</span></button>
+  </div>
   <div class="treasure-counter" aria-label="Gesammelte Münzen">◈ <strong id="gold-count">0</strong></div>
+  <button type="button" id="inventory-open" class="inventory-open" title="Inventar (I)" aria-label="Inventar öffnen">◈ Inventar [I]</button>
+  <div class="inventory-overlay" id="inventory-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="inventory-title">
+    <section class="inventory-dialog">
+      <div class="inventory-heading"><div><div class="shop-eyebrow">Ausrüstung &amp; Beutel</div>
+        <h2 id="inventory-title">Inventar</h2></div>
+        <button class="shop-close" id="inventory-close" type="button" aria-label="Inventar schließen">×</button></div>
+      <p class="inventory-brief">Klicke auf einen Gegenstand, um ihn anzulegen oder abzulegen. Dein Inventar wird automatisch gespeichert.</p>
+      <div class="inventory-section-title">Ausrüstungsplätze</div>
+      <div class="inventory-line"><div class="inventory-symbol">✦</div>
+        <div class="inventory-description"><strong>Arkaner Fokus</strong><span id="gear-focus">Nicht im Besitz</span></div>
+        <button id="inventory-focus" class="inventory-action" type="button" disabled>Gesperrt</button></div>
+      <div class="inventory-line"><div class="inventory-symbol">➟</div>
+        <div class="inventory-description"><strong>Windläuferstiefel</strong><span id="gear-boots">Nicht im Besitz</span></div>
+        <button id="inventory-boots" class="inventory-action" type="button" disabled>Gesperrt</button></div>
+      <div class="inventory-line"><div class="inventory-symbol">♥</div>
+        <div class="inventory-description"><strong>Hüteramulett</strong><span id="gear-charm">Nicht im Besitz</span></div>
+        <button id="inventory-charm" class="inventory-action" type="button" disabled>Gesperrt</button></div>
+      <div class="inventory-section-title">Rucksack</div>
+      <div class="inventory-line"><div class="inventory-symbol">✚</div>
+        <div class="inventory-description"><strong>Heiltrank</strong><span id="inventory-potions">0 Stück · Stellt 40 Leben wieder her</span></div>
+        <button id="inventory-drink" class="inventory-action" type="button" disabled>Trinken [4]</button></div>
+      <p class="inventory-brief">Ausrüstung gibt es bei Galdor. Einige Slimes lassen Heiltränke fallen.</p>
+    </section>
+  </div>
   <div class="shop-overlay" id="shop-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="shop-title">
     <section class="shop-dialog">
       <div class="shop-heading">
@@ -178,7 +262,7 @@
     <span class="sep desktop"></span>
     <span class="desktop"><kbd>Shift</kbd> Sprinten</span><span class="sep desktop"></span><span class="desktop"><kbd>E</kbd> Heilen</span><span class="sep desktop"></span><span class="desktop"><kbd>B</kbd> Händler</span>
   </div>
-  <div class="hint">NOBBY WORLD · MERCHANT & SAVE 0.5</div>
+  <div class="hint">NOBBY WORLD · SPELLS & INVENTORY 0.6</div>
   <script>
   (() => {
     'use strict';
