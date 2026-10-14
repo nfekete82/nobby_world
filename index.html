@@ -2184,30 +2184,47 @@
       ctx.fillText(text,merchant.x,merchant.y-113+bob);
       ctx.restore();
     }
-    // User-supplied 8-column x 7-row mage sheet, optimized to 1000x1001.
-    // Rows: front idle/cast, side idle/run/cast, back idle/cast.
+    // Packed from the user-supplied original at native sprite detail.
+    // Every cell is now an independently cropped 192x192 sprite; the seven
+    // original row origins were IRREGULAR, so naive height/7 slicing mixed
+    // the head, cape and magic from unrelated poses.
+    const MAGE_FRAME=192,MAGE_FOOT=173,MAGE_RENDER=150;
     const playerMageSheet=new Image();
-    playerMageSheet.src='assets/custom/player_mage.png';
-    function drawPlayerMageSprite(){
-      if(!playerMageSheet.complete||playerMageSheet.naturalWidth!==1000
-        ||playerMageSheet.naturalHeight!==1001)return false;
+    playerMageSheet.src='assets/custom/player_mage_aligned.png';
+    function mageAnimationFrame(){
       const casting=time<castUntil||time<shotCastUntil;
       const side=hero.dir===1||hero.dir===3;
       const back=hero.dir===2;
       const row=back?(casting?6:5):side?(casting?4:hero.walking?3:2):(casting?1:0);
-      const startCast=time<castUntil?castStart:shotCastStart;
-      const frame=casting?Math.min(7,Math.max(0,Math.floor((time-startCast)*13))):
-        hero.walking?Math.floor(hero.walkCycle*.67)%8:Math.floor(time*2.3)%8;
-      const fw=125,fh=143,h=121,w=h*fw/fh;
-      // Source's last row ends above the atlas tile bottom.
-      const feet=[136,140,139,139,139,137,85][row];
+      if(casting){
+        const isHealing=time<castUntil;
+        const began=isHealing?castStart:shotCastStart;
+        const duration=isHealing?Math.max(.35,castUntil-castStart):
+          Math.max(.12,shotCastUntil-shotCastStart);
+        const t=clamp((time-began)/duration,0,.9999);
+        // Frames 0-2 of the side/back cast rows include art that overflowed
+        // the original column boundaries. Choose clean pose frames instead.
+        const sequence=row===4||row===6?[3,4,5,6,7]:[0,1,2,3,4,5,6,7];
+        return {row,frame:sequence[Math.floor(t*sequence.length)]};
+      }
+      const frame=hero.walking?Math.floor(hero.walkCycle*.85)%8:
+        Math.floor(time*2.3)%8;
+      return {row,frame};
+    }
+    function drawPlayerMageSprite(){
+      if(!playerMageSheet.complete||playerMageSheet.naturalWidth!==1536
+        ||playerMageSheet.naturalHeight!==1344)return false;
+      const {row,frame}=mageAnimationFrame();
+      const size=MAGE_RENDER;
       ctx.save();
-      ctx.fillStyle='#07191b66';ctx.beginPath();
-      ctx.ellipse(hero.x,hero.y+1,19,7,0,0,TAU);ctx.fill();
+      ctx.fillStyle='#061a1a44';ctx.beginPath();
+      ctx.ellipse(hero.x,hero.y+1,20,6,0,0,TAU);ctx.fill();
       ctx.imageSmoothingEnabled=false;
       if(hero.dir===3){ctx.translate(hero.x*2,0);ctx.scale(-1,1);}
-      ctx.drawImage(playerMageSheet,frame*fw,row*fh,fw,fh,
-        hero.x-w/2,hero.y-h*feet/fh,w,h);
+      // One fixed sole anchor for every frame, including all spell rows.
+      ctx.drawImage(playerMageSheet,frame*MAGE_FRAME,row*MAGE_FRAME,
+        MAGE_FRAME,MAGE_FRAME,hero.x-size/2,
+        hero.y-size*MAGE_FOOT/MAGE_FRAME,size,size);
       ctx.restore();return true;
     }
     function drawHero(){
