@@ -2,17 +2,17 @@ name: nobby-world
 
 services:
   game:
-    image: nginx:stable-alpine
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nobby-world:local
     restart: unless-stopped
     ports:
       - "127.0.0.1:8088:80"
-    volumes:
-      # Only serve the game and its assets (not the Git repository or scripts).
-      - ./index.html:/usr/share/nginx/html/index.html:ro
-      - ./assets:/usr/share/nginx/html/assets:ro
+    # No file bind mounts: prevents OrbStack permission-related 403 responses.
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
-      interval: 30s
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/ || exit 1"]
+      interval: 10s
       timeout: 5s
       retries: 3
       start_period: 10s
