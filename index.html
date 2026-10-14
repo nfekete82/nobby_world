@@ -729,7 +729,7 @@
         hp:spec.hp,maxHp:spec.hp,speed:spec.speed,baseSpeed:spec.speed,damage:spec.damage,
         reach:spec.reach,radius:spec.radius,xp:spec.xp,
         attackDelay:spec.attackDelay,respawn:spec.respawn,ranged:!!spec.ranged,
-        phase:id*1.76,attackAt:time+2.5,
+        phase:id*1.76,attackAt:time+2.5,attackAnimStart:0,attackAnimUntil:0,
         hitUntil:0,respawnAt:0,deadAt:0,selectedUntil:0,slowUntil:0,
         aggroUntil:0,staggerUntil:0,state:'idle',provoked:false,bossPhase:1,
         chasePath:[],nextRepathAt:0,pathHeroX:x,pathHeroY:y};
@@ -995,6 +995,7 @@
           if(time>=m.respawnAt){
             m.x=m.homeX;m.y=m.homeY;m.hp=m.maxHp;
             m.speed=m.baseSpeed;m.attackAt=time+1.3;
+            m.attackAnimStart=0;m.attackAnimUntil=0;
             m.aggroUntil=0;m.staggerUntil=0;m.slowUntil=0;m.state='idle';
           m.bossPhase=1;
             m.provoked=false;m.chasePath=[];m.nextRepathAt=0;
@@ -1067,6 +1068,10 @@
               damage:m.damage,age:0,life:2.1,kind:m.kind});
             m.attackAt=time+m.attackDelay;
           }else if(rangeNow<m.reach){
+            if(m.kind==='goblin'){
+              m.attackAnimStart=time;
+              m.attackAnimUntil=time+.55;
+            }
             damageHero(m.damage);
             m.attackAt=time+m.attackDelay;
           }
@@ -1134,6 +1139,38 @@
       }
     }
 
+    // User-supplied eight-frame transparent forest goblin animation.
+    // 2048x682 PNG, arranged horizontally as 8 frames of 256x682.
+    // This is committed under assets/custom/, separate from Tiny Swords Free Pack.
+    const forestGoblinSheet=new Image();
+    forestGoblinSheet.src='assets/custom/forest_goblin.png';
+    function drawForestGoblinSprite(m,bounce=0){
+      if(!forestGoblinSheet.complete
+        ||forestGoblinSheet.naturalWidth!==2048
+        ||forestGoblinSheet.naturalHeight!==682)return false;
+      const attacking=time<(m.attackAnimUntil||0);
+      let frame;
+      if(attacking){
+        // 1 = wind-up, 2 = lifted spear, 3 = slash, 4/5 = thrust, 6 = recovery.
+        const elapsed=Math.max(0,time-(m.attackAnimStart||0));
+        frame=Math.min(6,1+Math.floor(elapsed/.09));
+      }else if(m.state==='chase'){
+        // Use a restrained stance cycle while pursuing; don't replay sword strikes.
+        frame=[0,1,7,1][Math.floor(time*6+m.phase)%4];
+      }else{
+        frame=Math.floor(time*2.5+m.phase)%2===0?0:7;
+      }
+      const h=185,w=h*256/682;
+      const y=m.y-h*(658/682)-bounce;
+      ctx.save();ctx.imageSmoothingEnabled=false;
+      // The supplied goblin faces right; mirror when the hero is on the left.
+      if(hero.x<m.x){ctx.translate(m.x*2,0);ctx.scale(-1,1);}
+      ctx.drawImage(forestGoblinSheet,frame*256,0,256,682,
+        m.x-w/2,y,w,h);
+      ctx.restore();
+      return true;
+    }
+
     function drawAdventureEnemy(m){
       if(m.kind==='slime'){drawSlime(m);return;}
       if(m.hp<=0&&time-m.deadAt>.45)return;
@@ -1150,8 +1187,8 @@
       // custom cartoon opponent if those sprite files are unavailable.
       const key=m.kind==='goblin'?(m.state==='chase'?'redWarriorRun':'redWarrior'):
         raider?(m.state==='chase'?'redArcherRun':'redArcher'):null;
-      let rendered=false;
-      if(key&&tiny[key]){
+      let rendered=m.kind==='goblin'&&drawForestGoblinSprite(m,bounce);
+      if(!rendered&&key&&tiny[key]){
         const fw=192,fh=192,sz=raider?167:158;
         rendered=sprite(key,Math.floor(time*(m.state==='chase'?10:6)+m.phase)%8,
           fw,fh,m.x-sz/2,m.y-sz*.74-bounce,sz,sz);
@@ -1215,7 +1252,7 @@
       }
       ctx.restore();
       const bw=boss?145:elite?100:67;
-      const by=m.y-(boss?250:elite?184:raider?130:110)-bounce;
+      const by=m.y-(boss?250:elite?184:raider?130:m.kind==='goblin'&&rendered?174:110)-bounce;
       const fraction=clamp(m.hp/m.maxHp,0,1);
       ctx.fillStyle='#15202ddf';ctx.fillRect(m.x-bw/2-3,by-3,bw+6,15);
       ctx.fillStyle='#603347';ctx.fillRect(m.x-bw/2,by,bw,9);
