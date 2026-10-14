@@ -4,7 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#171c19">
-  <title>Nobby World – Smaragdwald</title>
+  <title>Nobby World – 3D-Waldabenteuer</title>
+  <link rel="icon" href="data:,">
   <style>
     :root { color-scheme: dark; font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
     * { box-sizing: border-box; }
@@ -320,13 +321,26 @@
       .spellbar{bottom:170px;}.spell-choice{width:108px;height:78px;}.resource-rune{width:32px;height:32px;}
       .footer{max-width:calc(100vw - 24px);bottom:16px;}.inventory-open{top:112px;right:16px;}
     }
+
+    .spell-icon,.item-icon {background-image:url('assets/3d/ui.png');image-rendering:auto;}
+    #world { position:fixed;inset:0;z-index:1; }
+    #scene-3d { position:fixed;inset:0;z-index:0;image-rendering:auto;pointer-events:none; }
+    .hud,.footer,.zone-banner,.treasure-counter,.topright { z-index:3; }
+    .hud { pointer-events:none; }.render-status { position:fixed;left:20px;bottom:60px;z-index:8;font-size:11px;color:#efe6be; }
+    .hud { top:22px;left:26px; }.hud h1 {font-size:32px;text-shadow:0 2px 8px #203c2e;}.subtitle{max-width:245px;}
+    .resource-hud {width:min(460px,calc(100vw - 24px));background:#173c33ed;border-color:#cfba81;border-radius:12px;box-shadow:0 5px 22px #102b2766,inset 0 1px #fff3;}
+    .spell-choice {background:#173c33ed;border-radius:10px;box-shadow:0 4px 12px #12352b55;}
+    .spell-choice[aria-pressed="true"]{background:#345d52;border-color:#ecd497;box-shadow:0 0 0 1px #d7bc7e66,0 4px 12px #12352b55;}
+    .zone-banner,.audio-control,.inventory-open,.footer {background:#173c33e6;border-radius:8px;border-color:#c4b58188;box-shadow:0 4px 16px #10322844;}
+    .boss-hud {top:82px;}.shop-dialog,.inventory-dialog{background:linear-gradient(130deg,#284c40,#162f2b);border-radius:14px;}
+    @media(max-width:680px){.hud h1{font-size:25px;}.hud{left:16px;}.render-status{bottom:48px;}.boss-hud{top:154px;}}
   </style>
 </head>
 <body>
   <canvas id="world" aria-label="Spielwelt Nobby World"></canvas>
   <div class="loading" id="loading"><span>Nobby World</span><small>Dein Abenteuer beginnt …</small></div>
   <div class="hud">
-    <div class="kicker">Smaragdwald · Ein magisches Abenteuer</div>
+    <div class="kicker">Eine Welt voller Magie</div>
     <h1>Nobby World</h1>
     <div class="subtitle">Erkunde den Wald · Monster anklicken zum Angreifen</div>
   </div>
@@ -429,7 +443,8 @@
     <span class="sep desktop"></span>
     <span class="desktop"><kbd>Shift</kbd> Sprinten</span><span class="sep desktop"></span><span class="desktop"><kbd>E</kbd> Heilen</span><span class="sep desktop"></span><span class="desktop"><kbd>B</kbd> Händler</span>
   </div>
-  <div class="hint">NOBBY WORLD · EMERALD EDITION</div>
+  <div class="hint">NOBBY WORLD · 3D EDITION</div><span id="render-status" class="render-status" role="status">3D-Welt wird geladen …</span>
+  <script type="module" src="assets/3d/world.js"></script>
   <script>
   (() => {
     'use strict';
@@ -757,8 +772,8 @@
     function addMonster(kind,x,y,overrides={}){
       const archetypes={
         slime:{name:'Waldschleim',hp:66,speed:90,damage:8,reach:42,attackDelay:1.35,respawn:10,xp:15,radius:32},
-        goblin:{name:'Waldkobold',hp:112,speed:110,damage:10,reach:45,attackDelay:1.55,respawn:15,xp:25,radius:40,ranged:true,minRange:55,maxRange:345,projectileSpeed:275,projectileColor:'red'},
-        raider:{name:'Dünenräuber',hp:135,speed:98,damage:8,reach:39,attackDelay:2.4,respawn:18,xp:32,radius:41,ranged:true},
+        goblin:{name:'Waldkobold',hp:112,speed:110,damage:10,reach:45,attackDelay:1.55,respawn:15,xp:25,radius:40,weapon:'spear',ranged:false},
+        raider:{name:'Dünenräuber',hp:135,speed:98,damage:8,reach:39,attackDelay:2.4,respawn:18,xp:32,radius:41,weapon:'bow',ranged:true},
         scarab:{name:'Sandkäfer',hp:118,speed:131,damage:10,reach:40,attackDelay:1.05,respawn:16,xp:28,radius:35},
         elite:{name:'Wurzelhüter · ELITE',hp:255,speed:95,damage:18,reach:62,attackDelay:1.75,respawn:28,xp:70,radius:63},
         boss:{name:'MOORKÖNIG · WALDBOSS',hp:560,speed:83,damage:20,reach:72,attackDelay:2.8,respawn:60,xp:200,radius:85}
@@ -770,7 +785,7 @@
       const m={id,kind,name:spec.name,x,y,homeX:x,homeY:y,
         hp:spec.hp,maxHp:spec.hp,speed:spec.speed,baseSpeed:spec.speed,damage:spec.damage,
         reach:spec.reach,radius:spec.radius,xp:spec.xp,
-        attackDelay:spec.attackDelay,respawn:spec.respawn,ranged:!!spec.ranged,
+        attackDelay:spec.attackDelay,respawn:spec.respawn,weapon:spec.weapon??'melee',ranged:spec.weapon==='bow'&&!!spec.ranged,
         minRange:spec.minRange??60,maxRange:spec.maxRange??330,
         projectileSpeed:spec.projectileSpeed??285,projectileColor:spec.projectileColor??'orange',
         phase:id*1.76,attackAt:time+2.5,attackAnimStart:0,attackAnimUntil:0,
@@ -1121,24 +1136,19 @@
               radius:m.bossPhase===2?126:106,
               damage:m.bossPhase===2?25:18,owner:m.id});
             m.attackAt=time+(m.bossPhase===2?1.85:2.7);
-          }else if(m.ranged&&rangeNow<m.maxRange&&rangeNow>m.minRange){
-            // Different elemental colours distinguish the forest goblin from
-            // the dune raider. Aim at the hero's body from the casting hand.
+          }else if(m.ranged&&m.weapon==='bow'&&rangeNow<m.maxRange&&rangeNow>m.minRange){
+            // Only a visibly equipped ranged weapon can fire; these are bow arrows.
             const side=hero.x>=m.x?1:-1;
             const shotX=m.x+(m.kind==='goblin'?side*22:0);
             const shotY=m.y-(m.kind==='goblin'?53:43);
             const deltaX=hero.x-shotX,deltaY=hero.y-20-shotY;
             const length=Math.max(.01,Math.hypot(deltaX,deltaY));
-            if(m.kind==='goblin'){
-              m.attackAnimStart=time;
-              m.attackAnimUntil=time+.55;
-              burst(shotX,shotY,'#ff6076',9);
-            }
+            m.attackAnimStart=time;m.attackAnimUntil=time+.55;
             enemyShots.push({x:shotX,y:shotY,
               vx:deltaX/length*m.projectileSpeed,
               vy:deltaY/length*m.projectileSpeed,
               damage:m.damage,age:0,life:2.1,kind:m.kind,
-              color:m.projectileColor});
+              color:m.projectileColor,weapon:'bow'});
             m.attackAt=time+m.attackDelay;
           }else if(rangeNow<m.reach){
             if(m.kind==='goblin'||m.kind==='elite'){
@@ -1960,11 +1970,17 @@
       {x:2650,y:2060,cols:4,rows:3},
       {x:4220,y:1910,cols:3,rows:3}
     ];
+    const river={x:2020,width:108,bridgeY:pathAt(2020),bridgeHalf:78};
+    const riverCenter=y=>river.x+36*Math.sin(y/245)+18*Math.sin(y/93);
+    function riverContains(x,y,margin=0){
+      return Math.abs(x-riverCenter(y))<river.width/2+margin&&Math.abs(y-river.bridgeY)>river.bridgeHalf-margin;
+    }
+    const lakeRadius=(lake,angle)=>1+.085*Math.sin(angle*3+lake.x*.01)+.055*Math.cos(angle*5)+.028*Math.sin(angle*8);
     function lakeContains(x,y,margin=0){
       return lakes.some(l=>{
         const cx=l.x+l.cols*LAKE_TILE/2,cy=l.y+l.rows*LAKE_TILE/2;
         const rx=l.cols*LAKE_TILE/2-24+margin,ry=l.rows*LAKE_TILE/2-24+margin;
-        return ((x-cx)/rx)**2+((y-cy)/ry)**2<1;
+        const nx=(x-cx)/rx,ny=(y-cy)/ry;return Math.hypot(nx,ny)<lakeRadius(l,Math.atan2(ny,nx));
       });
     }
     function drawLakeTiles(){
@@ -2210,36 +2226,38 @@
       for(let i=0;i<9;i++)for(let kind of ['oak','pine'])atlas.set(`${kind}:${i}`,treeSprite(kind,i));
       let count=0, attempts=0;
       // Approximately 25% less forest density despite the much larger overall map.
-      while(count<335 && attempts<5400){attempts++;
+      while(count<88 && attempts<5400){attempts++;
         const x=rnd(65,BIOMES.forestEnd-30),y=rnd(75,WORLD.h-60);
         if(Math.abs(y-pathAt(x))<rnd(125,185)||dist(x,y,start.x,start.y)<260)continue;
+        if(dist(x,y,2430,pathAt(2430)-205)<235||dist(x,y,start.x-30,start.y+260)<230)continue;
         if(dist(x,y,2860,pathAt(2860)-190)<270)continue; // boss clearing
-        if(lakeContains(x,y,85))continue;
+        if(lakeContains(x,y,100)||riverContains(x,y,100))continue;
+        if(plateaus.some(p=>Math.abs(x-p.stairsX)<200&&y>p.y+p.h-80&&y<p.y+p.h+450))continue;
         if(plateaus.some(p=>x>p.x-75&&x<p.x+p.w+75&&y>p.y-60&&y<p.y+p.h+180))
           continue;
         if(villageProps.some(p=>dist(x,y,start.x+p.dx,pathAt(start.x+p.dx)+p.dy)<p.size*.6))continue;
         const rad=rnd(22,35);
-        if(trees.some(t=>dist(t.x,t.y,x,y)<t.r+rad+rnd(12,34)))continue;
+        if(trees.some(t=>dist(t.x,t.y,x,y)<Math.max(210,t.r+rad+120)))continue;
         const kind=rand()<.48?'pine':'oak';
         trees.push({x,y,r:rad,kind,variant:Math.floor(rand()*9),scale:rnd(.77,1.22),wind:rnd(0,TAU)});count++;
       }
       // Rocks and stumps are decoration; solid trunks are the actual obstacles.
-      for(let i=0;i<170;i++){
+      for(let i=0;i<110;i++){
         const x=rnd(35,WORLD.w-35),y=rnd(35,WORLD.h-35);
         if(Math.abs(y-pathAt(x))<rnd(48,100))continue;
-        if(dist(x,y,start.x,start.y)<75||lakeContains(x,y,25))continue;
-        rocks.push({x,y,s:rnd(6,17),type:rand()<.28?'mushroom':'rock'});
+        if(dist(x,y,start.x,start.y)<90||lakeContains(x,y,40)||riverContains(x,y,50))continue;
+        rocks.push({x,y,s:rnd(6,17),type:x<BIOMES.forestEnd&&rand()<.28?'mushroom':'rock'});
       }
-      for(let i=0;i<250;i++){
-        const x=rnd(0,WORLD.w),y=rnd(0,WORLD.h);
-        if(Math.abs(y-pathAt(x))<70||lakeContains(x,y,25))continue;
+      for(let i=0;i<155;i++){
+        const x=rnd(0,BIOMES.forestEnd-70),y=rnd(0,WORLD.h);
+        if(Math.abs(y-pathAt(x))<90||lakeContains(x,y,45)||riverContains(x,y,55))continue;
         details.push({x,y,s:rnd(5,11),type:rand()<.62?'fern':'flowers',phase:rnd(0,TAU)});
       }
       for(let i=0;i<95;i++)fireflies.push({x:rnd(0,BIOMES.forestEnd),y:rnd(0,WORLD.h),z:rnd(0,TAU),phase:rnd(0,TAU),speed:rnd(.5,1.5)});
       // Sparse desert props (decorative, non-blocking) make wide combat clearings.
-      for(let i=0;i<115;i++){
+      for(let i=0;i<60;i++){
         const x=rnd(BIOMES.forestEnd+150,WORLD.w-50),y=rnd(70,WORLD.h-70);
-        if(Math.abs(y-pathAt(x))<105)continue;
+        if(Math.abs(y-pathAt(x))<115||lakeContains(x,y,65)||riverContains(x,y,65))continue;
         details.push({x,y,s:rnd(14,28),type:rand()<.57?'cactus':'drybush',phase:rnd(0,TAU)});
       }
     }
@@ -2501,10 +2519,15 @@
       ctx.fillStyle='#dec698';ctx.beginPath();ctx.arc(0,-33,3.5,0,TAU);ctx.fill();
       ctx.restore();
     }
+    const structures=[
+      {x:start.x-480,y:pathAt(start.x-480)-210,w:205,h:175},
+      {x:start.x-160,y:pathAt(start.x-160)-230,w:235,h:175}
+    ];
     function collides(x,y){
       if(x<25||y<32||x>WORLD.w-25||y>WORLD.h-25)return true;
       if(dist(x,y,merchant.x,merchant.y)<24)return true;
-      if(lakeContains(x,y,12))return true;
+      if(structures.some(o=>Math.abs(x-o.x)<o.w/2+12&&Math.abs(y-o.y)<o.h/2+12))return true;
+      if(lakeContains(x,y,12)||riverContains(x,y,12))return true;
       for(const t of trees)if(Math.abs(t.x-x)<62 && Math.abs(t.y-y)<62 && dist(x,y,t.x,t.y)<t.r+12)return true;
       return false;
     }
@@ -2621,7 +2644,15 @@
       const follow=1-Math.exp(-dt*7.5);
       camera.x=lerp(camera.x,tx,follow);camera.y=lerp(camera.y,ty,follow);
     }
+    let sceneRenderer=null,sceneFailed=false;
+    function sceneState(){return {hero,enemies,trees,rocks,details,lakes,river,riverCenter,lakeRadius,plateaus,plateauBand,heightAt,lakeContains,riverContains,pathAt,merchant,start,structures,WORLD,BIOMES,fireballs,enemyShots,bossZones,loot,combatParticles,floatingNumbers,impactBursts,resources,target,time,shotCastUntil,shotCastStart,castUntil,castStart,heroInvulnerableUntil};}
     function render(){
+      if(window.Nobby3D&&!sceneFailed){
+        try{
+          if(!sceneRenderer){sceneRenderer=window.Nobby3D.create(canvas,sceneState());ground.width=ground.height=1;atlas.clear();}
+          sceneRenderer.render(sceneState());return;
+        }catch(error){sceneFailed=true;console.error('3D-Renderer nicht verfügbar:',error);ground.width=WORLD.w;ground.height=WORLD.h;drawGround();for(let i=0;i<9;i++)for(const kind of ['oak','pine'])atlas.set(`${kind}:${i}`,treeSprite(kind,i));canvas.style.opacity='1';document.getElementById('render-status').textContent='3D nicht verfügbar · 2D-Ansicht';}
+      }
       const {w,h,dpr}=viewport;
       ctx.setTransform(dpr,0,0,dpr,0,0);ctx.imageSmoothingEnabled=false;
       ctx.fillStyle='#172d25';ctx.fillRect(0,0,w,h);
@@ -2760,9 +2791,13 @@
       if(e.pointerType==='mouse'&&e.button!==0)return;
       e.preventDefault();
       const rect=canvas.getBoundingClientRect();
-      const x=clamp((e.clientX-rect.left)/ZOOM+camera.x,26,WORLD.w-26);
-      const y=clamp((e.clientY-rect.top)/ZOOM+camera.y,33,WORLD.h-26);
-      if(dist(x,y,merchant.x,merchant.y-46)<54){
+      const point=sceneRenderer?.pick(e.clientX,e.clientY);
+      if(sceneRenderer&&!point)return;
+      const x=clamp(point?point.x:(e.clientX-rect.left)/ZOOM+camera.x,26,WORLD.w-26);
+      const y=clamp(point?point.y:(e.clientY-rect.top)/ZOOM+camera.y,33,WORLD.h-26);
+      if(point?.enemy){castFireball(point.enemy);return;}
+
+      if(point?.merchant||dist(x,y,merchant.x,merchant.y-46)<54){
         if(!openShop()){
           route=routeTo(merchant.x,merchant.y+57);
           pendingMerchant=route.length>0;

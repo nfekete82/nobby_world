@@ -13,7 +13,7 @@ const bootAnchor = 'drawGround();generateForest();buildNav();spawnMonsters();res
 assert.ok(script.includes(bootAnchor), 'game initialization changed; adjust test hook');
 const instrumented = script.replace(
   bootAnchor,
-  bootAnchor + '\nwindow.__test={enemies,fireballs,resources,progress,loot,hero,merchant,WORLD,BIOMES,trees,details,biomeAt,pathAt,drawAdventureEnemy,drawForestGoblinSprite,forestGoblinSheet,drawRootGuardianSprite,rootGuardianSheet,drawForestBossSprite,forestBossSheet,drawNobbySprite,nobbyAnimationFrame,nobbySprites,nobbySpriteLoaded,plateaus,heightAt,stairCrossing,canTraverse,moveHero,collides,lakes,lakeContains,drawLakeTiles,drawMountainTiles,organicPlateauImage,plateauBand,paintRoadTiles,roadAtlas,lakeAtlas,cliffAtlas,groundCtx:g,bossZones,enemyShots,equipment,equipped,bag,selectSpell,openInventory,closeInventory,toggleEquipment,drinkPotion,spellSpecs,camera,update,castFireball,provokeMonster,routeTo,hurtMonster,grantXP,damageHero,drawCombatEffects,drawMerchant,openShop,closeShop,buyItem,saveGame,route:()=>route,target:()=>target,shopState:()=>shopOpen};'
+  bootAnchor + '\nwindow.__test={enemies,fireballs,resources,progress,loot,hero,merchant,WORLD,BIOMES,trees,rocks,details,biomeAt,pathAt,drawAdventureEnemy,drawForestGoblinSprite,forestGoblinSheet,drawRootGuardianSprite,rootGuardianSheet,drawForestBossSprite,forestBossSheet,drawNobbySprite,nobbyAnimationFrame,nobbySprites,nobbySpriteLoaded,river,riverCenter,riverContains,lakeRadius,structures,plateaus,heightAt,stairCrossing,canTraverse,moveHero,collides,lakes,lakeContains,drawLakeTiles,drawMountainTiles,organicPlateauImage,plateauBand,paintRoadTiles,roadAtlas,lakeAtlas,cliffAtlas,groundCtx:g,bossZones,enemyShots,equipment,equipped,bag,selectSpell,openInventory,closeInventory,toggleEquipment,drinkPotion,spellSpecs,camera,update,castFireball,provokeMonster,routeTo,hurtMonster,grantXP,damageHero,drawCombatEffects,drawMerchant,openShop,closeShop,buyItem,saveGame,route:()=>route,target:()=>target,shopState:()=>shopOpen};'
 );
 
 function boot(initialSave = null) {
@@ -605,22 +605,22 @@ test('root guardian draws the correct eight-frame sheet, including melee attack 
     'root guardian must show windup/slam/recovery frames during the melee animation');
 });
 
-test('goblin now fires crimson magic shots at range with casting animation', () => {
+test('spear goblins pursue and strike in melee but never shoot', () => {
   const {g}=boot(),kobold=g.enemies.find(m=>m.kind==='goblin');
-  assert.equal(kobold.ranged,true);
-  g.hero.x=kobold.x+190;g.hero.y=kobold.y;
-  g.provokeMonster(kobold);
-  kobold.attackAt=0;
-  g.update(.05);
-  const shot=g.enemyShots.find(s=>s.kind==='goblin');
-  assert.ok(shot,'a distant goblin should launch a spell');
-  assert.equal(shot.color,'red');
-  assert.equal(shot.damage,10);
-  assert.ok(Math.hypot(shot.vx,shot.vy)>250);
-  assert.ok(kobold.attackAnimUntil>0,'the spell should trigger a sprite strike animation');
+  assert.equal(kobold.ranged,false);assert.equal(kobold.weapon,'spear');
+  g.hero.x=kobold.x+190;g.hero.y=kobold.y;g.provokeMonster(kobold);kobold.attackAt=0;
+  for(let i=0;i<8;i++)g.update(.05);
+  assert.equal(g.enemyShots.filter(s=>s.kind==='goblin').length,0);
+  assert.equal(kobold.state,'chase');
+  // An accidental ranged flag must not enable a non-ranged weapon.
+  kobold.ranged=true;kobold.attackAt=0;g.update(.05);
+  assert.equal(g.enemyShots.filter(s=>s.kind==='goblin').length,0);
+  kobold.ranged=false;g.hero.x=kobold.x+25;g.hero.y=kobold.y;kobold.attackAt=0;
+  const hp=g.resources.health;g.update(.05);
+  assert.equal(g.resources.health,hp-kobold.damage);assert.ok(kobold.attackAnimUntil>0);
 });
 
-test('goblin projectiles damage the hero, while dune raider magic stays orange', () => {
+test('bow raider arrows fire and damage the hero', () => {
   const {g}=boot(),raider=g.enemies.find(m=>m.kind==='raider');
   g.hero.x=raider.x+185;g.hero.y=raider.y;
   g.provokeMonster(raider);raider.attackAt=0;
@@ -633,7 +633,7 @@ test('goblin projectiles damage the hero, while dune raider magic stays orange',
   g.enemyShots.length=0;
   const before=g.resources.health;
   g.enemyShots.push({x:g.hero.x-6,y:g.hero.y-20,vx:0,vy:0,
-    color:'red',damage:10,age:0,life:1.5,kind:'goblin'});
+    color:'orange',damage:10,age:0,life:1.5,kind:'raider',weapon:'bow'});
   g.update(.05);
   assert.equal(g.resources.health,before-10);
 });
@@ -844,4 +844,30 @@ test('new hill still forbids wall climbing but permits stairs', () => {
   assert.ok(edge.top>mid.top,'plateau shape remains organic');
   assert.equal(g.canTraverse(hill.stairsX,mid.lip+3,hill.stairsX,mid.lip-3),true);
   assert.equal(g.canTraverse(edgeX,edge.lip+3,edgeX,edge.lip-3),false);
+});
+
+
+test('world placement keeps all land props outside water and trees spaced apart', () => {
+  const {g}=boot();assert.ok(g.trees.length<=88&&g.trees.length>30);
+  for(const o of [...g.rocks,...g.details,...g.trees]){
+    assert.equal(g.lakeContains(o.x,o.y),false,`land prop in lake at ${o.x},${o.y}`);
+    assert.equal(g.riverContains(o.x,o.y),false,`land prop in river at ${o.x},${o.y}`);
+  }
+  for(let i=0;i<g.trees.length;i++)for(let j=i+1;j<g.trees.length;j++)
+    assert.ok(Math.hypot(g.trees[i].x-g.trees[j].x,g.trees[i].y-g.trees[j].y)>=210);
+});
+
+test('river blocks walking except at its actual wooden bridge', () => {
+  const {g}=boot();const y=g.river.bridgeY,x=g.riverCenter(y);
+  assert.equal(g.riverContains(x,y),false);assert.equal(g.collides(x,y),false);
+  assert.equal(g.riverContains(g.riverCenter(y+220),y+220),true);
+  assert.equal(g.collides(g.riverCenter(y+220),y+220),true);
+  const route=g.routeTo(x+160,y,x-160,y);
+  assert.ok(route.length>0);let previous={x:x-160,y};
+  for(const p of route){assert.equal(g.riverContains(p.x,p.y,12),false);assert.equal(g.canTraverse(previous.x,previous.y,p.x,p.y),true);previous=p;}
+});
+
+test('every shooting enemy carries a bow and buildings have solid footprints', () => {
+  const {g}=boot();assert.ok(g.enemies.filter(m=>m.ranged).every(m=>m.weapon==='bow'&&m.kind==='raider'));
+  for(const o of g.structures)assert.equal(g.collides(o.x,o.y),true);
 });

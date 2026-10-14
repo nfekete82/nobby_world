@@ -1,0 +1,152 @@
+{
+  "browser": "Chrome/WebGL via Playwright",
+  "diagnostics": {
+    "engine": "Three.js",
+    "version": "186",
+    "webgl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+    "texturesReady": true,
+    "drawCalls": 752,
+    "triangles": 378245,
+    "geometries": 241,
+    "trees": 88,
+    "fadedTrees": 0,
+    "models": 24,
+    "projection": "orthographic 3D",
+    "shadows": true
+  },
+  "sceneDiagnostics": {
+    "village": {
+      "engine": "Three.js",
+      "version": "186",
+      "webgl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+      "texturesReady": true,
+      "drawCalls": 2428,
+      "triangles": 2357984,
+      "geometries": 159,
+      "trees": 88,
+      "fadedTrees": 0,
+      "models": 24,
+      "projection": "orthographic 3D",
+      "shadows": true
+    },
+    "bridge": {
+      "engine": "Three.js",
+      "version": "186",
+      "webgl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+      "texturesReady": true,
+      "drawCalls": 2372,
+      "triangles": 2326010,
+      "geometries": 179,
+      "trees": 88,
+      "fadedTrees": 0,
+      "models": 24,
+      "projection": "orthographic 3D",
+      "shadows": true
+    },
+    "forest-boss": {
+      "engine": "Three.js",
+      "version": "186",
+      "webgl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+      "texturesReady": true,
+      "drawCalls": 1789,
+      "triangles": 1576315,
+      "geometries": 202,
+      "trees": 88,
+      "fadedTrees": 1,
+      "models": 24,
+      "projection": "orthographic 3D",
+      "shadows": true
+    },
+    "lake": {
+      "engine": "Three.js",
+      "version": "186",
+      "webgl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+      "texturesReady": true,
+      "drawCalls": 1894,
+      "triangles": 2157810,
+      "geometries": 214,
+      "trees": 88,
+      "fadedTrees": 0,
+      "models": 24,
+      "projection": "orthographic 3D",
+      "shadows": true
+    },
+    "plateau": {
+      "engine": "Three.js",
+      "version": "186",
+      "webgl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+      "texturesReady": true,
+      "drawCalls": 2230,
+      "triangles": 2145794,
+      "geometries": 226,
+      "trees": 88,
+      "fadedTrees": 0,
+      "models": 24,
+      "projection": "orthographic 3D",
+      "shadows": true
+    },
+    "desert": {
+      "engine": "Three.js",
+      "version": "186",
+      "webgl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+      "texturesReady": true,
+      "drawCalls": 752,
+      "triangles": 378245,
+      "geometries": 241,
+      "trees": 88,
+      "fadedTrees": 0,
+      "models": 24,
+      "projection": "orthographic 3D",
+      "shadows": true
+    }
+  },
+  "placement": {
+    "landInWater": 0,
+    "bowsOnly": true
+  },
+  "projection": {
+    "dx": 0,
+    "dy": 4.547473508864641e-13
+  },
+  "plateauPick": {
+    "dx": 0,
+    "dy": 0.0000020435874148461153
+  },
+  "memory": {
+    "before": 257,
+    "after": 257
+  },
+  "scenes": [
+    "village",
+    "bridge",
+    "forest-boss",
+    "lake",
+    "plateau",
+    "desert"
+  ],
+  "checks": [
+    "genuine WebGL meshes, shadows and loaded ImageGen material textures",
+    "WASD movement",
+    "real 3D mouse selection for frost and arcane",
+    "frost zero damage",
+    "shop and inventory",
+    "healing 50→85",
+    "save write",
+    "screen/world projection round-trip including elevated plateau",
+    "no new geometries per frame",
+    "all land props outside water",
+    "only bow carriers fire",
+    "390px mobile viewport"
+  ],
+  "errors": [],
+  "missing": [],
+  "warnings": [],
+  "deployment": {
+    "url": "http://localhost:8088",
+    "status": "",
+    "debugHook": false,
+    "webgl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+    "errors": [],
+    "missing": []
+  }
+}

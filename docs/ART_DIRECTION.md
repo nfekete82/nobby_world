@@ -1,3 +1,5 @@
+> Archived pixel-art direction. The accepted 3D target supersedes this document; see [3D art contract](3D_ART_DIRECTION.md).
+
 # Nobby World — Emerald Edition art contract
 
 This document governs new artwork. The active renderer uses the six PNG atlases in

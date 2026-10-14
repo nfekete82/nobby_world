@@ -1,23 +1,30 @@
-# Nobby World — Emerald Edition
+# Nobby World — 3D Adventure
 
-A standalone browser action RPG with a coherent fantasy pixel-art world. Play as
-Nobby, explore the Smaragdwald, climb plateaus via their stairs and follow the road
-through the badlands to the desert. Existing savegames remain compatible.
+An original stylized 3D browser RPG: animated models, warm light and shadows,
+hand-painted ImageGen materials, a winding stream and wooden bridge, organic lake
+banks, rocky plateaus, a small village, forest clearings and desert creatures.
+Nobby keeps his brown hair, blue/gold robe and cyan crystal staff.
 
-## Run
+The accepted target is a real 3D world inspired by the user's Secret-of-Mana remake
+reference. The supplied Tiny Swords pack informs simplified fantasy proportions;
+its 2D sprites are not used as substitutes for 3D models. The previous pixel renderer
+is retained as a fallback if WebGL initialization fails.
+
+## Play
 
 ```sh
 npm start
 ```
 
-Open http://localhost:8088. No build, external asset download or Tiny Swords ZIP is
-needed for the active Emerald artwork. For OrbStack/Docker:
+Open http://localhost:8088. No build step, CDN or ZIP import is needed. Chrome,
+Safari or another browser with WebGL 2 is required for the 3D renderer.
+For the existing OrbStack/Docker setup:
 
 ```sh
 docker compose up -d --build --force-recreate
 ```
 
-Reload with Cmd+Shift+R after updating cached artwork.
+Reload with Cmd+Shift+R after updating. Existing browser saves remain compatible.
 
 ## Controls
 
@@ -25,7 +32,7 @@ Reload with Cmd+Shift+R after updating cached artwork.
 | --- | --- |
 | Move | WASD, arrows, click/tap ground |
 | Sprint | Shift |
-| Attack | Click/tap enemy |
+| Attack | Click/tap a 3D enemy |
 | Arcane Orb | 1; 9 mana, 26 base damage |
 | Frost Slow | 2; 14 mana, zero damage, 3-second slow |
 | Heal | E; 25 mana, restores up to 35 HP |
@@ -35,53 +42,57 @@ Reload with Cmd+Shift+R after updating cached artwork.
 | Close panels | Escape |
 | Toggle sound / fullscreen | M / F |
 
-The world is 5200×2800 units, with impassable lakes and stair-only plateau access.
-There are nine slimes, four goblins, three ranged desert raiders, four scarabs, a
-Wurzelhüter elite and the Moorkönig boss. Aggression, ranged attacks, boss ground
-warnings, respawns, XP, levels, gold, equipment and automatic browser saving retain
-the previous mechanics. Saves use `nobby_world_save_v1` in localStorage.
+Spear goblins use melee attacks. Only raiders visibly equipped with bows shoot;
+their projectiles are arrows. Slimes, scarabs, guardians and the boss do not shoot.
+The boss retains its dodgeable ground slam. XP, levels, gold, equipment, loot,
+respawns, mana and saves use the existing simulation and `nobby_world_save_v1`.
 
-## Artwork
+The world remains 5200×2800 simulation units. There are at most 88 spaced trees
+rather than 335; paths, village, boss/elite areas and stair approaches stay readable.
+Land props reject both lakes and the stream. The stream can be crossed at the
+wooden bridge; lakes and cliff walls remain solid. Houses now have solid footprints.
 
-Six ImageGen-created production atlases in `assets/art/` cover 100 sprite cells
-plus grass, road, water, sand, cliff and stair materials. Nobby has separate idle,
-run, attack and heal rows. The world includes trees, plants, rocks, a cottage,
-smith workshop, market stall, fences, wheat, crates, cart and campfires. Buildings
-are scenery; the existing merchant is the trading interaction.
+## Implementation and artwork
 
-The [art contract](docs/ART_DIRECTION.md) defines perspective, palette, light,
-scale, pivots, generation provenance, export rules and limitations. Sources and
-measured alpha bounds are checked in with the runtime atlases. Original custom
-assets and legacy rendering remain for compatibility; the active renderer does
-not request the optional Tiny Swords pack.
+- `index.html`: game simulation, controls, HUD and legacy fallback renderer.
+- `assets/3d/world.js`: real WebGL geometry, rigs, lighting, water, terrain picking,
+  model animation and effects. One metre corresponds to 100 simulation units.
+- `assets/3d/materials.png`, `foliage.png`, `ui.png`: built-in ImageGen artwork.
+- `assets/vendor/`: locally bundled Three.js 0.186.1 and MIT license.
+- [3D art contract](docs/3D_ART_DIRECTION.md): proportions, world rules and scope.
+- [ImageGen prompt set](assets/3d/PROMPTS.md): material and UI generation prompts.
+
+The Tiny Swords ZIP was imported locally for inspection. The ignored pack remains
+optional and is not committed. Previous PNGs remain for the 2D fallback and history.
+This is an original browser 3D implementation; the commercial reference game's
+models and production pipeline are not reproduced.
 
 ## Validation
 
 ```sh
+npm ci
 npm test
 ```
 
-61 regression tests cover combat, frost's zero damage, progression, shop, inventory,
-saving, navigation, water and elevation. Real Chrome review and atlas preparation
-require Playwright installed in your development environment and a local server:
+64 regression tests cover the existing systems and revised weapon, bridge, prop
+placement and structure rules. Real Chrome/WebGL integration review:
 
 ```sh
+# Separate terminal:
 python3 -m http.server 8093 --bind 127.0.0.1
-# In another terminal; PLAYWRIGHT_MODULE may point to an existing installation.
-npm run art:prepare
+# Requires Google Chrome installed:
 npm run test:visual
 ```
 
-[Browser review report](artifacts/visual/report.json) and actual screenshots:
-[village](artifacts/visual/village.png), [boss](artifacts/visual/boss.png),
-[lake](artifacts/visual/lake.png), [mountain](artifacts/visual/mountain.png),
-[desert](artifacts/visual/desert.png), [shop](artifacts/visual/shop.png),
-[inventory](artifacts/visual/inventory.png), [heal](artifacts/visual/heal.png),
-[mobile](artifacts/visual/mobile.png). The review uses a temporary intercepted
-script hook; the game does not expose debug globals.
+The browser suite checks real projected mouse combat, WASD, zero-damage frost,
+healing, menus, saves, elevated picking, stable geometry allocation, loaded textures
+and 390px mobile layout. Its review hook is injected only into intercepted HTML.
 
-Characters use mirrored side movement rather than dedicated eight-direction
-sprites. Enemy movement has three poses; attack has windup/release. See the art
-contract for the scope of visual checks.
+[Review report](artifacts/3d/report.json) · [Village](artifacts/3d/village.png) ·
+[Bridge](artifacts/3d/bridge.png) · [Boss](artifacts/3d/forest-boss.png) ·
+[Lake](artifacts/3d/lake.png) · [Plateau](artifacts/3d/plateau.png) ·
+[Desert](artifacts/3d/desert.png) · [Combat](artifacts/3d/combat.png) ·
+[Mobile](artifacts/3d/mobile.png).
 
-Private repository: [nfekete82/nobby_world](https://github.com/nfekete82/nobby_world).
+To re-export the generated transparent UI source: `npm run art:ui` with the review
+server running. The older `art:prepare` command is for retained pixel-art assets.

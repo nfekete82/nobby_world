@@ -1,24 +1,28 @@
-# Artwork and provenance
+# Artwork and software provenance
 
-## Active Emerald Edition artwork
+## Active 3D world
 
-`assets/art/` contains artwork created for Nobby World using the built-in OpenAI
-ImageGen tool and normalized into game-ready PNG atlases. The existing Nobby idle
-strip supplied by the user served as his identity reference. The generated world
-atlas served as the enemy reference. Art direction and production details are in
-[docs/ART_DIRECTION.md](docs/ART_DIRECTION.md).
+`assets/3d/world.js` defines original Nobby World geometry, character rigs, buildings,
+vegetation and effects. The user's Nobby artwork guides his identity. The user's
+Secret-of-Mana remake screenshot guides composition and atmosphere; no models or
+textures from that game were extracted.
 
-The source generations, transparent exports and measured alpha bounds are kept
-in the repository. No third-party commercial asset pack is needed by the active
-renderer. Existing source characters retain their recognizable costume/roles.
+`assets/3d/materials.png`, `foliage.png`, and `ui-source.png` were generated for this
+project with built-in OpenAI ImageGen. `ui.png` is their normalized transparent UI
+export. See [prompt set](assets/3d/PROMPTS.md) and [art contract](docs/3D_ART_DIRECTION.md).
 
-## Retained legacy assets
+Three.js 0.186.1 is bundled locally in `assets/vendor/` under the MIT license.
+Copyright Three.js Authors. The full notice is in
+[THREE-LICENSE.txt](assets/vendor/THREE-LICENSE.txt).
+Source: https://github.com/mrdoob/three.js.
 
-- `assets/custom/`: existing user-supplied character, terrain and effect artwork;
-  retained for compatibility and fallback rendering.
-- `assets/woods.png`: previously supplied `pixel_16_woods v2 free.zip`; the original
-  archive contained no license text. It is a retained fallback, not new artwork.
-- Optional, ignored `assets/tiny-swords/`: Pixel Frog's Tiny Swords Free Pack,
-  https://pixelfrog-assets.itch.io/tiny-swords. Not committed or fetched by the
-  active renderer. The importer remains for users who already have the original
-  pack; its original distribution restrictions still apply.
+## Retained 2D artwork
+
+`assets/art/` contains the preceding ImageGen pixel-art pass and its source PNGs.
+`assets/custom/` and `assets/woods.png` are the existing user-supplied assets,
+retained for compatibility/fallback rendering. The original woods archive contained
+no license text.
+
+The supplied Tiny Swords Free Pack ZIP was inspected and imported locally as an
+art reference. Pixel Frog: https://pixelfrog-assets.itch.io/tiny-swords. The original
+pack is ignored by Git and is not required or fetched by the active 3D renderer.
