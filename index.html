@@ -1670,7 +1670,7 @@
       const wave=Math.sin(t*13+hill.x*.013)*5*(1-round);
       return {
         top:hill.y+17+68*round+Math.sin(t*16)*7*(1-round),
-        lip:hill.y+hill.h-78*round+wave
+        lip:hill.y+hill.h-78*round+wave*Math.min(1,Math.abs(x-hill.stairsX)/90)
       };
     }
     function plateauAt(x,y){
