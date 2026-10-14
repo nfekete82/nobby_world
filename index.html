@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#171c19">
-  <title>Nobby World – Tiny Swords Prototype</title>
+  <title>Nobby World – Smaragdwald</title>
   <style>
     :root { color-scheme: dark; font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
     * { box-sizing: border-box; }
@@ -278,13 +278,55 @@
       background:linear-gradient(#ffb59a,#d74d68 48%,#82214b); }
     #boss-health-text { display:block; color:#f4d0b8; font-size:11px; font-weight:bold; margin-top:4px; }
     @media(max-width:680px){.zone-banner{top:72px;font-size:11px;}.boss-hud{top:110px;}}
+
+    /* Emerald edition: crisp navy/gold frames, compact controls, shared PNG icon vocabulary. */
+    :root { font-family: "Trebuchet MS", sans-serif; color:#f5e8c2; }
+    canvas { image-rendering:pixelated; }
+    .hud { top:28px; left:32px; }
+    h1 { font-family:Georgia,serif; font-weight:700; font-size:36px; text-shadow:3px 3px #20283f; }
+    .kicker { font-size:9px; letter-spacing:.25em; color:#e9b86c; }
+    .subtitle { font-size:11px; max-width:270px; line-height:1.5; }
+    .resource-hud,.shop-dialog,.inventory-dialog,.zone-banner,.boss-hud,.audio-control,.inventory-open,.footer {
+      border:2px solid #b89861; border-radius:3px; background:#202c36f5;
+      box-shadow:0 0 0 2px #20283f,inset 0 0 0 2px #3e4d53,4px 5px 0 #15222b99;
+      backdrop-filter:none;
+    }
+    .resource-hud { width:min(500px,calc(100vw - 24px)); bottom:66px; padding:12px; gap:12px; grid-template-columns:1fr 36px 1fr; }
+    .resource-track { height:20px; border:2px solid #141f2b; border-radius:1px; }
+    .resource-name { font-size:11px; letter-spacing:.12em; }
+    .resource-value { font-size:11px; }
+    .resource-rune { width:36px; height:36px; border-radius:1px; background:#324650; font-size:23px; transform:none; }
+    .resource-health .resource-fill { background:linear-gradient(#e98b7d 0 20%,#c65465 20% 75%,#87354e 75%); }
+    .resource-mana .resource-fill { background:linear-gradient(#9edee1 0 20%,#469fbc 20% 75%,#326080 75%); }
+    .xp-track,.xp-fill { border-radius:0; }.xp-fill { background:#b4ca7c;box-shadow:none; }
+    .spellbar { bottom:180px; gap:12px; }
+    .spell-choice { width:120px;height:88px;border:2px solid #aa8b5c;border-radius:3px;background:#202c36;box-shadow:3px 4px #15222b;gap:3px; }
+    .spell-choice::before,.spell-choice::after { display:none; }
+    .spell-choice[aria-pressed="true"] { border-color:#f1d492;background:#344953;box-shadow:0 0 0 2px #20283f,3px 4px #15222b; }
+    .spell-name { font-size:11px; }.spell-key { font-size:9px;color:#c2ccbe; }
+    .spell-icon { width:32px;height:32px;font-size:0;background-image:url('assets/art/effects.png');background-size:128px 128px;image-rendering:pixelated; }
+    #spell-fire .spell-icon { background-position:-64px -96px; }#spell-ice .spell-icon { background-position:-32px -96px; }
+    .shop-symbol,.inventory-symbol { border-radius:2px;background:#30414a;border:1px solid #6d7770; }
+    .item-icon { display:block;width:32px;height:32px;background:url('assets/art/effects.png');background-size:128px 128px;image-rendering:pixelated; }
+    .icon-focus { background-position:-64px -64px; }.icon-boots { background-position:-96px -64px; }.icon-charm { background-position:0 -96px; }.icon-potion { background-position:-32px -64px; }
+    .shop-buy,.inventory-action,.shop-close,button { border-radius:2px;backdrop-filter:none; }
+    .shop-title,.inventory-heading h2 { font-family:Georgia,serif; }
+    .footer { bottom:20px;font-size:10px;padding:8px 12px;gap:9px; }
+    kbd { border-radius:1px;padding:3px 5px; }.hint { display:none; }
+    .zone-banner { top:28px;font-size:11px;letter-spacing:.06em; }
+    @media(max-width:680px){
+      .hud{top:18px;left:16px;}h1{font-size:26px;}.kicker{font-size:8px;}.subtitle{display:none;}
+      .zone-banner{top:100px;max-width:90vw;}.resource-hud{bottom:60px;padding:9px;gap:8px;}
+      .spellbar{bottom:170px;}.spell-choice{width:108px;height:78px;}.resource-rune{width:32px;height:32px;}
+      .footer{max-width:calc(100vw - 24px);bottom:16px;}.inventory-open{top:112px;right:16px;}
+    }
   </style>
 </head>
 <body>
   <canvas id="world" aria-label="Spielwelt Nobby World"></canvas>
   <div class="loading" id="loading"><span>Nobby World</span><small>Dein Abenteuer beginnt …</small></div>
   <div class="hud">
-    <div class="kicker">Tiny Swords · Waldabenteuer</div>
+    <div class="kicker">Smaragdwald · Ein magisches Abenteuer</div>
     <h1>Nobby World</h1>
     <div class="subtitle">Erkunde den Wald · Monster anklicken zum Angreifen</div>
   </div>
@@ -332,17 +374,17 @@
         <button class="shop-close" id="inventory-close" type="button" aria-label="Inventar schließen">×</button></div>
       <p class="inventory-brief">Klicke auf einen Gegenstand, um ihn anzulegen oder abzulegen. Dein Inventar wird automatisch gespeichert.</p>
       <div class="inventory-section-title">Ausrüstungsplätze</div>
-      <div class="inventory-line"><div class="inventory-symbol">✦</div>
+      <div class="inventory-line"><div class="inventory-symbol"><span aria-hidden="true" class="item-icon icon-focus"></span></div>
         <div class="inventory-description"><strong>Arkaner Fokus</strong><span id="gear-focus">Nicht im Besitz</span></div>
         <button id="inventory-focus" class="inventory-action" type="button" disabled>Gesperrt</button></div>
-      <div class="inventory-line"><div class="inventory-symbol">➟</div>
+      <div class="inventory-line"><div class="inventory-symbol"><span aria-hidden="true" class="item-icon icon-boots"></span></div>
         <div class="inventory-description"><strong>Windläuferstiefel</strong><span id="gear-boots">Nicht im Besitz</span></div>
         <button id="inventory-boots" class="inventory-action" type="button" disabled>Gesperrt</button></div>
-      <div class="inventory-line"><div class="inventory-symbol">♥</div>
+      <div class="inventory-line"><div class="inventory-symbol"><span aria-hidden="true" class="item-icon icon-charm"></span></div>
         <div class="inventory-description"><strong>Hüteramulett</strong><span id="gear-charm">Nicht im Besitz</span></div>
         <button id="inventory-charm" class="inventory-action" type="button" disabled>Gesperrt</button></div>
       <div class="inventory-section-title">Rucksack</div>
-      <div class="inventory-line"><div class="inventory-symbol">✚</div>
+      <div class="inventory-line"><div class="inventory-symbol"><span aria-hidden="true" class="item-icon icon-potion"></span></div>
         <div class="inventory-description"><strong>Heiltrank</strong><span id="inventory-potions">0 Stück · Stellt 40 Leben wieder her</span></div>
         <button id="inventory-drink" class="inventory-action" type="button" disabled>Trinken [4]</button></div>
       <p class="inventory-brief">Ausrüstung gibt es bei Galdor. Einige Slimes lassen Heiltränke fallen.</p>
@@ -358,19 +400,19 @@
       <p class="shop-description">Bezahle mit dem Gold, das du bei besiegten Waldmonstern findest. Jedes Upgrade wirkt dauerhaft.</p>
       <div class="shop-wallet">◈ Dein Gold: <strong id="shop-gold">0</strong></div>
       <div class="shop-item">
-        <div class="shop-symbol" aria-hidden="true">✦</div>
+        <div class="shop-symbol" aria-hidden="true"><span class="item-icon icon-focus"></span></div>
         <div class="shop-item-detail"><div class="shop-item-name">Arkaner Fokus</div>
           <div class="shop-item-effect">+10 Schaden pro blauer Feuerkugel</div></div>
         <button type="button" class="shop-buy" id="shop-buy-focus">12 Gold</button>
       </div>
       <div class="shop-item">
-        <div class="shop-symbol" aria-hidden="true">➟</div>
+        <div class="shop-symbol" aria-hidden="true"><span class="item-icon icon-boots"></span></div>
         <div class="shop-item-detail"><div class="shop-item-name">Windläuferstiefel</div>
           <div class="shop-item-effect">+20 % Bewegungsgeschwindigkeit</div></div>
         <button type="button" class="shop-buy" id="shop-buy-boots">10 Gold</button>
       </div>
       <div class="shop-item">
-        <div class="shop-symbol" aria-hidden="true">♥</div>
+        <div class="shop-symbol" aria-hidden="true"><span class="item-icon icon-charm"></span></div>
         <div class="shop-item-detail"><div class="shop-item-name">Hüteramulett</div>
           <div class="shop-item-effect">+25 maximale Lebenspunkte</div></div>
         <button type="button" class="shop-buy" id="shop-buy-charm">15 Gold</button>
@@ -387,7 +429,7 @@
     <span class="sep desktop"></span>
     <span class="desktop"><kbd>Shift</kbd> Sprinten</span><span class="sep desktop"></span><span class="desktop"><kbd>E</kbd> Heilen</span><span class="sep desktop"></span><span class="desktop"><kbd>B</kbd> Händler</span>
   </div>
-  <div class="hint">NOBBY WORLD · NOBBY 0.9.4</div>
+  <div class="hint">NOBBY WORLD · EMERALD EDITION</div>
   <script>
   (() => {
     'use strict';
@@ -931,6 +973,7 @@
     function drawLoot(){
       for(const item of loot){
         const wobble=Math.sin(time*3+item.id)*2.8;
+        if(artReady(effectArt)){ctx.save();ctx.globalAlpha=item.age>item.life-5?Math.max(0,(item.life-item.age)/5):1;drawEffect(item.kind==='potion'?9:item.kind==='mana'?14:8,item.x,item.y-10+wobble,30);ctx.restore();continue;}
         const size=item.kind==='potion'?10:item.kind==='mana'?9:6.5;
         ctx.save();
         ctx.globalAlpha=item.age>item.life-5?Math.max(0,(item.life-item.age)/5):1;
@@ -1275,9 +1318,9 @@
       // custom cartoon opponent if those sprite files are unavailable.
       const key=m.kind==='goblin'?(m.state==='chase'?'redWarriorRun':'redWarrior'):
         raider?(m.state==='chase'?'redArcherRun':'redArcher'):null;
-      let rendered=boss?drawForestBossSprite(m):
+      let rendered=drawEnemyArt(m)||drawArt(m.kind,m.x,m.y,boss?360:elite?340:scarab?100:168,hero.x<m.x)|| (boss?drawForestBossSprite(m):
         m.kind==='goblin'?drawForestGoblinSprite(m,bounce):
-        elite?drawRootGuardianSprite(m,bounce):false;
+        elite?drawRootGuardianSprite(m,bounce):false);
       if(!rendered&&key&&tiny[key]){
         const fw=192,fh=192,sz=raider?167:158;
         rendered=sprite(key,Math.floor(time*(m.state==='chase'?10:6)+m.phase)%8,
@@ -1390,6 +1433,7 @@
       }
       ctx.save();ctx.globalAlpha=dying?Math.max(0,1-(time-m.deadAt)/.45):1;
       ctx.fillStyle='#0b172170';ctx.beginPath();ctx.ellipse(m.x,m.y+2,25,8,0,0,TAU);ctx.fill();
+      if(!drawEnemyArt(m)&&!drawArt('slime',m.x,m.y,100)){
       ctx.translate(m.x,m.y-9-bounce);ctx.scale(squash,2-squash);
       ctx.fillStyle='#35264f';
       ctx.beginPath();ctx.moveTo(-27,0);ctx.bezierCurveTo(-27,-13,-21,-39,-2,-43);
@@ -1408,6 +1452,7 @@
       ctx.fillStyle='#251a41';ctx.beginPath();ctx.ellipse(-9,-13,3.8,5.5,0,0,TAU);ctx.ellipse(9,-13,3.8,5.5,0,0,TAU);ctx.fill();
       ctx.fillStyle='#f7e9ff';ctx.fillRect(-10,-16,2,2);ctx.fillRect(8,-16,2,2);
       ctx.strokeStyle='#432254';ctx.lineWidth=2;ctx.lineCap='round';ctx.beginPath();ctx.arc(0,-6,4,0,Math.PI);ctx.stroke();
+      }
       ctx.restore();
       if(m.hp>0){
         const barW=49,barY=m.y-66-bounce;
@@ -1421,11 +1466,13 @@
       }
     }
     function drawCombatEffects(){
+      if(time<castUntil)drawEffect(4+Math.min(3,Math.floor((time-castStart)/1.1*4)),hero.x,hero.y-50,150);
       // Ring, glyphs and a short blue pulse under the mage's hand at the shot moment.
       if(time<shotCastUntil&&resources.health>0){
         const phase=(time-shotCastStart)/Math.max(.01,shotCastUntil-shotCastStart);
         const radius=12+phase*29;
         const x=hero.x+(hero.dir===1?23:hero.dir===3?-23:0),y=hero.y-49;
+        if(!drawEffect(Math.min(3,Math.floor(phase*4)),x,y,100)){
         ctx.save();ctx.globalCompositeOperation='lighter';
         const halo=ctx.createRadialGradient(x,y,0,x,y,40);
         halo.addColorStop(0,'#d5fbff99');
@@ -1442,11 +1489,13 @@
           ctx.lineTo(x+Math.cos(a)*(radius+4),y+Math.sin(a)*(radius+4));ctx.stroke();
         }
         ctx.restore();
+        }
       }
       drawLoot();
       ctx.save();
       ctx.globalCompositeOperation='lighter';
       for(const impact of impactBursts){
+        if(drawEffect(2+Math.min(1,Math.floor(impact.age/impact.life*2)),impact.x,impact.y,110))continue;
         const t=impact.age/impact.life,ice=impact.kind==='ice';
         const radius=(ice?51:43)*(0.33+t*.78);
         ctx.save();ctx.globalAlpha=(1-t)*.9;ctx.translate(impact.x,impact.y);
@@ -1479,6 +1528,7 @@
         ctx.restore();
       }
       for(const shot of enemyShots){
+        if(artReady(effectArt)){ctx.save();ctx.filter=shot.color==='red'?'hue-rotate(140deg)':'hue-rotate(190deg)';drawEffect(14,shot.x,shot.y,44);ctx.restore();continue;}
         const red=shot.color==='red';
         const radius=red?23:17;
         const glow=ctx.createRadialGradient(shot.x,shot.y,0,shot.x,shot.y,radius);
@@ -1502,6 +1552,7 @@
         }
       }
       for(const p of fireballs){
+        if(drawEffect(p.spell==='ice'?13:14,p.x,p.y,52))continue;
         for(let k=0;k<p.trail.length;k++){
           const t=p.trail[k],a=(k+1)/p.trail.length;
           ctx.fillStyle='rgba(38,143,255,'+(a*.30)+')';
@@ -1552,6 +1603,114 @@
       }
       ctx.restore();
     }
+
+    // Shared production atlas: all props use the same light, palette and ground pivot.
+    const worldArt=new Image();
+    const terrainArt=new Image();
+    const heroArt=new Image();
+    worldArt.src='assets/art/world.png';
+    terrainArt.onload=()=>drawGround();terrainArt.src='assets/art/terrain.png';
+    heroArt.src='assets/art/nobby.png';
+    const enemyArt=new Image(),effectArt=new Image(),cliffArt=new Image();
+    enemyArt.src='assets/art/enemies.png';effectArt.src='assets/art/effects.png';cliffArt.src='assets/art/cliffs.png';
+    const patternCache=new Map();
+    function drawEffect(index,x,y,size=96){
+      if(!artReady(effectArt))return false;
+      ctx.save();ctx.imageSmoothingEnabled=false;
+      ctx.drawImage(effectArt,(index%4)*128,Math.floor(index/4)*128,128,128,Math.round(x-size/2),Math.round(y-size/2),size,size);
+      ctx.restore();return true;
+    }
+    function drawEnemyArt(m){
+      if(!artReady(enemyArt))return false;
+      const row=['slime','goblin','raider','scarab','elite','boss'].indexOf(m.kind);
+      const attacking=time<(m.attackAnimUntil||0);
+      const col=attacking?(time-m.attackAnimStart<.2?4:5):m.state==='chase'?1+Math.floor(time*7+m.phase)%3:0;
+      const size=m.kind==='boss'?360:m.kind==='elite'?340:m.kind==='slime'?96:m.kind==='scarab'?108:168;
+      ctx.save();ctx.imageSmoothingEnabled=false;ctx.translate(Math.round(m.x),Math.round(m.y));
+      if(hero.x<m.x&&m.kind!=='slime')ctx.scale(-1,1);
+      ctx.drawImage(enemyArt,col*128,row*128,128,128,-size/2,-size*116/128,size,size);ctx.restore();return true;
+    }
+    function drawArtMountain(hill){
+      if(!artReady(cliffArt)||!artReady(terrainArt))return false;
+      const edge=plateauBand(hill,hill.stairsX).lip;
+      ctx.save();tracePlateau(hill,100);ctx.clip();
+      for(let x=hill.x;x<hill.x+hill.w;x+=96)for(let y=hill.y;y<hill.y+hill.h+120;y+=96)ctx.drawImage(cliffArt,0,0,128,128,x,y,96,96);
+      ctx.restore();ctx.save();tracePlateau(hill);ctx.clip();
+      ctx.fillStyle=terrainPattern(ctx,biomeAt(hill.x)==='forest'?0:3);ctx.fillRect(hill.x,hill.y,hill.w,hill.h+20);
+      ctx.restore();ctx.save();tracePlateau(hill);ctx.lineWidth=4;ctx.strokeStyle='#769650';ctx.stroke();
+      ctx.drawImage(cliffArt,128,0,128,128,hill.stairsX-hill.stairsWidth/2,edge-36,hill.stairsWidth,136);
+      ctx.restore();return true;
+    }
+
+    const ART_NAMES=['oak','pine','fruitTree','rock','fern','flowers','cottage','smith','stall','fence','wheat','cart','merchant','slime','goblin','raider','scarab','elite','boss','cactus','mushroom','sign','crates','fire'];
+    function artReady(img){return !!(img.complete&&img.naturalWidth>0);}
+    function drawArt(name,x,y,size=128,flip=false,alpha=1){
+      if(!artReady(worldArt))return false;
+      const i=ART_NAMES.indexOf(name);if(i<0)return false;
+      ctx.save();ctx.imageSmoothingEnabled=false;ctx.globalAlpha*=alpha;
+      ctx.translate(Math.round(x),Math.round(y));if(flip)ctx.scale(-1,1);
+      ctx.drawImage(worldArt,(i%6)*128,Math.floor(i/6)*128,128,128,-size/2,-size*116/128,size,size);
+      ctx.restore();return true;
+    }
+    function terrainPattern(c,index){
+      let cache=patternCache.get(c);if(!cache){cache=new Map();patternCache.set(c,cache);}
+      if(cache.has(index))return cache.get(index);
+      const tile=document.createElement('canvas');tile.width=128;tile.height=128;
+      const tc=tile.getContext('2d');tc.imageSmoothingEnabled=false;
+      tc.drawImage(terrainArt,(index%2)*128,Math.floor(index/2)*128,128,128,0,0,128,128);
+      const pattern=c.createPattern(tile,'repeat');cache.set(index,pattern);return pattern;
+    }
+    function paintArtGround(){
+      if(!artReady(terrainArt))return false;
+      g.save();g.imageSmoothingEnabled=false;
+      g.fillStyle=terrainPattern(g,0);g.fillRect(0,0,WORLD.w,WORLD.h);
+      const sand=terrainPattern(g,3);
+      // Dithered biome transition is fixed to world pixels and never flickers.
+      for(let x=BIOMES.forestEnd;x<WORLD.w;x+=16){
+        g.globalAlpha=biomeBlend(x);g.fillStyle=sand;g.fillRect(x,0,16,WORLD.h);
+      }
+      g.globalAlpha=1;
+      const trace=()=>{g.beginPath();for(let x=-20;x<WORLD.w+20;x+=8){if(x===-20)g.moveTo(x,pathAt(x));else g.lineTo(x,pathAt(x));}};
+      g.lineJoin='round';g.lineCap='round';
+      for(const [w,color] of [[152,'#385e43'],[140,'#819055'],[128,'#876849']]){trace();g.lineWidth=w;g.strokeStyle=color;g.stroke();}
+      trace();g.lineWidth=118;g.strokeStyle=terrainPattern(g,1);g.stroke();
+      g.restore();return true;
+    }
+    function drawArtLake(lake){
+      if(!artReady(terrainArt))return false;
+      const cx=lake.x+lake.cols*LAKE_TILE/2,cy=lake.y+lake.rows*LAKE_TILE/2;
+      // Same ellipse and radii as lakeContains: visible shoreline matches solid water.
+      const rx=lake.cols*LAKE_TILE/2-24,ry=lake.rows*LAKE_TILE/2-24;
+      ctx.save();ctx.fillStyle='#385e43';ctx.beginPath();ctx.ellipse(cx,cy,rx+14,ry+14,0,0,TAU);ctx.fill();
+      ctx.fillStyle='#b8b078';ctx.beginPath();ctx.ellipse(cx,cy,rx+8,ry+8,0,0,TAU);ctx.fill();
+      ctx.beginPath();ctx.ellipse(cx,cy,rx,ry,0,0,TAU);ctx.clip();
+      ctx.fillStyle=terrainPattern(ctx,2);ctx.fillRect(cx-rx,cy-ry,rx*2,ry*2);
+      ctx.fillStyle='#8bc6bb';
+      for(let i=0;i<16;i++){const xx=cx-rx+((i*71)%Math.floor(rx*2)),yy=cy-ry+((i*47)%Math.floor(ry*2));ctx.globalAlpha=.25+.15*Math.sin(time*1.5+i);ctx.fillRect(xx,yy,12+(i%3)*4,2);}
+      ctx.restore();return true;
+    }
+    function drawProductionHero(){
+      if(!artReady(heroArt))return false;
+      const healing=time<castUntil,shooting=time<shotCastUntil;
+      const row=healing?3:shooting?2:hero.walking?1:0;
+      const begin=healing?castStart:shotCastStart,finish=healing?castUntil:shotCastUntil;
+      const f=row>=2?Math.min(5,Math.floor(clamp((time-begin)/Math.max(.01,finish-begin),0,.999)*6)):
+        row===1?Math.floor(hero.walkCycle*.9)%6:Math.floor(time*3)%6;
+      ctx.save();ctx.imageSmoothingEnabled=false;
+      ctx.fillStyle='#20283f55';ctx.beginPath();ctx.ellipse(hero.x,hero.y+2,22,8,0,0,TAU);ctx.fill();
+      ctx.translate(Math.round(hero.x),Math.round(hero.y));if(hero.dir===3)ctx.scale(-1,1);
+      ctx.drawImage(heroArt,f*128,row*128,128,128,-96,-174,192,192);ctx.restore();return true;
+    }
+    const villageProps=[
+      {name:'cottage',dx:-440,dy:-245,size:320},
+      {name:'smith',dx:-130,dy:-260,size:300},
+      {name:'stall',dx:225,dy:-220,size:290},
+      {name:'cart',dx:390,dy:-150,size:160},
+      {name:'crates',dx:325,dy:-195,size:110},
+      {name:'fence',dx:-490,dy:-155,size:150},
+      {name:'wheat',dx:-450,dy:-135,size:110}
+    ];
+
     const trees=[],rocks=[],details=[],fireflies=[];
     const atlas=new Map();
     // Uploaded 352×192 forest spritesheet; remains separate from the placeholder hero.
@@ -1619,7 +1778,7 @@
         }else tiny[key]=img;
       };
       img.onerror=()=>{if(key==='grass')console.info('Tiny Swords noch nicht importiert: python3 scripts/import_tiny_swords.py');};
-      img.src='assets/tiny-swords/'+path.split('/').map(encodeURIComponent).join('/');
+      // Optional legacy pack is no longer fetched by the Emerald renderer.
     }
     function sprite(key,frame,fw,fh,x,y,w,h,alpha=1){
       const img=tiny[key];if(!img)return false;
@@ -1643,8 +1802,8 @@
     let activeZone='';
     function updateZoneUI(){
       const zone=biomeAt(hero.x),high=heightAt(hero.x,hero.y)===1;
-      const label=(zone==='forest'?'🌲 Smaragdwald':
-        zone==='badlands'?'🪨 Trockene Grenzlande':'☀️ Goldene Wüste')
+      const label=(zone==='forest'?'Smaragdwald':
+        zone==='badlands'?'Trockene Grenzlande':'Goldene Wüste')
         +(high?' · ⛰️ Höhenebene':'');
       if(label===activeZone)return;
       activeZone=label;zoneBanner.textContent=label;
@@ -1721,6 +1880,7 @@
         const x=hill.x,y=hill.y,w=hill.w,h=hill.h,edge=plateauBand(hill,hill.stairsX).lip;
         if(x>camera.x+viewport.w/ZOOM+200||x+w<camera.x-200
           ||y>camera.y+viewport.h/ZOOM+200||y+h+160<camera.y-200)continue;
+        if(drawArtMountain(hill))continue;
         // One seamless illustrated cliff asset replaces the mismatched tiles
         // and the old polygon/grass rectangle. Keep fallback for missing PNG.
         if(organicPlateauImage.complete
@@ -1814,6 +1974,7 @@
         if(lake.x>camera.x+viewport.w/ZOOM+70||lake.y>camera.y+viewport.h/ZOOM+70
           ||lake.x+lake.cols*LAKE_TILE<camera.x-70
           ||lake.y+lake.rows*LAKE_TILE<camera.y-70)continue;
+        if(drawArtLake(lake))continue;
         if(!ready){
           const cx=lake.x+lake.cols*LAKE_TILE/2,cy=lake.y+lake.rows*LAKE_TILE/2;
           ctx.save();ctx.fillStyle='#b49e68';ctx.beginPath();
@@ -1943,6 +2104,7 @@
       c.fillStyle=gr;c.beginPath();c.arc(x,y,r,0,TAU);c.fill();
     }
     function drawGround(){
+      if(paintArtGround())return;
       g.clearRect(0,0,WORLD.w,WORLD.h);
       if(tinyReady){
         // Tile the genuine 64x64 Tiny Swords grass interior over the entire map.
@@ -2055,6 +2217,7 @@
         if(lakeContains(x,y,85))continue;
         if(plateaus.some(p=>x>p.x-75&&x<p.x+p.w+75&&y>p.y-60&&y<p.y+p.h+180))
           continue;
+        if(villageProps.some(p=>dist(x,y,start.x+p.dx,pathAt(start.x+p.dx)+p.dy)<p.size*.6))continue;
         const rad=rnd(22,35);
         if(trees.some(t=>dist(t.x,t.y,x,y)<t.r+rad+rnd(12,34)))continue;
         const kind=rand()<.48?'pine':'oak';
@@ -2064,12 +2227,12 @@
       for(let i=0;i<170;i++){
         const x=rnd(35,WORLD.w-35),y=rnd(35,WORLD.h-35);
         if(Math.abs(y-pathAt(x))<rnd(48,100))continue;
-        if(dist(x,y,start.x,start.y)<75)continue;
+        if(dist(x,y,start.x,start.y)<75||lakeContains(x,y,25))continue;
         rocks.push({x,y,s:rnd(6,17),type:rand()<.28?'mushroom':'rock'});
       }
       for(let i=0;i<250;i++){
         const x=rnd(0,WORLD.w),y=rnd(0,WORLD.h);
-        if(Math.abs(y-pathAt(x))<70)continue;
+        if(Math.abs(y-pathAt(x))<70||lakeContains(x,y,25))continue;
         details.push({x,y,s:rnd(5,11),type:rand()<.62?'fern':'flowers',phase:rnd(0,TAU)});
       }
       for(let i=0;i<95;i++)fireflies.push({x:rnd(0,BIOMES.forestEnd),y:rnd(0,WORLD.h),z:rnd(0,TAU),phase:rnd(0,TAU),speed:rnd(.5,1.5)});
@@ -2081,6 +2244,7 @@
       }
     }
     function drawRock(o){
+      if(drawArt(o.type,o.x,o.y,o.type==='mushroom'?48:Math.round(o.s*5/2)*2))return;
 
       if(tinyReady){
         if(o.type==='mushroom'){
@@ -2104,6 +2268,7 @@
       ctx.restore();
     }
     function drawDetails(o){
+      if(drawArt(o.type==='drybush'?'fern':o.type,o.x,o.y,Math.round(o.s*(o.type==='cactus'?5:6)/2)*2))return;
       if(o.type==='cactus'||o.type==='drybush'){
         ctx.save();ctx.translate(o.x,o.y);
         ctx.fillStyle='#37291f48';ctx.beginPath();ctx.ellipse(0,0,o.s*.8,5,0,0,TAU);ctx.fill();
@@ -2145,6 +2310,9 @@
       ctx.restore();
     }
     function drawTree(t){
+      const close=t.y>hero.y-8&&dist(t.x,t.y,hero.x,hero.y)<110*t.scale;
+      if(drawArt(t.kind==='pine'?'pine':t.variant%4===0?'fruitTree':'oak',t.x,t.y,Math.round(240*t.scale/2)*2,false,close?.4:1))return;
+
 
       if(tinyReady){
         const key=t.kind==='pine'?(t.variant%2?'tree1':'tree2'):(t.variant%2?'tree3':'tree4');
@@ -2187,7 +2355,7 @@
       ctx.fillStyle='#62503a';ctx.fillRect(merchant.x-37,merchant.y-13,74,15);
       ctx.fillStyle='#ceb374';ctx.fillRect(merchant.x-35,merchant.y-11,70,2);
       ctx.restore();
-      if(!sprite('merchantIdle',Math.floor(time*7)%8,192,192,
+      if(!drawArt('merchant',merchant.x,merchant.y,168)&&!sprite('merchantIdle',Math.floor(time*7)%8,192,192,
            merchant.x-81,merchant.y-122+bob,162,162)){
         ctx.save();ctx.translate(merchant.x,merchant.y);
         ctx.fillStyle='#af8551';ctx.fillRect(-14,-31,28,28);
@@ -2267,7 +2435,7 @@
       return true;
     }
     function drawHero(){
-      if(drawNobbySprite())return;
+      if(drawProductionHero()||drawNobbySprite())return;
       if(tinyReady&&tiny.monkIdle){
         const casting=time<castUntil||time<shotCastUntil;
         const key=casting?'monkHeal':hero.walking?'monkRun':'monkIdle';
@@ -2455,10 +2623,10 @@
     }
     function render(){
       const {w,h,dpr}=viewport;
-      ctx.setTransform(dpr,0,0,dpr,0,0);
+      ctx.setTransform(dpr,0,0,dpr,0,0);ctx.imageSmoothingEnabled=false;
       ctx.fillStyle='#172d25';ctx.fillRect(0,0,w,h);
       const viewW=w/ZOOM,viewH=h/ZOOM;
-      ctx.save();ctx.scale(ZOOM,ZOOM);ctx.translate(-camera.x,-camera.y);
+      ctx.save();ctx.scale(ZOOM,ZOOM);ctx.translate(-Math.round(camera.x),-Math.round(camera.y));
       // Draw visible slice only. DPR remains native browser canvas resolution.
       ctx.drawImage(ground,Math.max(0,camera.x),Math.max(0,camera.y),
         Math.min(viewW,WORLD.w-Math.max(0,camera.x)),Math.min(viewH,WORLD.h-Math.max(0,camera.y)),
@@ -2476,7 +2644,7 @@
         ctx.beginPath();ctx.ellipse(bx,by,177,114,0,0,TAU);ctx.stroke();ctx.restore();
       }
       const ox=4720,oy=pathAt(4720)-280;
-      if(ox>camera.x-240&&ox<camera.x+viewW+240){
+      if(!artReady(terrainArt)&&ox>camera.x-240&&ox<camera.x+viewW+240){
         ctx.save();ctx.fillStyle='#a4895266';ctx.beginPath();
         ctx.ellipse(ox,oy,180,106,-.12,0,TAU);ctx.fill();
         ctx.fillStyle='#63bfc5';ctx.beginPath();
@@ -2507,11 +2675,16 @@
         drawHero();ctx.restore();
       }});
 
-      if(tinyReady&&tiny.house){
+      if(artReady(worldArt)){
+        for(const p of villageProps){const x=start.x+p.dx,y=pathAt(x)+p.dy;
+          renderables.push({y,draw:()=>drawArt(p.name,x,y,p.size)});}
+        for(const p of campfires)renderables.push({y:p.y,draw:()=>drawArt('fire',p.x,p.y,72)});
+      }
+      if(!artReady(worldArt)&&tinyReady&&tiny.house){
         const hx=start.x-520,hy=pathAt(start.x-520)-270;
         renderables.push({y:hy,draw:()=>sprite('house',0,tiny.house.width,tiny.house.height,hx-89,hy-165,178,165)});
       }
-      if(tinyReady&&tiny.fire){
+      if(!artReady(worldArt)&&tinyReady&&tiny.fire){
         for(const p of campfires)renderables.push({y:p.y,draw:()=>sprite('fire',Math.floor(time*10)%8,64,64,p.x-22,p.y-41,44,44)});
       }
 

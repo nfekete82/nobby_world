@@ -1,15 +1,24 @@
-# Asset credits and distribution
+# Artwork and provenance
 
-## Active art: Tiny Swords (Free Pack)
+## Active Emerald Edition artwork
 
-- **Author:** Pixel Frog
-- **Source:** https://pixelfrog-assets.itch.io/tiny-swords
-- **Used:** Terrain tiles, grass, trees, bushes, stones, structures, character (Monk), animations and particles
-- **Animations:** The published original recommends 10 FPS for animation playback
-- **License:** The current Free Pack allows personal and commercial games and modifications; credit is optional. **The raw sprites may not be redistributed, resold, or repackaged**, even if modified. That is why the project only contains an import script and expects your own ZIP locally. Check the artist's current license before distributing the game.
+`assets/art/` contains artwork created for Nobby World using the built-in OpenAI
+ImageGen tool and normalized into game-ready PNG atlases. The existing Nobby idle
+strip supplied by the user served as his identity reference. The generated world
+atlas served as the enemy reference. Art direction and production details are in
+[docs/ART_DIRECTION.md](docs/ART_DIRECTION.md).
 
-## Legacy art (fallback)
+The source generations, transparent exports and measured alpha bounds are kept
+in the repository. No third-party commercial asset pack is needed by the active
+renderer. Existing source characters retain their recognizable costume/roles.
 
-- `assets/woods.png` originates from the previously user-supplied `pixel_16_woods v2 free.zip` (352×192). No license text was found in that ZIP; this artwork should not be distributed until its license is verified. It remains a fallback when Tiny Swords is not imported.
+## Retained legacy assets
 
-The programmatic placeholder hero and procedural details are kept as fallback only.
+- `assets/custom/`: existing user-supplied character, terrain and effect artwork;
+  retained for compatibility and fallback rendering.
+- `assets/woods.png`: previously supplied `pixel_16_woods v2 free.zip`; the original
+  archive contained no license text. It is a retained fallback, not new artwork.
+- Optional, ignored `assets/tiny-swords/`: Pixel Frog's Tiny Swords Free Pack,
+  https://pixelfrog-assets.itch.io/tiny-swords. Not committed or fetched by the
+  active renderer. The importer remains for users who already have the original
+  pack; its original distribution restrictions still apply.

@@ -1,0 +1,47 @@
+{
+  "browser": "Chrome (Playwright)",
+  "scenes": [
+    "village",
+    "boss",
+    "lake",
+    "mountain",
+    "desert"
+  ],
+  "atlasChecks": [
+    {
+      "name": "world",
+      "width": 768,
+      "height": 512,
+      "cells": 24
+    },
+    {
+      "name": "nobby",
+      "width": 768,
+      "height": 512,
+      "cells": 24
+    },
+    {
+      "name": "enemies",
+      "width": 768,
+      "height": 768,
+      "cells": 36
+    },
+    {
+      "name": "effects",
+      "width": 512,
+      "height": 512,
+      "cells": 16
+    }
+  ],
+  "checks": [
+    "shop opens/closes",
+    "inventory opens/closes",
+    "frost selection",
+    "heal 50→85",
+    "all 100 sprite cells nonempty and grounded",
+    "all terrain edges match exactly",
+    "390px mobile no page overflow"
+  ],
+  "errors": [],
+  "missing": []
+}
