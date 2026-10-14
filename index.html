@@ -1054,8 +1054,8 @@
             const dx=(destination.x-m.x)/length,dy=(destination.y-m.y)/length;
             const chilled=time<(m.slowUntil||0);
             const step=Math.min(length,m.speed*(retreating?1.3:1)*(chilled?.34:1)*dt);
-            if(!collides(m.x+dx*step,m.y))m.x+=dx*step;
-            if(!collides(m.x,m.y+dy*step))m.y+=dy*step;
+            if(canTraverse(m.x,m.y,m.x+dx*step,m.y))m.x+=dx*step;
+            if(canTraverse(m.x,m.y,m.x,m.y+dy*step))m.y+=dy*step;
           }
         }
         // Subtle home-area patrol: no collision with trees; never wander offscreen at speed.
@@ -1640,17 +1640,87 @@
       value:document.getElementById('boss-health-text')};
     let activeZone='';
     function updateZoneUI(){
-      const zone=biomeAt(hero.x);
-      if(zone===activeZone)return;
-      activeZone=zone;
-      zoneBanner.textContent=zone==='forest'?'🌲 Smaragdwald':
-        zone==='badlands'?'🪨 Trockene Grenzlande':'☀️ Goldene Wüste';
+      const zone=biomeAt(hero.x),high=heightAt(hero.x,hero.y)===1;
+      const label=(zone==='forest'?'🌲 Smaragdwald':
+        zone==='badlands'?'🪨 Trockene Grenzlande':'☀️ Goldene Wüste')
+        +(high?' · ⛰️ Höhenebene':'');
+      if(label===activeZone)return;
+      activeZone=label;zoneBanner.textContent=label;
     }
     // The user's road/lake sprite sheets are committed with the game.
-    const roadAtlas=new Image(),lakeAtlas=new Image();
+    const roadAtlas=new Image(),lakeAtlas=new Image(),cliffAtlas=new Image();
     roadAtlas.onload=()=>drawGround();
     roadAtlas.src='assets/custom/road_tiles.png';
     lakeAtlas.src='assets/custom/lake_tiles.png';
+    cliffAtlas.src='assets/custom/cliff_tiles.png';
+    // Elevation 0 = woodland ground, 1 = walkable plateau. The only
+    // height-changing portals are the actual staircase tiles on the SOUTH lip.
+    const plateaus=[
+      {x:1060,y:325,w:480,h:375,stairsX:1300,stairsWidth:102},
+      {x:3400,y:395,w:520,h:355,stairsX:3660,stairsWidth:110}
+    ];
+    function plateauAt(x,y){
+      return plateaus.find(p=>x>=p.x&&x<p.x+p.w&&y>=p.y&&y<p.y+p.h);
+    }
+    function heightAt(x,y){return plateauAt(x,y)?1:0;}
+    function stairCrossing(fromX,fromY,toX,toY){
+      return plateaus.some(p=>{
+        const edge=p.y+p.h;
+        return Math.abs(fromX-p.stairsX)<=p.stairsWidth/2-6
+          &&Math.abs(toX-p.stairsX)<=p.stairsWidth/2-6
+          &&Math.min(fromY,toY)<=edge+48
+          &&Math.max(fromY,toY)>=edge-48;
+      });
+    }
+    function canTraverse(fromX,fromY,toX,toY){
+      if(collides(toX,toY))return false;
+      return heightAt(fromX,fromY)===heightAt(toX,toY)
+        ||stairCrossing(fromX,fromY,toX,toY);
+    }
+    function drawMountainTiles(){
+      const loaded=cliffAtlas.complete&&cliffAtlas.naturalWidth===828;
+      const k=828/1254;
+      for(const hill of plateaus){
+        const x=hill.x,y=hill.y,w=hill.w,h=hill.h,foot=y+h;
+        if(x>camera.x+viewport.w/ZOOM+200||x+w<camera.x-200
+          ||y>camera.y+viewport.h/ZOOM+200||foot+160<camera.y-200)continue;
+        ctx.save();
+        ctx.fillStyle='#2036247d';
+        ctx.fillRect(x+12,foot-4,w,114);
+        ctx.fillStyle='#769e55';
+        ctx.fillRect(x,y,w,h);
+        ctx.strokeStyle='#2c4f35';ctx.lineWidth=10;ctx.strokeRect(x,y,w,h);
+        ctx.fillStyle='#c9d58544';
+        for(let i=0;i<45;i++){
+          const xx=x+25+(i*79)%(w-50),yy=y+22+(i*103)%(h-70);
+          ctx.fillRect(xx,yy,6,2);
+        }
+        if(loaded){
+          // Stitched strips from the exact uploaded cliff-set top ledges.
+          for(let xx=x;xx<x+w;xx+=116){
+            const dw=Math.min(122,x+w-xx);
+            ctx.drawImage(cliffAtlas,243*k,38*k,176*k,201*k,
+              xx,foot-40,dw,154);
+          }
+          // The supplied staircase tile is the only legal height portal.
+          ctx.drawImage(cliffAtlas,350*k,749*k,154*k,175*k,
+            hill.stairsX-57,foot-48,114,153);
+        }else{
+          ctx.fillStyle='#7c6040';ctx.fillRect(x,foot-22,w,135);
+          ctx.fillStyle='#b79a66';ctx.fillRect(hill.stairsX-48,foot-40,96,145);
+          ctx.strokeStyle='#6b563f';ctx.lineWidth=4;
+          for(let i=0;i<7;i++){
+            ctx.beginPath();ctx.moveTo(hill.stairsX-48,foot-30+i*19);
+            ctx.lineTo(hill.stairsX+48,foot-30+i*19);ctx.stroke();
+          }
+        }
+        ctx.font='900 12px "Trebuchet MS",sans-serif';ctx.textAlign='center';
+        ctx.lineWidth=3;ctx.strokeStyle='#1d3427';ctx.fillStyle='#fff4ca';
+        ctx.strokeText('↑ TREPPE',hill.stairsX,foot+124);
+        ctx.fillText('↑ TREPPE',hill.stairsX,foot+124);
+        ctx.restore();
+      }
+    }
     const LAKE_TILE=115;
     const lakes=[
       {x:760,y:1890,cols:4,rows:3},
@@ -1869,6 +1939,8 @@
         if(Math.abs(y-pathAt(x))<rnd(125,185)||dist(x,y,start.x,start.y)<260)continue;
         if(dist(x,y,2860,pathAt(2860)-190)<270)continue; // boss clearing
         if(lakeContains(x,y,85))continue;
+        if(plateaus.some(p=>x>p.x-75&&x<p.x+p.w+75&&y>p.y-60&&y<p.y+p.h+180))
+          continue;
         const rad=rnd(22,35);
         if(trees.some(t=>dist(t.x,t.y,x,y)<t.r+rad+rnd(12,34)))continue;
         const kind=rand()<.48?'pine':'oak';
@@ -2093,9 +2165,9 @@
       return false;
     }
     function moveHero(dx,dy){
-      // Axis-separated collision resolves glancing motion along tree trunks.
-      if(dx && !collides(hero.x+dx,hero.y))hero.x+=dx;
-      if(dy && !collides(hero.x,hero.y+dy))hero.y+=dy;
+      // Axis-separated movement cannot climb cliffs except via real stairs.
+      if(dx && canTraverse(hero.x,hero.y,hero.x+dx,hero.y))hero.x+=dx;
+      if(dy && canTraverse(hero.x,hero.y,hero.x,hero.y+dy))hero.y+=dy;
     }
     // Grid navigation gives click-to-move real routing around trees.
     const CELL=37,COLS=Math.ceil(WORLD.w/CELL),ROWS=Math.ceil(WORLD.h/CELL);
@@ -2132,7 +2204,11 @@
         for(const [dx,dy] of around){
           const nx=cx+dx,ny=cy+dy;if(nx<0||ny<0||nx>=COLS||ny>=ROWS)continue;
           const ni=ny*COLS+nx;if(blocked[ni]||visited[ni])continue;
-          if(dx&&dy&&(blocked[cy*COLS+nx]||blocked[ny*COLS+cx]))continue;
+          const fx=(cx+.5)*CELL,fy=(cy+.5)*CELL;
+          const tx=(nx+.5)*CELL,ty=(ny+.5)*CELL;
+          if(!canTraverse(fx,fy,tx,ty))continue;
+          if(dx&&dy&&(!canTraverse(fx,fy,tx,fy)||!canTraverse(fx,fy,fx,ty)
+            ||!canTraverse(tx,fy,tx,ty)||!canTraverse(fx,ty,tx,ty)))continue;
           const cost=costs[id]+(dx&&dy?1.4142:1);
           if(cost<costs[ni]){costs[ni]=cost;parents[ni]=id;push(ni,cost+heur(ni));}
         }
@@ -2212,8 +2288,9 @@
         Math.min(viewW,WORLD.w-Math.max(0,camera.x)),Math.min(viewH,WORLD.h-Math.max(0,camera.y)),
         Math.max(0,camera.x),Math.max(0,camera.y),
         Math.min(viewW,WORLD.w-Math.max(0,camera.x)),Math.min(viewH,WORLD.h-Math.max(0,camera.y)));
-      // Forest lakes use the supplied shore, water and corner tiles.
+      // Ground-first scenery keeps the player, monsters and shadows on top.
       drawLakeTiles();
+      drawMountainTiles();
       // Forest-boss rune circle and desert oasis landmark.
       const bx=2860,by=pathAt(2860)-190;
       if(bx>camera.x-250&&bx<camera.x+viewW+250){
