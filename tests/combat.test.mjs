@@ -13,7 +13,7 @@ const bootAnchor = 'drawGround();generateForest();buildNav();spawnMonsters();res
 assert.ok(script.includes(bootAnchor), 'game initialization changed; adjust test hook');
 const instrumented = script.replace(
   bootAnchor,
-  bootAnchor + '\nwindow.__test={enemies,fireballs,resources,progress,loot,hero,merchant,WORLD,BIOMES,trees,details,biomeAt,pathAt,drawAdventureEnemy,drawForestGoblinSprite,forestGoblinSheet,drawRootGuardianSprite,rootGuardianSheet,bossZones,enemyShots,equipment,equipped,bag,selectSpell,openInventory,closeInventory,toggleEquipment,drinkPotion,spellSpecs,camera,update,castFireball,provokeMonster,routeTo,hurtMonster,grantXP,damageHero,drawCombatEffects,drawMerchant,openShop,closeShop,buyItem,saveGame,route:()=>route,target:()=>target,shopState:()=>shopOpen};'
+  bootAnchor + '\nwindow.__test={enemies,fireballs,resources,progress,loot,hero,merchant,WORLD,BIOMES,trees,details,biomeAt,pathAt,drawAdventureEnemy,drawForestGoblinSprite,forestGoblinSheet,drawRootGuardianSprite,rootGuardianSheet,drawForestBossSprite,forestBossSheet,plateaus,heightAt,stairCrossing,canTraverse,moveHero,collides,lakes,lakeContains,drawLakeTiles,drawMountainTiles,paintRoadTiles,roadAtlas,lakeAtlas,cliffAtlas,groundCtx:g,bossZones,enemyShots,equipment,equipped,bag,selectSpell,openInventory,closeInventory,toggleEquipment,drinkPotion,spellSpecs,camera,update,castFireball,provokeMonster,routeTo,hurtMonster,grantXP,damageHero,drawCombatEffects,drawMerchant,openShop,closeShop,buyItem,saveGame,route:()=>route,target:()=>target,shopState:()=>shopOpen};'
 );
 
 function boot(initialSave = null) {
@@ -590,7 +590,8 @@ test('root guardian draws the correct eight-frame sheet, including melee attack 
   assert.ok(drawn);
   assert.equal(drawn[3],160);
   assert.equal(drawn[4],426);
-  assert.ok(drawn[8]>230&&drawn[8]<270);
+  assert.ok(drawn[8]>325&&drawn[8]<355,'elite root guardian should be much larger');
+  assert.ok(Math.abs(drawn[6]+drawn[8]*408/426-elite.y)<.01,'elite feet must touch shadow anchor');
   drawCalls.length=0;
   elite.attackAnimStart=0;elite.attackAnimUntil=.55;
   g.update(.2);
@@ -632,4 +633,81 @@ test('goblin projectiles damage the hero, while dune raider magic stays orange',
     color:'red',damage:10,age:0,life:1.5,kind:'goblin'});
   g.update(.05);
   assert.equal(g.resources.health,before-10);
+});
+
+test('forest goblin is grounded at its actual alpha-feet line, not empty transparent padding', () => {
+  const {g,drawCalls}=boot();const m=g.enemies.find(e=>e.kind==='goblin');
+  const img=g.forestGoblinSheet;img.complete=true;
+  img.naturalWidth=2048;img.naturalHeight=682;
+  g.drawForestGoblinSprite(m);
+  const c=drawCalls.find(v=>v[0]===img);
+  assert.ok(c);assert.ok(Math.abs(c[6]+c[8]*444/682-m.y)<.1,
+    'the last opaque sprite pixel must touch the world-floor coordinate');
+});
+
+test('user-provided giant forest boss animation renders on its actual feet', () => {
+  const {g,drawCalls}=boot();const m=g.enemies.find(e=>e.kind==='boss');
+  const img=g.forestBossSheet;assert.equal(img.url,'assets/custom/forest_boss.png');
+  assert.equal(g.drawForestBossSprite(m),false,'fallback before image load');
+  img.complete=true;img.naturalWidth=1280;img.naturalHeight=426;
+  assert.equal(g.drawForestBossSprite(m),true);
+  const c=drawCalls.find(v=>v[0]===img);
+  assert.ok(c);assert.equal(c[8],560);
+  assert.equal(c[3],160);assert.equal(c[4],426);
+  assert.ok(Math.abs(c[6]+c[8]*415/426-m.y)<.1,'boss feet must meet ground shadow');
+});
+
+test('road sheet replaces drawn roads when present, including true image draw calls', () => {
+  const {g,drawCalls}=boot();
+  assert.equal(g.roadAtlas.url,'assets/custom/road_tiles.png');
+  const atlas=g.roadAtlas;
+  atlas.complete=true;atlas.naturalWidth=828;
+  g.paintRoadTiles(g.groundCtx);
+  assert.ok(drawCalls.filter(v=>v[0]===atlas).length>20);
+});
+
+test('water sprite atlas draws shoreline cells and four solid lakes block pathing', () => {
+  const {g,drawCalls}=boot();
+  assert.equal(g.lakeAtlas.url,'assets/custom/lake_tiles.png');
+  assert.equal(g.lakes.length,4);
+  const first=g.lakes[0], cx=first.x+first.cols*115/2;
+  const cy=first.y+first.rows*115/2;
+  assert.equal(g.lakeContains(cx,cy),true);
+  assert.equal(g.collides(cx,cy),true);
+  g.camera.x=first.x-150;g.camera.y=first.y-150;
+  g.lakeAtlas.complete=true;g.lakeAtlas.naturalWidth=828;
+  g.drawLakeTiles();
+  assert.ok(drawCalls.some(v=>v[0]===g.lakeAtlas),'tile edges must use supplied water graphics');
+});
+
+test('mountain plateau levels cannot be climbed through cliff walls', () => {
+  const {g}=boot();assert.equal(g.plateaus.length,2);
+  const p=g.plateaus[0], lip=p.y+p.h;
+  assert.equal(g.heightAt(p.stairsX,lip+1),0);
+  assert.equal(g.heightAt(p.stairsX,lip-1),1);
+  assert.equal(g.canTraverse(p.stairsX,lip+1,p.stairsX,lip-1),true);
+  assert.equal(g.canTraverse(p.x+70,lip+1,p.x+70,lip-1),false);
+  g.hero.x=p.x+70;g.hero.y=lip+4;
+  g.moveHero(0,-12);
+  assert.ok(g.hero.y>=lip,'manual WASD cannot walk through solid cliff wall');
+  g.hero.x=p.stairsX;g.hero.y=lip+4;
+  g.moveHero(0,-12);
+  assert.ok(g.hero.y<lip,'manual WASD can climb at stairs');
+});
+
+test('click-to-move navigation finds stairs rather than traversing cliff boundaries', () => {
+  const {g}=boot(),p=g.plateaus[0],lip=p.y+p.h;
+  const route=g.routeTo(p.x+90,lip-80,p.x+90,lip+120);
+  assert.ok(route.length>0,'elevated destination should be reachable');
+  assert.ok(route.some(v=>Math.abs(v.x-p.stairsX)<p.stairsWidth/2+30&&
+    Math.abs(v.y-lip)<125),'A* route must cross the stair corridor');
+});
+
+test('the uploaded cliff sprites are used when a mountain becomes visible', () => {
+  const {g,drawCalls}=boot(),p=g.plateaus[1];
+  assert.equal(g.cliffAtlas.url,'assets/custom/cliff_tiles.png');
+  g.cliffAtlas.complete=true;g.cliffAtlas.naturalWidth=828;
+  g.camera.x=p.x-150;g.camera.y=p.y-150;
+  g.drawMountainTiles();
+  assert.ok(drawCalls.some(v=>v[0]===g.cliffAtlas));
 });
