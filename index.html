@@ -177,7 +177,8 @@
     let target=null,route=[],targetAnimation=0;
     let time=0,last=0,paused=false;
     // Forest combat: independent from navigation so ground clicks always remain click-to-move.
-    const enemies=[],fireballs=[],combatParticles=[],floatingNumbers=[];
+    const enemies=[],fireballs=[],combatParticles=[],floatingNumbers=[],loot=[];
+    let nextLootId=0;
     const FIREBALL_COST=9,FIREBALL_DAMAGE=26,FIREBALL_SPEED=540,FIREBALL_RANGE=690,FIREBALL_COOLDOWN=.29;
     let nextFireballAt=0,shotCastUntil=0,shotCastStart=0,heroInvulnerableUntil=0,heroRespawnAt=0;
     let defeatedMonsters=0;
@@ -197,7 +198,8 @@
         enemies.push({
           id:i,x,y,homeX:x,homeY:y,hp:66,maxHp:66,
           phase:i*1.76,speed:43+i%3*7,attackAt:time+2.5,
-          hitUntil:0,respawnAt:0,deadAt:0,selectedUntil:0
+          hitUntil:0,respawnAt:0,deadAt:0,selectedUntil:0,
+          aggroUntil:0,staggerUntil:0,state:'idle'
         });
       }
     }
@@ -254,16 +256,116 @@
         floatNumber(hero.x,hero.y-120,'Wiederbelebung ...','#ffffff');
       }
     }
+    function grantXP(amount){
+      progress.xp+=amount;
+      let leveled=false;
+      while(progress.xp>=xpForLevel(progress.level)){
+        progress.xp-=xpForLevel(progress.level);
+        progress.level++;
+        resources.maxHealth+=10;
+        resources.maxMana+=5;
+        resources.health=resources.maxHealth;
+        resources.mana=resources.maxMana;
+        leveled=true;
+      }
+      if(leveled){
+        floatNumber(hero.x,hero.y-120,'STUFENAUFSTIEG '+progress.level,'#f9df96');
+        burst(hero.x,hero.y-60,'#b8f6ff',25);
+      }
+      updateProgressHUD();
+      updateResourceHUD();
+    }
+    function dropLoot(m){
+      // The items remain on the ground even while the monster is respawning.
+      const count=2+progress.kills%2;
+      for(let i=0;i<count;i++){
+        const angle=TAU*i/count+rand()*.35;
+        const speed=38+rand()*42;
+        loot.push({
+          id:++nextLootId,kind:'gold',value:1,
+          x:m.x,y:m.y-10,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,
+          age:0,life:40
+        });
+      }
+      if(progress.kills%3===0){
+        loot.push({id:++nextLootId,kind:'mana',value:18,x:m.x,y:m.y-10,
+          vx:32,vy:-50,age:0,life:40});
+      }
+      if(loot.length>80)loot.splice(0,loot.length-80);
+    }
+    function updateLoot(dt){
+      for(let i=loot.length-1;i>=0;i--){
+        const item=loot[i];item.age+=dt;
+        if(item.age>item.life){loot.splice(i,1);continue;}
+        // Items scatter on landing; then pull toward the hero at pickup range.
+        item.x+=item.vx*dt;item.y+=item.vy*dt;
+        item.vx*=Math.exp(-7*dt);item.vy*=Math.exp(-7*dt);
+        if(resources.health<=0)continue;
+        const d=dist(item.x,item.y,hero.x,hero.y-12);
+        if(d<100&&d>0){
+          const speed=260+(100-d)*3;
+          item.x+=(hero.x-item.x)/d*speed*dt;
+          item.y+=(hero.y-12-item.y)/d*speed*dt;
+        }
+        if(dist(item.x,item.y,hero.x,hero.y-12)<24){
+          if(item.kind==='gold'){
+            progress.gold+=item.value;
+            floatNumber(hero.x,hero.y-80,'+'+item.value+' Gold','#fce38d');
+            burst(item.x,item.y,'#ffda72',5);
+            updateProgressHUD();
+          }else{
+            resources.mana=Math.min(resources.maxMana,resources.mana+item.value);
+            floatNumber(hero.x,hero.y-75,'+'+item.value+' Mana','#7edfff');
+            burst(item.x,item.y,'#79e7ff',8);
+            updateResourceHUD();
+          }
+          loot.splice(i,1);
+        }
+      }
+    }
+    function drawLoot(){
+      for(const item of loot){
+        const wobble=Math.sin(time*3+item.id)*2.8;
+        const size=item.kind==='mana'?9:6.5;
+        ctx.save();
+        ctx.globalAlpha=item.age>item.life-5?Math.max(0,(item.life-item.age)/5):1;
+        ctx.translate(item.x,item.y-10+wobble);
+        ctx.fillStyle='#081c2269';ctx.beginPath();ctx.ellipse(0,12,11,4,0,0,TAU);ctx.fill();
+        const aura=ctx.createRadialGradient(0,0,0,0,0,20);
+        aura.addColorStop(0,item.kind==='mana'?'#79d9fa77':'#f2c66388');
+        aura.addColorStop(1,'#ffffff00');
+        ctx.fillStyle=aura;ctx.beginPath();ctx.arc(0,0,20,0,TAU);ctx.fill();
+        ctx.rotate(time*1.6+item.id);
+        ctx.fillStyle=item.kind==='mana'?'#a5f3ff':'#fbd470';
+        ctx.strokeStyle=item.kind==='mana'?'#269ac6':'#b97527';ctx.lineWidth=2.2;
+        ctx.beginPath();
+        ctx.moveTo(0,-size);ctx.lineTo(size*.7,0);ctx.lineTo(0,size);
+        ctx.lineTo(-size*.7,0);ctx.closePath();ctx.fill();ctx.stroke();
+        ctx.restore();
+      }
+    }
     function hurtMonster(m){
       if(m.hp<=0)return;
       m.hp=Math.max(0,m.hp-FIREBALL_DAMAGE);
       m.hitUntil=time+.17;
       m.selectedUntil=time+.45;
+      m.aggroUntil=time+4;
+      m.staggerUntil=time+.18;
+      // Small knockback makes each spell feel tangible.
+      const push=dist(m.x,m.y,hero.x,hero.y);
+      if(push>0.01){
+        const nx=m.x+(m.x-hero.x)/push*11,ny=m.y+(m.y-hero.y)/push*11;
+        if(!collides(nx,ny)){m.x=nx;m.y=ny;}
+      }
       floatNumber(m.x,m.y-78,'-'+FIREBALL_DAMAGE,'#a1eaff');
       burst(m.x,m.y-34,'#51bffb',16);
       if(m.hp<=0){
         m.deadAt=time;m.respawnAt=time+10;
-        defeatedMonsters++;
+        m.state='dead';
+        defeatedMonsters++; progress.kills++;
+        grantXP(15);
+        floatNumber(m.x,m.y-110,'+15 EP','#a1e9e6');
+        dropLoot(m);
         burst(m.x,m.y-24,'#af8be9',16);
       }
     }
@@ -278,26 +380,47 @@
         if(m.hp<=0){
           if(time>=m.respawnAt){
             m.x=m.homeX;m.y=m.homeY;m.hp=m.maxHp;m.attackAt=time+1.3;
+            m.aggroUntil=0;m.staggerUntil=0;m.state='idle';
           }
           continue;
         }
         if(resources.health<=0)continue;
         const d=dist(hero.x,hero.y,m.x,m.y);
-        if(d<215&&d>38){
-          const dx=(hero.x-m.x)/d,dy=(hero.y-m.y)/d,step=m.speed*dt;
-          // Slide along trees instead of clipping through them.
-          if(!collides(m.x+dx*step,m.y))m.x+=dx*step;
-          if(!collides(m.x,m.y+dy*step))m.y+=dy*step;
-        }else if(d>320){
-          // Reset only far-away slimes that wandered beyond their clearing.
-          const homeD=dist(m.x,m.y,m.homeX,m.homeY);
-          if(homeD>55){
-            const vx=(m.homeX-m.x)/homeD,vy=(m.homeY-m.y)/homeD,step=m.speed*.5*dt;
-            if(!collides(m.x+vx*step,m.y))m.x+=vx*step;
-            if(!collides(m.x,m.y+vy*step))m.y+=vy*step;
+        const homeD=dist(m.x,m.y,m.homeX,m.homeY);
+        // Finite-state pursuit: sight, chase, lose target, return to spawn.
+        if(homeD>270||d>385)m.state='return';
+        else if(d<235||(m.state==='chase'&&d<325)||time<m.aggroUntil){
+          m.state='chase';
+          m.aggroUntil=Math.max(m.aggroUntil,time+.35);
+        }else if(m.state==='chase')m.state='return';
+        else if(m.state==='return'&&homeD<16)m.state='idle';
+        const resting=m.state==='idle';
+        const moving=m.state==='chase'&&d>38;
+        const retreating=m.state==='return'&&homeD>7;
+        if(time>=m.staggerUntil&&(moving||retreating)){
+          const destination=moving?{x:hero.x,y:hero.y}:{x:m.homeX,y:m.homeY};
+          const length=dist(m.x,m.y,destination.x,destination.y);
+          if(length>.001){
+            const dx=(destination.x-m.x)/length,dy=(destination.y-m.y)/length;
+            const step=m.speed*(retreating?1.3:1)*dt;
+            if(!collides(m.x+dx*step,m.y))m.x+=dx*step;
+            if(!collides(m.x,m.y+dy*step))m.y+=dy*step;
           }
         }
-        if(d<42&&time>=m.attackAt){damageHero(8);m.attackAt=time+1.35;}
+        // Subtle home-area patrol: no collision with trees; never wander offscreen at speed.
+        if(resting){
+          const px=m.homeX+Math.sin(time*.65+m.phase)*14;
+          const py=m.homeY+Math.cos(time*.49+m.phase)*9;
+          if(!collides(px,py)){
+            m.x=lerp(m.x,px,Math.min(1,dt*.6));
+            m.y=lerp(m.y,py,Math.min(1,dt*.6));
+          }
+        }
+        const rangeNow=dist(hero.x,hero.y,m.x,m.y);
+        if(rangeNow<42&&time>=m.attackAt&&m.state==='chase'&&time>=m.staggerUntil){
+          damageHero(8);
+          m.attackAt=time+1.35;
+        }
       }
       for(let i=fireballs.length-1;i>=0;i--){
         const p=fireballs[i];p.age+=dt;
@@ -312,6 +435,7 @@
           p.x+=dx/d*step;p.y+=dy/d*step;
         }
       }
+      updateLoot(dt);
       for(let i=combatParticles.length-1;i>=0;i--){
         const p=combatParticles[i];p.age+=dt;
         p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=Math.exp(-3*dt);p.vy*=Math.exp(-3*dt);
@@ -328,6 +452,14 @@
       const bounce=Math.abs(Math.sin(age))*4;
       const squash=1+Math.sin(age*2)*.055;
       const flash=time<m.hitUntil;
+      if(m.state==='chase'&&m.hp>0&&time>m.attackAt-.42&&time<m.attackAt
+          &&dist(hero.x,hero.y,m.x,m.y)<61){
+        // Telegraph the contact attack before the next hit.
+        const intensity=1-(m.attackAt-time)/.42;
+        ctx.strokeStyle='rgba(250,119,134,'+(.26+intensity*.65)+')';
+        ctx.lineWidth=2.5;
+        ctx.beginPath();ctx.ellipse(m.x,m.y,28+intensity*4,11+intensity*3,0,0,TAU);ctx.stroke();
+      }
       ctx.save();ctx.globalAlpha=dying?Math.max(0,1-(time-m.deadAt)/.45):1;
       ctx.fillStyle='#0b172170';ctx.beginPath();ctx.ellipse(m.x,m.y+2,25,8,0,0,TAU);ctx.fill();
       ctx.translate(m.x,m.y-9-bounce);ctx.scale(squash,2-squash);
@@ -361,6 +493,28 @@
       }
     }
     function drawCombatEffects(){
+      // Ring, glyphs and a short blue pulse under the mage's hand at the shot moment.
+      if(time<shotCastUntil&&resources.health>0){
+        const phase=(time-shotCastStart)/Math.max(.01,shotCastUntil-shotCastStart);
+        const radius=12+phase*29;
+        const x=hero.x+(hero.dir===1?23:hero.dir===3?-23:0),y=hero.y-49;
+        ctx.save();ctx.globalCompositeOperation='lighter';
+        const halo=ctx.createRadialGradient(x,y,0,x,y,40);
+        halo.addColorStop(0,'#d5fbff99');halo.addColorStop(.36,'#34bdff88');
+        halo.addColorStop(1,'#0877ff00');
+        ctx.globalAlpha=1-phase*.7;
+        ctx.fillStyle=halo;ctx.beginPath();ctx.arc(x,y,40,0,TAU);ctx.fill();
+        ctx.strokeStyle='#94e7ff';ctx.lineWidth=2.4;
+        ctx.beginPath();ctx.arc(x,y,radius,0,TAU);ctx.stroke();
+        ctx.strokeStyle='#c8faffaa';ctx.lineWidth=1;
+        for(let i=0;i<6;i++){
+          const a=i*TAU/6+time*3;
+          ctx.beginPath();ctx.moveTo(x+Math.cos(a)*(radius-4),y+Math.sin(a)*(radius-4));
+          ctx.lineTo(x+Math.cos(a)*(radius+4),y+Math.sin(a)*(radius+4));ctx.stroke();
+        }
+        ctx.restore();
+      }
+      drawLoot();
       ctx.save();
       ctx.globalCompositeOperation='lighter';
       for(const p of fireballs){
