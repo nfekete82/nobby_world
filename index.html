@@ -49,6 +49,20 @@
       .resource-rune { width:32px; height:32px; font-size:19px; }
       .resource-track { height:17px; }
     }
+    .progression { grid-column:1/-1; display:flex; align-items:center; gap:10px;
+      margin-top:3px; padding-top:8px; border-top:1px solid #c7b48a25; }
+    .level-badge { flex-shrink:0; font-size:11px; letter-spacing:.08em;
+      color:#f2d48d; font-weight:700; white-space:nowrap; }
+    .xp-track { flex:1; min-width:0; height:6px; overflow:hidden;
+      background:#101b1e; border:1px solid #776a4c; border-radius:10px; }
+    .xp-fill { height:100%; width:0%; border-radius:10px; transition:width .25s ease-out;
+      background:linear-gradient(90deg,#6596bd,#a9e4e3); box-shadow:0 0 9px #79d9ff80; }
+    .xp-count { flex-shrink:0; color:#bedbd6; font-size:10px; white-space:nowrap; font-variant-numeric:tabular-nums; }
+    .treasure-counter { position:fixed; top:clamp(77px,8vw,120px);
+      right:clamp(20px,4vw,40px); color:#efdaaa;
+      font-weight:600; font-size:13px; text-shadow:0 2px 6px #09100f;
+      pointer-events:none; display:flex; gap:7px; align-items:center; }
+    .treasure-counter strong { color:#f3df93; font-variant-numeric:tabular-nums; }
     .mobile-hint { display:none; }
     @media (max-width:680px) { .mobile-hint {display:inline;} }
     .footer { position:fixed; bottom:max(24px,env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:15px; padding:10px 17px; border:1px solid #d9eac522; background:#0c211bc4; backdrop-filter:blur(12px); border-radius:100px; color:#d1decf; white-space:nowrap; font-size:12px; line-height:1; box-shadow:0 12px 34px #09130d50; pointer-events:none; }
@@ -84,7 +98,13 @@
       <div class="resource-top"><span class="resource-name">Mana</span><span class="resource-value" id="mana-value">100 / 100</span></div>
       <div class="resource-track" id="mana-meter" role="progressbar" aria-label="Manapunkte" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div class="resource-fill" id="mana-fill"></div></div>
     </div>
+    <div class="progression" aria-label="Charakterfortschritt">
+      <span class="level-badge" id="level-label">STUFE 1</span>
+      <div class="xp-track" id="xp-meter" role="progressbar" aria-label="Erfahrungspunkte" aria-valuemin="0" aria-valuemax="40" aria-valuenow="0"><div class="xp-fill" id="xp-fill"></div></div>
+      <span class="xp-count" id="xp-count">0 / 40 EP</span>
+    </div>
   </section>
+  <div class="treasure-counter" aria-label="Gesammelte Münzen">◈ <strong id="gold-count">0</strong></div>
   <div class="footer">
     <span class="desktop"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / <kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></span>
     <span class="desktop">Bewegen</span>
@@ -93,7 +113,7 @@
     <span class="sep desktop"></span>
     <span class="desktop"><kbd>Shift</kbd> Sprinten</span><span class="sep desktop"></span><span class="desktop"><kbd>E</kbd> Heilmagie</span>
   </div>
-  <div class="hint">NOBBY WORLD · FOREST COMBAT 0.3</div>
+  <div class="hint">NOBBY WORLD · FOREST COMBAT 0.4</div>
   <script>
   (() => {
     'use strict';
@@ -115,6 +135,25 @@
     let camera={x:start.x-innerWidth/(2*ZOOM),y:start.y-innerHeight/(2*ZOOM)};
     let hero={x:start.x,y:start.y,speed:192,dir:0,walking:false,walkCycle:0,breath:0};
     const resources={health:100,maxHealth:100,mana:100,maxMana:100};
+    const progress={level:1,xp:0,gold:0,kills:0};
+    const xpForLevel=level=>40+(level-1)*25;
+    const progressUI={
+      level:document.getElementById('level-label'),
+      fill:document.getElementById('xp-fill'),
+      count:document.getElementById('xp-count'),
+      meter:document.getElementById('xp-meter'),
+      gold:document.getElementById('gold-count')
+    };
+    function updateProgressHUD(){
+      const cap=xpForLevel(progress.level);
+      progressUI.level.textContent='STUFE '+progress.level;
+      progressUI.fill.style.width=(progress.xp/cap*100)+'%';
+      progressUI.count.textContent=progress.xp+' / '+cap+' EP';
+      progressUI.meter.setAttribute('aria-valuemax',String(cap));
+      progressUI.meter.setAttribute('aria-valuenow',String(progress.xp));
+      progressUI.gold.textContent=String(progress.gold);
+    }
+    updateProgressHUD();
     const HEAL_MANA_COST=25,HEAL_AMOUNT=35,MANA_REGEN_PER_SECOND=8;
     const resourceUI={
       health:{fill:document.getElementById('health-fill'),value:document.getElementById('health-value'),meter:document.getElementById('health-meter')},
