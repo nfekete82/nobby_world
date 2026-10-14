@@ -314,8 +314,9 @@
         const current=Math.min(resources['max'+kind[0].toUpperCase()+kind.slice(1)],Math.max(0,resources[kind]));
         const max=resources['max'+kind[0].toUpperCase()+kind.slice(1)];
         const shown=Math.ceil(current);
-        if(shown===lastShown[kind])continue;
-        lastShown[kind]=shown;
+        const signature=shown+'/'+max;
+        if(signature===lastShown[kind])continue;
+        lastShown[kind]=signature;
         resourceUI[kind].value.textContent=shown+' / '+max;
         resourceUI[kind].fill.style.width=(current/max*100)+'%';
         resourceUI[kind].meter.setAttribute('aria-valuenow',String(shown));
