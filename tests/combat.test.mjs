@@ -821,7 +821,7 @@ test('new organic hill sprite replaces rectangular cliff assembly when available
   drawCalls.length=0;
   g.drawMountainTiles();
   const calls=drawCalls.filter(c=>c[0]===sprite);
-  assert.ok(calls.length>0,'draw the user's newly generated hill artwork');
+  assert.ok(calls.length>0,"draw the newly generated hill artwork");
   const draw=calls[0];
   assert.equal(draw[1],hill.x-55);
   assert.equal(draw[2],hill.y-53);
