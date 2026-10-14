@@ -33,19 +33,19 @@ Walking, full facing rotation, casting, healing and attack poses animate the rig
 - Blue/slate roofs, cream plaster, warm timber, moss/clover green grass, teal water,
   gray-green stone, ochre sand and restrained gold/cyan magic.
 - All material textures are original built-in ImageGen PNGs, used as albedo maps.
-  Color management uses sRGB textures and ACES output. UI uses the same warm family.
+  Color management uses sRGB textures and ACES output. UI uses cream glass panels, muted green borders, circular spell buttons and
+  restrained gold accents; character level and world tier are shown separately.
 
 ## World rules
 
-There are at most 88 trees with at least 210 simulation units between trunk centers,
+The map is 10400×5600 units across six regions. There are at most 210 trees with at least 210 simulation units between trunk centers,
 compared with 335 in the prior renderer. Starting village, road, elite/boss clearing,
 water banks, plateau stairs and their approaches are reserved. Plants belong to
 appropriate biomes; all land props reject both lakes and the stream.
 
 Lake outlines use shared harmonic radii rather than perfect ellipses. Shore geometry
 and water collision derive from the same function. A winding stream crosses the
-main path east of the starting village; a real wooden bridge supplies the only
-crossing. Terrain is depressed under water. Lily pads are intentional water plants;
+main path east of the starting village; two real wooden bridges connect the northern and southern roads. Terrain is depressed under water. Lily pads are intentional water plants;
 cacti, shrubs and land rocks are not allowed inside water collision regions.
 
 Plateau tops derive from `plateauBand`, with real rock walls and stair meshes.
@@ -59,7 +59,9 @@ Only actors whose equipment is a bow can fire enemy projectiles. Setting `ranged
 on a spear wielder is insufficient. Bow shots render as 3D arrows. Spear goblins
 pursue and attack at melee reach. Slimes, beetles, guardians and the boss do not shoot.
 The boss retains its dodgeable ground slam. Arcane damage, frost's zero damage,
-healing, mana, XP, loot, equipment, respawns and versioned browser saves remain.
+healing, mana, XP, loot, equipment and versioned browser saves remain.
+Enemy respawns now occur together through the completed-world portal, with rising
+health, damage and XP. See [progression rules](WORLD_PROGRESSION.md).
 Frost adds an icy ring/crystals; healing adds rising green sparks. Damage/status
 labels project from world positions into the interface.
 
@@ -71,11 +73,11 @@ culled. Foreground tree crowns fade when they obscure Nobby. The large legacy 2D
 The legacy renderer is retained as a fallback if WebGL initialization fails; an
 explicit status message identifies that fallback.
 
-`npm test` covers 64 simulation regressions, including the revised weapon rule,
+`npm test` covers 72 simulation regressions, including the revised weapon rule,
 water/bridge paths, prop placement and building footprints. `npm run test:visual`
 uses real Chrome/WebGL to verify material loading, WASD, projected mouse combat,
 frost, menus, healing, save writes, elevated picking, stable geometry allocation
-and mobile layout. See `artifacts/3d/report.json` and its screenshots.
+mobile layout, portal transitions and saved world tiers. See `artifacts/worlds/report.json` and its screenshots.
 
 This is an original stylized browser 3D implementation inspired by the supplied
 composition, not a reproduction of the commercial game's models or its production

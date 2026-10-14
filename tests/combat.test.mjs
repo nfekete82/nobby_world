@@ -13,7 +13,7 @@ const bootAnchor = 'drawGround();generateForest();buildNav();spawnMonsters();res
 assert.ok(script.includes(bootAnchor), 'game initialization changed; adjust test hook');
 const instrumented = script.replace(
   bootAnchor,
-  bootAnchor + '\nwindow.__test={enemies,fireballs,resources,progress,loot,hero,merchant,WORLD,BIOMES,trees,rocks,details,biomeAt,pathAt,drawAdventureEnemy,drawForestGoblinSprite,forestGoblinSheet,drawRootGuardianSprite,rootGuardianSheet,drawForestBossSprite,forestBossSheet,drawNobbySprite,nobbyAnimationFrame,nobbySprites,nobbySpriteLoaded,river,riverCenter,riverContains,lakeRadius,structures,plateaus,heightAt,stairCrossing,canTraverse,moveHero,collides,lakes,lakeContains,drawLakeTiles,drawMountainTiles,organicPlateauImage,plateauBand,paintRoadTiles,roadAtlas,lakeAtlas,cliffAtlas,groundCtx:g,bossZones,enemyShots,equipment,equipped,bag,selectSpell,openInventory,closeInventory,toggleEquipment,drinkPotion,spellSpecs,camera,update,castFireball,provokeMonster,routeTo,hurtMonster,grantXP,damageHero,drawCombatEffects,drawMerchant,openShop,closeShop,buyItem,saveGame,route:()=>route,target:()=>target,shopState:()=>shopOpen};'
+  bootAnchor + '\nwindow.__test={enemies,fireballs,resources,progress,loot,hero,merchant,WORLD,BIOMES,REGIONS,worldPaths,onWorldPath,worldRun,monsterPlan,updateWorldProgress,enterNextWorld,approachPortal,openMap,closeMap,castHeal,regionAt,CELL,COLS,ROWS,blocked,closestFree,trees,rocks,details,biomeAt,pathAt,drawAdventureEnemy,drawForestGoblinSprite,forestGoblinSheet,drawRootGuardianSprite,rootGuardianSheet,drawForestBossSprite,forestBossSheet,drawNobbySprite,nobbyAnimationFrame,nobbySprites,nobbySpriteLoaded,river,riverCenter,riverContains,lakeRadius,structures,plateaus,heightAt,stairCrossing,canTraverse,moveHero,collides,lakes,lakeContains,drawLakeTiles,drawMountainTiles,organicPlateauImage,plateauBand,paintRoadTiles,roadAtlas,lakeAtlas,cliffAtlas,groundCtx:g,bossZones,enemyShots,equipment,equipped,bag,selectSpell,openInventory,closeInventory,toggleEquipment,drinkPotion,spellSpecs,camera,update,castFireball,provokeMonster,routeTo,hurtMonster,grantXP,damageHero,drawCombatEffects,drawMerchant,openShop,closeShop,buyItem,saveGame,route:()=>route,target:()=>target,shopState:()=>shopOpen};'
 );
 
 function boot(initialSave = null) {
@@ -83,8 +83,8 @@ function boot(initialSave = null) {
 
 test('forest combat spawns healthy enemies', () => {
   const {g}=boot();
-  assert.equal(g.enemies.length,22);
-  assert.equal(g.enemies.filter(e=>e.kind==='slime').length,9);
+  assert.equal(g.enemies.length,80);
+  assert.equal(g.enemies.filter(e=>e.kind==='slime').length,23);
   assert.ok(g.enemies.every(e => e.hp===e.maxHp && e.hp>0));
   assert.equal(g.resources.health,100);
   assert.equal(g.resources.mana,100);
@@ -129,7 +129,7 @@ test('no mana means no attack; E heals only with enough mana', () => {
   assert.equal(g.resources.mana,0);
 });
 
-test('monsters damage the hero; defeated monsters respawn', () => {
+test('monsters damage the hero and remain defeated until the portal transition', () => {
   const {g}=boot();
   const m=g.enemies[0];
   m.x=g.hero.x+25;m.y=g.hero.y;m.attackAt=0;
@@ -140,7 +140,8 @@ test('monsters damage the hero; defeated monsters respawn', () => {
   // Hold the hero away from the monster until respawn.
   g.hero.x=g.hero.x+600;
   for(let i=0;i<204;i++)g.update(.05);
-  assert.equal(m.hp,m.maxHp);
+  assert.equal(m.hp,0);
+  assert.ok(g.worldRun.defeated.has(m.id));
 });
 
 test('monsters grant experience and scatter collectible treasure', () => {
@@ -442,15 +443,13 @@ test('failed spell cast does not alert monsters', () => {
   assert.equal(g.fireballs.length,0);
 });
 
-test('defeating a provoked slime and respawning clears the chase', () => {
-  const {g}=boot();const m=g.enemies[0];
-  g.provokeMonster(m);
-  for(let i=0;i<3;i++)g.hurtMonster(m);
-  assert.equal(m.hp,0);
-  g.hero.x+=560;
-  for(let i=0;i<210;i++)g.update(.05);
-  assert.equal(m.hp,m.maxHp);
-  assert.equal(m.provoked,false);
+test('portal transition resets pursuit for the next stronger world', () => {
+  const {g}=boot();g.provokeMonster(g.enemies[0]);
+  for(const m of g.enemies)g.hurtMonster(m,m.maxHp);
+  g.hero.x=g.worldRun.portal.x;g.hero.y=g.worldRun.portal.y;
+  assert.equal(g.enterNextWorld(),true);
+  assert.equal(g.enemies[0].provoked,false);assert.equal(g.enemies[0].state,'idle');
+  assert.ok(g.enemies[0].hp>66);assert.equal(g.enemies[0].hp,g.enemies[0].maxHp);
 });
 
 test('an unprovoked far-away slime still returns to its own territory', () => {
@@ -463,14 +462,14 @@ test('an unprovoked far-away slime still returns to its own territory', () => {
 
 test('expanded world preserves old start and softly separates forest, badlands and desert', () => {
   const {g}=boot();
-  assert.equal(g.WORLD.w,5200);
-  assert.equal(g.WORLD.h,2800);
+  assert.equal(g.WORLD.w,10400);
+  assert.equal(g.WORLD.h,5600);
   assert.equal(g.hero.x,1600,'player start must not jump after a map expansion');
   assert.equal(g.biomeAt(1600),'forest');
   assert.equal(g.biomeAt(3550),'badlands');
   assert.equal(g.biomeAt(4700),'desert');
-  assert.ok(g.trees.length<=335);
-  assert.ok(g.trees.every(t=>t.x<g.BIOMES.forestEnd));
+  assert.ok(g.trees.length<=210);
+  assert.ok(g.trees.every(t=>['forest','highlands','dusk'].includes(g.biomeAt(t.x))));
   assert.ok(g.details.some(o=>o.type==='cactus'));
   assert.ok(g.details.some(o=>o.type==='drybush'));
 });
@@ -673,7 +672,7 @@ test('road sheet replaces drawn roads when present, including true image draw ca
 test('water sprite atlas draws shoreline cells and four solid lakes block pathing', () => {
   const {g,drawCalls}=boot();
   assert.equal(g.lakeAtlas.url,'assets/custom/lake_tiles.png');
-  assert.equal(g.lakes.length,4);
+  assert.equal(g.lakes.length,8);
   const first=g.lakes[0], cx=first.x+first.cols*115/2;
   const cy=first.y+first.rows*115/2;
   assert.equal(g.lakeContains(cx,cy),true);
@@ -685,7 +684,7 @@ test('water sprite atlas draws shoreline cells and four solid lakes block pathin
 });
 
 test('mountain plateau levels cannot be climbed through cliff walls', () => {
-  const {g}=boot();assert.equal(g.plateaus.length,2);
+  const {g}=boot();assert.equal(g.plateaus.length,4);
   const p=g.plateaus[0], lip=g.plateauBand(p,p.stairsX).lip;
   assert.equal(g.heightAt(p.stairsX,lip+1),0);
   assert.equal(g.heightAt(p.stairsX,lip-1),1);
@@ -848,8 +847,9 @@ test('new hill still forbids wall climbing but permits stairs', () => {
 
 
 test('world placement keeps all land props outside water and trees spaced apart', () => {
-  const {g}=boot();assert.ok(g.trees.length<=88&&g.trees.length>30);
+  const {g}=boot();assert.ok(g.trees.length<=210&&g.trees.length>100);
   for(const o of [...g.rocks,...g.details,...g.trees]){
+    assert.equal(g.onWorldPath(o.x,o.y),false,'land props must leave roads clear');
     assert.equal(g.lakeContains(o.x,o.y),false,`land prop in lake at ${o.x},${o.y}`);
     assert.equal(g.riverContains(o.x,o.y),false,`land prop in river at ${o.x},${o.y}`);
   }
@@ -870,4 +870,94 @@ test('river blocks walking except at its actual wooden bridge', () => {
 test('every shooting enemy carries a bow and buildings have solid footprints', () => {
   const {g}=boot();assert.ok(g.enemies.filter(m=>m.ranged).every(m=>m.weapon==='bow'&&m.kind==='raider'));
   for(const o of g.structures)assert.equal(g.collides(o.x,o.y),true);
+});
+
+
+test('portal requires the last enemy and defeated enemies stay dead after long waits', () => {
+  const {g}=boot();assert.equal(g.enterNextWorld(),false);
+  for(const m of g.enemies.slice(0,-1))g.hurtMonster(m,m.maxHp);
+  assert.equal(g.worldRun.portal.active,false);assert.equal(g.worldRun.defeated.size,79);
+  for(let i=0;i<100;i++)g.update(.1);
+  assert.equal(g.enemies.filter(m=>m.hp>0).length,1);
+  const last=g.enemies.at(-1);g.hurtMonster(last,last.maxHp);
+  assert.equal(g.worldRun.portal.active,true);assert.equal(g.worldRun.defeated.size,80);
+  assert.equal(g.collides(g.worldRun.portal.x,g.worldRun.portal.y),false);
+});
+
+test('world 2 and 3 strengthen every enemy, preserve gear and character progress and clear combat', () => {
+  const {g}=boot();g.equipment.focus=true;g.equipped.focus=true;g.bag.potions=2;
+  const original=g.enemies.map(m=>({hp:m.maxHp,damage:m.damage,speed:m.speed}));
+  for(let level=2;level<=3;level++){
+    for(const m of g.enemies)g.hurtMonster(m,m.maxHp);
+    const characterLevel=g.progress.level,oldGold=g.progress.gold;
+    g.hero.x=g.worldRun.portal.x;g.hero.y=g.worldRun.portal.y;
+    assert.equal(g.enterNextWorld(),true);assert.equal(g.worldRun.level,level);
+    assert.equal(g.enterNextWorld(),false,'a duplicate click cannot skip a world');
+    assert.equal(g.progress.level,characterLevel);assert.ok(g.progress.gold>=oldGold);
+    assert.equal(g.equipment.focus,true);assert.equal(g.equipped.focus,true);
+    assert.equal(g.worldRun.defeated.size,0);assert.equal(g.worldRun.portal.active,false);
+    assert.equal(g.resources.health,g.resources.maxHealth);assert.equal(g.resources.mana,g.resources.maxMana);
+    for(const m of g.enemies){assert.equal(m.level,level);assert.ok(m.maxHp>original[m.id].hp);assert.ok(m.damage>original[m.id].damage);assert.ok(m.speed>=original[m.id].speed);assert.equal(m.hp,m.maxHp);original[m.id]={hp:m.maxHp,damage:m.damage,speed:m.speed};}
+    assert.equal(g.fireballs.length+g.enemyShots.length+g.bossZones.length+g.loot.length,0);
+  }
+});
+
+test('portal is distance-gated and unavailable in menus or after defeat', () => {
+  const {g}=boot();for(const m of g.enemies)g.hurtMonster(m,m.maxHp);
+  g.hero.x=g.worldRun.portal.x+300;assert.equal(g.enterNextWorld(),false);
+  g.hero.x=g.worldRun.portal.x;g.hero.y=g.worldRun.portal.y;
+  g.openInventory();assert.equal(g.enterNextWorld(),false);g.closeInventory();
+  g.openMap();assert.equal(g.enterNextWorld(),false);g.closeMap();
+  g.resources.health=0;assert.equal(g.enterNextWorld(),false);
+  g.resources.health=g.resources.maxHealth;assert.equal(g.enterNextWorld(),true);
+});
+
+test('world tier and defeated enemies persist without duplicate kill rewards', () => {
+  const {g,stored}=boot();for(const m of g.enemies)g.hurtMonster(m,m.maxHp);
+  g.hero.x=g.worldRun.portal.x;g.hero.y=g.worldRun.portal.y;g.enterNextWorld();
+  g.hurtMonster(g.enemies[0],g.enemies[0].maxHp);g.hurtMonster(g.enemies[7],g.enemies[7].maxHp);g.saveGame();
+  const beforeKills=g.progress.kills,beforeXP=g.progress.xp;
+  const next=boot(JSON.parse(stored.get('nobby_world_save_v1'))).g;
+  assert.equal(next.worldRun.level,2);assert.equal(next.worldRun.defeated.size,2);
+  assert.equal(next.enemies[0].hp,0);assert.equal(next.enemies[7].hp,0);
+  assert.equal(next.enemies.filter(m=>m.hp>0).length,78);
+  assert.equal(next.progress.kills,beforeKills);assert.equal(next.progress.xp,beforeXP);
+  assert.equal(next.worldRun.portal.active,false);
+});
+
+test('completed world restores the open portal and transitions exactly once', () => {
+  const {g,stored}=boot();for(const m of g.enemies)g.hurtMonster(m,m.maxHp);g.saveGame();
+  const next=boot(JSON.parse(stored.get('nobby_world_save_v1'))).g;
+  assert.equal(next.worldRun.portal.active,true);assert.equal(next.enemies.filter(m=>m.hp>0).length,0);
+  next.hero.x=next.worldRun.portal.x;next.hero.y=next.worldRun.portal.y;
+  assert.equal(next.enterNextWorld(),true);assert.equal(next.worldRun.level,2);
+});
+
+test('old saves migrate into world 1 and corrupt wave data cannot unlock a portal', () => {
+  const next=boot({version:1,progress:{level:12,xp:20,gold:148,kills:100},equipment:{focus:true},hero:{x:1600,y:1200}}).g;
+  assert.equal(next.worldRun.level,1);assert.equal(next.progress.level,12);assert.equal(next.progress.gold,148);assert.equal(next.equipment.focus,true);
+  const bad=boot({version:1,progress:{level:1},world:{level:-100,defeated:[-1,10000,'0',null,{},1,1],portal:{active:true,x:Infinity,y:0}}}).g;
+  assert.equal(bad.worldRun.level,1);assert.equal(bad.worldRun.defeated.size,1);assert.equal(bad.worldRun.portal.active,false);
+});
+
+test('six regions have encounters, both bridges are traversable and every spawn is on land', () => {
+  const {g}=boot();assert.equal(g.REGIONS.length,6);assert.ok(g.worldPaths.length>=7);
+  for(const r of g.REGIONS)assert.ok(g.enemies.some(m=>g.regionAt(m.homeX,m.homeY).id===r.id),r.name+' needs enemies');
+  assert.ok(g.enemies.every(m=>!g.collides(m.homeX,m.homeY)));
+  assert.equal(g.enemies.filter(m=>m.kind==='boss').length,5);
+  for(const y of g.river.bridges){const x=g.riverCenter(y);assert.equal(g.collides(x,y),false);assert.ok(g.routeTo(x+130,y,x-130,y).length);}
+});
+
+
+test('all 80 encounter spawns are reachable from the village through legal land and stairs', () => {
+  const {g}=boot(),seen=new Uint8Array(g.COLS*g.ROWS),queue=new Int32Array(g.COLS*g.ROWS);
+  const start=g.closestFree(Math.floor(g.hero.x/g.CELL),Math.floor(g.hero.y/g.CELL));let head=0,tail=1;
+  queue[0]=start[1]*g.COLS+start[0];seen[queue[0]]=1;
+  while(head<tail){const id=queue[head++],cx=id%g.COLS,cy=Math.floor(id/g.COLS);
+    for(const [dx,dy]of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=cx+dx,ny=cy+dy;if(nx<0||ny<0||nx>=g.COLS||ny>=g.ROWS)continue;const ni=ny*g.COLS+nx;if(seen[ni]||g.blocked[ni])continue;
+      const x=(cx+.5)*g.CELL,y=(cy+.5)*g.CELL,tx=(nx+.5)*g.CELL,ty=(ny+.5)*g.CELL;
+      if(g.heightAt(x,y)!==g.heightAt(tx,ty)&&!g.stairCrossing(x,y,tx,ty))continue;seen[ni]=1;queue[tail++]=ni;
+    }
+  }
+  for(const m of g.enemies){const cell=g.closestFree(Math.floor(m.homeX/g.CELL),Math.floor(m.homeY/g.CELL));assert.equal(seen[cell[1]*g.COLS+cell[0]],1,m.name+' at '+m.homeX+','+m.homeY+' must be reachable');}
 });

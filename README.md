@@ -38,6 +38,8 @@ Reload with Cmd+Shift+R after updating. Existing browser saves remain compatible
 | Heal | E; 25 mana, restores up to 35 HP |
 | Shop near Galdor | B or click him |
 | Inventory | I |
+| World map / nearest enemy | K / map button |
+| Enter completed-world portal | R or click portal |
 | Drink healing potion | 4; restores up to 40 HP |
 | Close panels | Escape |
 | Toggle sound / fullscreen | M / F |
@@ -45,16 +47,31 @@ Reload with Cmd+Shift+R after updating. Existing browser saves remain compatible
 Spear goblins use melee attacks. Only raiders visibly equipped with bows shoot;
 their projectiles are arrows. Slimes, scarabs, guardians and the boss do not shoot.
 The boss retains its dodgeable ground slam. XP, levels, gold, equipment, loot,
-respawns, mana and saves use the existing simulation and `nobby_world_save_v1`.
+mana and saves use the existing simulation and `nobby_world_save_v1`.
 
-The world remains 5200×2800 simulation units. There are at most 88 spaced trees
-rather than 335; paths, village, boss/elite areas and stair approaches stay readable.
-Land props reject both lakes and the stream. The stream can be crossed at the
-wooden bridge; lakes and cliff walls remain solid. Houses now have solid footprints.
+The map is now **10400×5600 units**, four times its original area, with six regions:
+Smaragdwald, Versunkene Gärten, Trockene Grenzlande, Goldene Wüste, Kristallhöhen
+and Dämmerhain. There are **80 enemies**, including six elites and five bosses,
+eight lakes, four plateaus, two bridges and a connected network of roads.
+At most 210 spaced trees cover the larger world. Roads, encounters and stair
+approaches stay clear; land props reject water and paths.
+
+Defeated monsters stay dead for the current world. After the last kill, a glowing
+3D portal appears near Nobby. Entering it starts the next world with all 80 enemies
+restored at a higher tier. Enemy health, damage and XP increase each world; movement
+speed increases up to a cap. Character level and equipment remain; health and mana
+refill and uncollected loot is awarded. World tier, defeated IDs and the portal are
+saved alongside the existing character data. Old saves start in world 1.
+See [progression rules](docs/WORLD_PROGRESSION.md).
+
+The interface uses soft cream panels, green accents, compact resource bars and a
+circular spell dock. The world map shows remaining enemies and can guide Nobby to
+the nearest one. Menus and the map support desktop and mobile layouts.
 
 ## Implementation and artwork
 
-- `index.html`: game simulation, controls, HUD and legacy fallback renderer.
+- `index.html`: game simulation, progression, map, controls and legacy fallback renderer.
+- `assets/ui/game.css`: unified HUD, dialogs and responsive layout.
 - `assets/3d/world.js`: real WebGL geometry, rigs, lighting, water, terrain picking,
   model animation and effects. One metre corresponds to 100 simulation units.
 - `assets/3d/materials.png`, `foliage.png`, `ui.png`: built-in ImageGen artwork.
@@ -74,8 +91,8 @@ npm ci
 npm test
 ```
 
-64 regression tests cover the existing systems and revised weapon, bridge, prop
-placement and structure rules. Real Chrome/WebGL integration review:
+72 regression tests cover the existing systems and revised weapon, bridge, prop
+placement, structure, portal, save migration and reachability rules. Real Chrome/WebGL integration review:
 
 ```sh
 # Separate terminal:
@@ -86,13 +103,13 @@ npm run test:visual
 
 The browser suite checks real projected mouse combat, WASD, zero-damage frost,
 healing, menus, saves, elevated picking, stable geometry allocation, loaded textures
-and 390px mobile layout. Its review hook is injected only into intercepted HTML.
+390px mobile layout, real portal clicks, successive worlds and restored world saves. Its review hook is injected only into intercepted HTML.
 
-[Review report](artifacts/3d/report.json) · [Village](artifacts/3d/village.png) ·
-[Bridge](artifacts/3d/bridge.png) · [Boss](artifacts/3d/forest-boss.png) ·
-[Lake](artifacts/3d/lake.png) · [Plateau](artifacts/3d/plateau.png) ·
-[Desert](artifacts/3d/desert.png) · [Combat](artifacts/3d/combat.png) ·
-[Mobile](artifacts/3d/mobile.png).
+[Review report](artifacts/worlds/report.json) · [Village](artifacts/worlds/village.png) ·
+[Bridge](artifacts/worlds/bridge.png) · [Boss](artifacts/worlds/forest-boss.png) ·
+[Lake](artifacts/worlds/lake.png) · [Plateau](artifacts/worlds/plateau.png) ·
+[Desert](artifacts/worlds/desert.png) · [Combat](artifacts/worlds/combat.png) ·
+[Mobile](artifacts/worlds/mobile.png).
 
 To re-export the generated transparent UI source: `npm run art:ui` with the review
 server running. The older `art:prepare` command is for retained pixel-art assets.

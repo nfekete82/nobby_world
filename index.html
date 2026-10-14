@@ -335,6 +335,7 @@
     .boss-hud {top:82px;}.shop-dialog,.inventory-dialog{background:linear-gradient(130deg,#284c40,#162f2b);border-radius:14px;}
     @media(max-width:680px){.hud h1{font-size:25px;}.hud{left:16px;}.render-status{bottom:48px;}.boss-hud{top:154px;}}
   </style>
+  <link rel="stylesheet" href="assets/ui/game.css">
 </head>
 <body>
   <canvas id="world" aria-label="Spielwelt Nobby World"></canvas>
@@ -356,13 +357,13 @@
       <div class="resource-top"><span class="resource-name">Leben</span><span class="resource-value" id="health-value">100 / 100</span></div>
       <div class="resource-track" id="health-meter" role="progressbar" aria-label="Lebenspunkte" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div class="resource-fill" id="health-fill"></div></div>
     </div>
-    <div class="resource-rune" aria-hidden="true">✥</div>
+    <div class="resource-rune" aria-hidden="true"><span>N</span></div>
     <div class="resource resource-mana">
       <div class="resource-top"><span class="resource-name">Mana</span><span class="resource-value" id="mana-value">100 / 100</span></div>
       <div class="resource-track" id="mana-meter" role="progressbar" aria-label="Manapunkte" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div class="resource-fill" id="mana-fill"></div></div>
     </div>
     <div class="progression" aria-label="Charakterfortschritt">
-      <span class="level-badge" id="level-label">STUFE 1</span>
+      <span class="level-badge" id="level-label">LEVEL 1</span>
       <div class="xp-track" id="xp-meter" role="progressbar" aria-label="Erfahrungspunkte" aria-valuemin="0" aria-valuemax="40" aria-valuenow="0"><div class="xp-fill" id="xp-fill"></div></div>
       <span class="xp-count" id="xp-count">0 / 40 EP</span>
     </div>
@@ -371,16 +372,23 @@
     <button class="spell-choice" id="spell-fire" type="button" aria-pressed="true" title="1 – Blaue Feuerkugel, 9 Mana">
       <span class="spell-icon">✹</span><span class="spell-name">Arkane Kugel</span><span class="spell-key">1 · 9 Mana</span></button>
     <button class="spell-choice" id="spell-ice" type="button" aria-pressed="false" title="2 – Verlangsamen (3 Sekunden, 0 Schaden), 14 Mana">
-      <span class="spell-icon">❄</span><span class="spell-name">Verlangsamen</span><span class="spell-key">2 · 14 Mana · 0 Schaden</span></button>
+      <span class="spell-icon">❄</span><span class="spell-name">Verlangsamen</span><span class="spell-key">2 · 14 Mana</span></button>
+    <button class="spell-choice utility-spell" id="ability-heal" type="button" title="E – Heilen: 25 Mana, bis zu 35 Leben" aria-label="Heilen (E)"><span class="spell-icon heal-icon"></span><span class="spell-name">Heilen</span><span class="spell-key">E · 25 Mana</span></button>
+    <button class="spell-choice utility-spell" id="ability-potion" type="button" title="4 – Heiltrank trinken" aria-label="Heiltrank trinken (4)"><span class="spell-icon potion-icon"></span><span class="spell-name">Heiltrank</span><span class="spell-key" id="ability-potion-count">4 · 0 Tränke</span></button>
   </div>
   <div class="zone-banner" id="zone-banner" aria-live="polite">🌲 Smaragdwald</div>
+  <section class="world-progress" aria-label="Fortschritt der Welt"><div><strong id="world-tier">WELT 1</strong><span id="world-remaining">80 / 80 Gegner</span></div><div class="world-progress-track"><span id="world-progress-fill"></span></div><button id="portal-button" type="button" hidden>Portal betreten [R]</button></section>
+  <button id="map-open" class="map-open" type="button" title="Weltkarte (K)">Karte <kbd>K</kbd></button>
+  <aside class="minimap-panel" aria-label="Gebietsübersicht"><canvas id="minimap" width="208" height="112" aria-label="Positionen von Nobby und Gegnern"></canvas><span>Weltkarte öffnen · K</span></aside>
+  <details class="controls-help"><summary aria-label="Steuerung anzeigen">?</summary><div><strong>Dein Abenteuer</strong><p>WASD / Pfeile: Laufen<br>Klick auf Boden: Weg finden<br>Klick auf Gegner: Zaubern<br>Shift: Sprinten · E: Heilen<br>I: Inventar · B: Händler<br>K: Karte · R: Portal</p></div></details>
+  <div id="map-overlay" class="map-overlay" role="dialog" aria-modal="true" aria-labelledby="map-title" hidden><section class="map-dialog"><div class="inventory-heading"><div><div class="shop-eyebrow">Deine Reise</div><h2 id="map-title">Die Welt von Nobby</h2></div><button id="map-close" class="shop-close" type="button" aria-label="Karte schließen">×</button></div><p class="map-description">Wähle einen Ort, um dorthin zu laufen. Rote Punkte zeigen verbleibende Gegner.</p><canvas id="world-map" width="900" height="485" aria-label="Interaktive Weltkarte"></canvas><div class="map-regions"><span style="--region-color:#689655">Smaragdwald</span><span style="--region-color:#82966b">Versunkene Gärten</span><span style="--region-color:#b9a778">Grenzlande</span><span style="--region-color:#d7bb7a">Wüste</span><span style="--region-color:#8ab9b6">Kristallhöhen</span><span style="--region-color:#768eb1">Dämmerhain</span></div><div class="map-legend"><span>● Nobby</span><span>● Gegner</span><span>◈ Portal</span></div><button id="track-enemy" class="inventory-action" type="button">Zum nächsten Gegner</button></section></div>
   <section class="boss-hud" id="boss-hud" aria-label="Bossleben" hidden>
     <span id="boss-title">WÄCHTER DES WALDES</span>
     <div class="boss-track"><div id="boss-health"></div></div>
     <span id="boss-health-text">600 / 600</span>
   </section>
   <div class="treasure-counter" aria-label="Gesammelte Münzen">◈ <strong id="gold-count">0</strong></div>
-  <button type="button" id="inventory-open" class="inventory-open" title="Inventar (I)" aria-label="Inventar öffnen">◈ Inventar [I]</button>
+  <button type="button" id="inventory-open" class="inventory-open" title="Inventar (I)" aria-label="Inventar öffnen">Inventar <kbd>I</kbd></button>
   <div class="inventory-overlay" id="inventory-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="inventory-title">
     <section class="inventory-dialog">
       <div class="inventory-heading"><div><div class="shop-eyebrow">Ausrüstung &amp; Beutel</div>
@@ -450,11 +458,22 @@
     'use strict';
     const canvas = document.getElementById('world');
     const ctx = canvas.getContext('2d', {alpha:false});
-    const WORLD = {w:5200,h:2800};
+    const WORLD = {w:10400,h:5600};
+    const GROUND_SCALE=.5;
     // Preserve the original start coordinates and old savegame positions.
-    const BIOMES={forestEnd:3100,transitionEnd:4050,desertStart:3770};
+    const BIOMES={forestEnd:3100,transitionEnd:4050,desertStart:3770,desertEnd:6200,highlandsEnd:8200};
+    const REGIONS=[
+      {id:'forest',name:'Smaragdwald',x0:0,x1:3100,y0:0,y1:2800,color:'#689655'},
+      {id:'ruins',name:'Versunkene Gärten',x0:0,x1:3100,y0:2800,y1:5600,color:'#82966b'},
+      {id:'badlands',name:'Trockene Grenzlande',x0:3100,x1:4050,y0:0,y1:5600,color:'#b9a778'},
+      {id:'desert',name:'Goldene Wüste',x0:4050,x1:6200,y0:0,y1:5600,color:'#d7bb7a'},
+      {id:'highlands',name:'Kristallhöhen',x0:6200,x1:8200,y0:0,y1:5600,color:'#8ab9b6'},
+      {id:'dusk',name:'Dämmerhain',x0:8200,x1:10400,y0:0,y1:5600,color:'#768eb1'}
+    ];
+    const worldRun={level:1,defeated:new Set(),portal:{active:false,x:0,y:0}};
     const biomeBlend=x=>clamp((x-BIOMES.forestEnd)/(BIOMES.transitionEnd-BIOMES.forestEnd),0,1);
-    const biomeAt=x=>x<BIOMES.forestEnd?'forest':x<BIOMES.transitionEnd?'badlands':'desert';
+    const biomeAt=x=>x<3100?'forest':x<4050?'badlands':x<6200?'desert':x<8200?'highlands':'dusk';
+    const regionAt=(x,y)=>REGIONS.find(r=>x>=r.x0&&x<r.x1&&y>=r.y0&&y<r.y1)||REGIONS[0];
     const TAU=Math.PI*2;
     const ZOOM=1.22; // Art scale; keep camera and pointer coordinates in world units.
     const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
@@ -465,6 +484,11 @@
     const rnd=(a,b)=>a+(b-a)*rand();
     const choose=arr=>arr[Math.floor(rand()*arr.length)];
     const pathAt=x=>1205+178*Math.sin(x/560)+68*Math.sin(x/203);
+    const southPathAt=x=>pathAt(x)+2450;
+    const worldPaths=[];
+    for(const [at,width]of [[pathAt,63],[southPathAt,52]]){const points=[];for(let x=0;x<=WORLD.w;x+=40)points.push([x,at(x)]);worldPaths.push({points,width});}
+    for(const x of [1150,3500,5600,7600,9200]){const points=[];for(let y=pathAt(x);y<=southPathAt(x);y+=40)points.push([x+Math.sin((y-pathAt(x))/280)*45,y]);worldPaths.push({points,width:40});}
+    const onWorldPath=(x,y,margin=0)=>worldPaths.some(p=>p.points.some(q=>Math.abs(x-q[0])<p.width+margin+30&&Math.abs(y-q[1])<p.width+margin+30));
     const start={x:1600,y:pathAt(1600)}; // Original spawn remains stable for existing saves.
     let viewport={w:innerWidth,h:innerHeight,dpr:1};
     let camera={x:start.x-innerWidth/(2*ZOOM),y:start.y-innerHeight/(2*ZOOM)};
@@ -481,7 +505,7 @@
     };
     function updateProgressHUD(){
       const cap=xpForLevel(progress.level);
-      progressUI.level.textContent='STUFE '+progress.level;
+      progressUI.level.textContent='LEVEL '+progress.level;
       progressUI.fill.style.width=(progress.xp/cap*100)+'%';
       progressUI.count.textContent=progress.xp+' / '+cap+' EP';
       progressUI.meter.setAttribute('aria-valuemax',String(cap));
@@ -583,6 +607,8 @@
       return true;
     }
     function updateInventoryUI(){
+      document.getElementById('ability-potion-count').textContent='4 · '+bag.potions+' Tränke';
+      document.getElementById('ability-potion').disabled=bag.potions<1;
       for(const [key,slot] of Object.entries(invUI.slots)){
         slot.status.textContent=!equipment[key]?'Nicht im Besitz':equipped[key]?'Ausgerüstet':'Im Rucksack';
         slot.btn.textContent=!equipment[key]?'Gesperrt':equipped[key]?'Ablegen':'Anlegen';
@@ -592,7 +618,7 @@
       invUI.drink.disabled=bag.potions<=0||resources.health>=resources.maxHealth||resources.health<=0;
     }
     function openInventory(){
-      if(shopOpen||resources.health<=0)return false;
+      if(shopOpen||mapOpen||resources.health<=0)return false;
       inventoryOpen=true;invUI.overlay.hidden=false;keyboard.clear();route=[];target=null;
       updateInventoryUI();invUI.close.focus?.();
       return true;
@@ -669,6 +695,7 @@
     function snapshotSave(){
       return {
         version:1,
+        world:{level:worldRun.level,defeated:[...worldRun.defeated],portal:{x:worldRun.portal.x,y:worldRun.portal.y}},
         progress:{level:progress.level,xp:progress.xp,gold:progress.gold,kills:progress.kills},
         equipment:{...equipment},
         equipped:{...equipped},bag:{potions:bag.potions},
@@ -697,6 +724,11 @@
         if(!raw)return false;
         const state=JSON.parse(raw);
         if(!state||state.version!==1||!state.progress)return false;
+        worldRun.level=Math.trunc(finiteNumber(state.world?.level,1,1,1000000));
+        spawnMonsters();worldRun.defeated.clear();
+        if(Array.isArray(state.world?.defeated))for(const id of state.world.defeated){
+          if(Number.isInteger(id)&&id>=0&&id<enemies.length){worldRun.defeated.add(id);const m=enemies[id];m.hp=0;m.state='dead';m.deadAt=-100;}
+        }
         const savedProgress=state.progress;
         progress.level=Math.trunc(finiteNumber(savedProgress.level,1,1,100));
         progress.xp=Math.trunc(finiteNumber(savedProgress.xp,0,0,xpForLevel(progress.level)-1));
@@ -720,6 +752,8 @@
         const x=finiteNumber(state.hero?.x,start.x,25,WORLD.w-25);
         const y=finiteNumber(state.hero?.y,start.y,32,WORLD.h-25);
         if(!collides(x,y)){hero.x=x;hero.y=y;}
+        updateWorldProgress();
+        if(worldRun.portal.active){const px=finiteNumber(state.world?.portal?.x,worldRun.portal.x,55,WORLD.w-55),py=finiteNumber(state.world?.portal?.y,worldRun.portal.y,55,WORLD.h-55);if(!collides(px,py)){worldRun.portal.x=px;worldRun.portal.y=py;}}
         updateProgressHUD();updateResourceHUD();updateShopUI();updateInventoryUI();
         saveDirty=false;
         shopUI.status.textContent='Spielstand geladen';
@@ -730,7 +764,7 @@
       }
     }
     function openShop(){
-      if(inventoryOpen||resources.health<=0||dist(hero.x,hero.y,merchant.x,merchant.y)>145)return false;
+      if(inventoryOpen||mapOpen||resources.health<=0||dist(hero.x,hero.y,merchant.x,merchant.y)>145)return false;
       pendingMerchant=false;route=[];target=null;keyboard.clear();hero.walking=false;
       shopOpen=true;shopUI.overlay.hidden=false;updateShopUI();
       shopUI.close.focus?.();
@@ -779,10 +813,13 @@
         boss:{name:'MOORKÖNIG · WALDBOSS',hp:560,speed:83,damage:20,reach:72,attackDelay:2.8,respawn:60,xp:200,radius:85}
       };
       const spec={...archetypes[kind],...overrides};
+      const tier=worldRun.level-1,hpScale=1+.32*tier+.025*tier*tier,damageScale=1+.20*tier+.01*tier*tier;
+      spec.hp=Math.ceil(spec.hp*hpScale);spec.damage=Math.ceil(spec.damage*damageScale);
+      spec.speed*=1+Math.min(.4,tier*.025);spec.xp=Math.round(spec.xp*(1+tier*.12));
       const id=enemies.length;
       x=clamp(x,55,WORLD.w-55);y=clamp(y,65,WORLD.h-55);
-      if(collides(x,y))y=pathAt(x);
-      const m={id,kind,name:spec.name,x,y,homeX:x,homeY:y,
+      if(collides(x,y)){const cell=closestFree(Math.floor(x/CELL),Math.floor(y/CELL));x=(cell[0]+.5)*CELL;y=(cell[1]+.5)*CELL;}
+      const m={id,kind,name:spec.name,level:worldRun.level,variant:spec.variant||'',x,y,homeX:x,homeY:y,
         hp:spec.hp,maxHp:spec.hp,speed:spec.speed,baseSpeed:spec.speed,damage:spec.damage,
         reach:spec.reach,radius:spec.radius,xp:spec.xp,
         attackDelay:spec.attackDelay,respawn:spec.respawn,weapon:spec.weapon??'melee',ranged:spec.weapon==='bow'&&!!spec.ranged,
@@ -795,28 +832,64 @@
       enemies.push(m);
       return m;
     }
-    function spawnMonsters(){
-      // The nine original slimes remain first so progression/test expectations survive.
-      const spots=[
-        [-265,-12],[245,14],[385,-55],[-430,34],[580,19],
-        [-665,-32],[815,-16],[-945,35],[1040,20]
-      ];
-      enemies.length=0;
-      for(let i=0;i<spots.length;i++){
-        const x=clamp(start.x+spots[i][0],50,WORLD.w-50);
-        addMonster('slime',x,pathAt(x)+spots[i][1],{speed:90+i%3*10});
-      }
-      // Distinct enemy classes in each area: sword-bearing goblins, ranged
-      // raiders, desert beetles, one roaming elite and the named forest boss.
-      for(const x of [700,2120,2540,3060])
-        addMonster('goblin',x,pathAt(x)+(x%2?90:-80));
-      for(const x of [3750,4150,4640])
-        addMonster('raider',x,pathAt(x)+(x%2?85:-90));
-      for(const x of [4040,4440,4880,5080])
-        addMonster('scarab',x,pathAt(x)+(x%2?105:-85));
-      addMonster('elite',2430,pathAt(2430)-205);
-      addMonster('boss',2860,pathAt(2860)-190);
+    const monsterPlan=[];
+    function plan(kind,x,y,overrides={}){monsterPlan.push({kind,x,y,overrides});}
+    for(const [i,offset]of [[-265,-12],[245,14],[385,-55],[-430,34],[580,19],[-665,-32],[815,-16],[-945,35],[1040,20]].entries()){
+      const x=start.x+offset[0];plan('slime',x,pathAt(x)+offset[1],{speed:90+i%3*10});
     }
+    for(const x of [700,2120,2540,3060])plan('goblin',x,pathAt(x)-80);
+    for(const x of [3750,4150,4640])plan('raider',x,pathAt(x)-90);
+    for(const x of [4040,4440,4880,5080])plan('scarab',x,pathAt(x)-85);
+    plan('elite',2430,pathAt(2430)-205);plan('boss',2860,pathAt(2860)-190);
+    for(const x of [550,950,2100,2650])plan('slime',x,southPathAt(x)+70,{name:'Gartenschleim',variant:'ruins'});
+    for(const x of [650,1150,1750,2300,2800])plan('goblin',x,southPathAt(x)-100,{name:'Ruinenkobold',variant:'ruins'});
+    plan('elite',1000,2850,{name:'Steinwurzel · ELITE',variant:'ruins'});plan('boss',1500,southPathAt(1500)+350,{name:'HÜTER DER GÄRTEN',variant:'ruins'});
+    for(const x of [3250,3450,3650,3900]){plan('raider',x,southPathAt(x)-130);plan('scarab',x,southPathAt(x)+170);}
+    for(const x of [4350,4800,5250,5650,6000]){plan('raider',x,southPathAt(x)-130);plan('scarab',x,southPathAt(x)+160);}
+    plan('boss',5750,southPathAt(5750)-390,{name:'SONNENWÄCHTER',variant:'sand',hp:640});
+    for(const [i,x]of [6400,6650,6900,7250,7750,8000].entries())plan('slime',x,(i%2?pathAt:southPathAt)(x)+100,{name:'Kristallschleim',variant:'crystal',hp:84});
+    for(const [i,x]of [6500,7000,7500,7900].entries())plan('goblin',x,(i%2?pathAt:southPathAt)(x)-140,{name:'Bergkobold',variant:'crystal',hp:140});
+    for(const x of [6600,7150,7800])plan('raider',x,pathAt(x)+240,{name:'Höhenjäger',variant:'crystal',hp:160});
+    for(const [x,y]of [[6800,2700],[7900,2900]])plan('elite',x,y,{name:'Kristallhüter · ELITE',variant:'crystal',hp:300});
+    plan('boss',7470,southPathAt(7470)+240,{name:'KRISTALLKÖNIG',variant:'crystal',hp:720});
+    for(const [i,x]of [8450,8850,9400,9950].entries())plan('slime',x,(i%2?pathAt:southPathAt)(x)+100,{name:'Dämmerschleim',variant:'dusk',hp:96});
+    for(const [i,x]of [8400,8750,9150,9600,10050].entries())plan('goblin',x,(i%2?pathAt:southPathAt)(x)-140,{name:'Nachtkobold',variant:'dusk',hp:155});
+    for(const [x,y]of [[8700,2750],[9700,2850]])plan('elite',x,y,{name:'Nachtwurzel · ELITE',variant:'dusk',hp:340});
+    plan('boss',9600,pathAt(9600)+340,{name:'DÄMMERFÜRST',variant:'dusk',hp:800});
+    function spawnMonsters(){enemies.length=0;for(const p of monsterPlan)addMonster(p.kind,p.x,p.y,p.overrides);}
+    function updateWorldProgress(){
+      const remaining=enemies.reduce((n,m)=>n+(m.hp>0?1:0),0),total=enemies.length;
+      document.getElementById('world-tier').textContent='WELT '+worldRun.level;
+      document.getElementById('world-remaining').textContent=remaining+' / '+total+' Gegner';
+      document.getElementById('world-progress-fill').style.width=(total?100*(total-remaining)/total:0)+'%';
+      if(total&&remaining===0&&!worldRun.portal.active){
+        const free=closestFree(Math.floor((hero.x+110)/CELL),Math.floor(hero.y/CELL));
+        worldRun.portal.x=(free[0]+.5)*CELL;worldRun.portal.y=(free[1]+.5)*CELL;worldRun.portal.active=true;
+        floatNumber(hero.x,hero.y-150,'PORTAL ZU WELT '+(worldRun.level+1),'#d4f2df');
+      }
+      const button=document.getElementById('portal-button');button.hidden=!worldRun.portal.active;
+      button.textContent='Portal zu Welt '+(worldRun.level+1)+' · Betreten [R]';
+    }
+    function enterNextWorld(){
+      const portal=worldRun.portal;
+      if(!portal.active||resources.health<=0||shopOpen||inventoryOpen||mapOpen||dist(hero.x,hero.y,portal.x,portal.y)>130)return false;
+      for(const item of loot){if(item.kind==='gold')progress.gold+=item.value;else if(item.kind==='potion')bag.potions=Math.min(99,bag.potions+item.value);}
+      worldRun.level++;worldRun.defeated.clear();portal.active=false;
+      for(const list of [fireballs,enemyShots,bossZones,loot,combatParticles,floatingNumbers,impactBursts])list.length=0;
+      route=[];target=null;keyboard.clear();hero.walking=false;pendingPortal=false;pendingMerchant=false;
+      hero.x=start.x;hero.y=start.y;resources.health=resources.maxHealth;resources.mana=resources.maxMana;
+      heroRespawnAt=0;heroInvulnerableUntil=time+2;nextFireballAt=time+.3;
+      spawnMonsters();updateWorldProgress();updateProgressHUD();updateResourceHUD();updateInventoryUI();
+      markSaveDirty();saveGame();floatNumber(hero.x,hero.y-140,'WELT '+worldRun.level,'#e2d8ae');return true;
+    }
+    let pendingPortal=false,mapOpen=false;
+    function approachPortal(){
+      pendingMerchant=false;
+      if(!worldRun.portal.active)return false;
+      if(enterNextWorld())return true;
+      route=routeTo(worldRun.portal.x,worldRun.portal.y);target=route.at(-1)||null;pendingPortal=!!target;return false;
+    }
+    document.getElementById('portal-button').addEventListener('click',approachPortal);
     function findMonsterAt(x,y){
       let closest=null,best=Infinity;
       for(const m of enemies){
@@ -1042,7 +1115,7 @@
           for(let i=bossZones.length-1;i>=0;i--)
             if(bossZones[i].owner===m.id)bossZones.splice(i,1);
         }
-        m.deadAt=time;m.respawnAt=time+m.respawn;
+        m.deadAt=time;m.respawnAt=Infinity;worldRun.defeated.add(m.id);
         m.state='dead';
         defeatedMonsters++;progress.kills++;
         grantXP(m.xp);
@@ -1052,7 +1125,7 @@
           burst(m.x,m.y-65,'#ffd189',60);
         }
         dropLoot(m);
-        burst(m.x,m.y-24,'#af8be9',16);
+        burst(m.x,m.y-24,'#af8be9',16);updateWorldProgress();markSaveDirty();saveGame();
       }
     }
     function updateCombat(dt){
@@ -1064,14 +1137,6 @@
       }
       for(const m of enemies){
         if(m.hp<=0){
-          if(time>=m.respawnAt){
-            m.x=m.homeX;m.y=m.homeY;m.hp=m.maxHp;
-            m.speed=m.baseSpeed;m.attackAt=time+1.3;
-            m.attackAnimStart=0;m.attackAnimUntil=0;
-            m.aggroUntil=0;m.staggerUntil=0;m.slowUntil=0;m.state='idle';
-            m.bossPhase=1;
-            m.provoked=false;m.chasePath=[];m.nextRepathAt=0;
-          }
           continue;
         }
         if(resources.health<=0)continue;
@@ -1134,7 +1199,7 @@
             bossZones.push({x:hero.x,y:hero.y,age:0,
               windup:m.bossPhase===2?.55:.80,
               radius:m.bossPhase===2?126:106,
-              damage:m.bossPhase===2?25:18,owner:m.id});
+              damage:Math.round(m.damage*(m.bossPhase===2?1.25:.9)),owner:m.id});
             m.attackAt=time+(m.bossPhase===2?1.85:2.7);
           }else if(m.ranged&&m.weapon==='bow'&&rangeNow<m.maxRange&&rangeNow>m.minRange){
             // Only a visibly equipped ranged weapon can fire; these are bow arrows.
@@ -1198,16 +1263,17 @@
         }
       }
       updateLoot(dt);
-      const boss=enemies.find(m=>m.kind==='boss');
+      const boss=enemies.filter(m=>m.kind==='boss'&&m.hp>0).sort((a,b)=>dist(hero.x,hero.y,a.x,a.y)-dist(hero.x,hero.y,b.x,b.y))[0];
       if(boss){
         const visible=boss.hp>0&&dist(hero.x,hero.y,boss.x,boss.y)<710;
         bossUI.panel.hidden=!visible;
         if(visible){
-          bossUI.name.textContent=boss.name+(boss.bossPhase===2?' · PHASE 2':'');
+          bossUI.name.textContent=boss.name+' · Stufe '+boss.level+(boss.bossPhase===2?' · PHASE 2':'');
           bossUI.value.textContent=Math.ceil(boss.hp)+' / '+boss.maxHp;
           bossUI.fill.style.width=Math.max(0,100*boss.hp/boss.maxHp)+'%';
         }
       }
+      if(!boss)bossUI.panel.hidden=true;
       for(let i=impactBursts.length-1;i>=0;i--){
         const impact=impactBursts[i];impact.age+=dt;
         if(impact.age>=impact.life)impactBursts.splice(i,1);
@@ -1722,6 +1788,8 @@
     ];
 
     const trees=[],rocks=[],details=[],fireflies=[];
+    const treeBuckets=new Map();
+    function rebuildTreeIndex(){treeBuckets.clear();for(const t of trees){const key=Math.floor(t.x/160)+':'+Math.floor(t.y/160);if(!treeBuckets.has(key))treeBuckets.set(key,[]);treeBuckets.get(key).push(t);}}
     const atlas=new Map();
     // Uploaded 352×192 forest spritesheet; remains separate from the placeholder hero.
     const forestAtlas=new Image();
@@ -1742,7 +1810,7 @@
       ctx.drawImage(forestAtlas,s[0],s[1],s[2],s[3],x,y,w,h);
       ctx.restore();return true;
     }
-    const ground=document.createElement('canvas'); ground.width=WORLD.w; ground.height=WORLD.h;
+    const ground=document.createElement('canvas'); ground.width=WORLD.w*GROUND_SCALE; ground.height=WORLD.h*GROUND_SCALE;
 
     // Pixel Frog Tiny Swords: images are imported locally from the user's ZIP.
     // Frame layout: 192px human units, 192px trees, 128px bushes, 64px rocks.
@@ -1804,7 +1872,7 @@
       {x:4050,y:pathAt(4050)-95}
     ];
 
-    const g=ground.getContext('2d',{alpha:false});
+    const g=ground.getContext('2d',{alpha:false});g.setTransform(GROUND_SCALE,0,0,GROUND_SCALE,0,0);
     const zoneBanner=document.getElementById('zone-banner');
     const bossUI={panel:document.getElementById('boss-hud'),
       name:document.getElementById('boss-title'),fill:document.getElementById('boss-health'),
@@ -1812,8 +1880,7 @@
     let activeZone='';
     function updateZoneUI(){
       const zone=biomeAt(hero.x),high=heightAt(hero.x,hero.y)===1;
-      const label=(zone==='forest'?'Smaragdwald':
-        zone==='badlands'?'Trockene Grenzlande':'Goldene Wüste')
+      const label=regionAt(hero.x,hero.y).name
         +(high?' · ⛰️ Höhenebene':'');
       if(label===activeZone)return;
       activeZone=label;zoneBanner.textContent=label;
@@ -1830,7 +1897,9 @@
     // height-changing portals are the actual staircase tiles on the SOUTH lip.
     const plateaus=[
       {x:1060,y:325,w:480,h:375,stairsX:1300,stairsWidth:102},
-      {x:3400,y:395,w:520,h:355,stairsX:3660,stairsWidth:110}
+      {x:3400,y:395,w:520,h:355,stairsX:3660,stairsWidth:110},
+      {x:6650,y:500,w:640,h:430,stairsX:6970,stairsWidth:120},
+      {x:8350,y:2850,w:560,h:380,stairsX:8630,stairsWidth:120}
     ];
     // Organic ridgeline profiles replace the old hard rectangular platforms.
     // Game collision and scenery derive from the SAME outline.
@@ -1968,12 +2037,16 @@
       {x:760,y:1890,cols:4,rows:3},
       {x:1880,y:2100,cols:3,rows:3},
       {x:2650,y:2060,cols:4,rows:3},
-      {x:4220,y:1910,cols:3,rows:3}
+      {x:4220,y:1910,cols:3,rows:3},
+      {x:900,y:4550,cols:5,rows:3},
+      {x:4700,y:4500,cols:4,rows:3},
+      {x:6700,y:1750,cols:4,rows:4},
+      {x:8800,y:4450,cols:5,rows:4}
     ];
-    const river={x:2020,width:108,bridgeY:pathAt(2020),bridgeHalf:78};
+    const river={x:2020,width:108,bridgeY:pathAt(2020),bridgeHalf:78,bridges:[pathAt(2020),southPathAt(2020)]};
     const riverCenter=y=>river.x+36*Math.sin(y/245)+18*Math.sin(y/93);
     function riverContains(x,y,margin=0){
-      return Math.abs(x-riverCenter(y))<river.width/2+margin&&Math.abs(y-river.bridgeY)>river.bridgeHalf-margin;
+      return Math.abs(x-riverCenter(y))<river.width/2+margin&&!river.bridges.some(by=>Math.abs(y-by)<=river.bridgeHalf-margin);
     }
     const lakeRadius=(lake,angle)=>1+.085*Math.sin(angle*3+lake.x*.01)+.055*Math.cos(angle*5)+.028*Math.sin(angle*8);
     function lakeContains(x,y,margin=0){
@@ -2226,12 +2299,12 @@
       for(let i=0;i<9;i++)for(let kind of ['oak','pine'])atlas.set(`${kind}:${i}`,treeSprite(kind,i));
       let count=0, attempts=0;
       // Approximately 25% less forest density despite the much larger overall map.
-      while(count<88 && attempts<5400){attempts++;
+      while(count<120 && attempts<5400){attempts++;
         const x=rnd(65,BIOMES.forestEnd-30),y=rnd(75,WORLD.h-60);
         if(Math.abs(y-pathAt(x))<rnd(125,185)||dist(x,y,start.x,start.y)<260)continue;
         if(dist(x,y,2430,pathAt(2430)-205)<235||dist(x,y,start.x-30,start.y+260)<230)continue;
         if(dist(x,y,2860,pathAt(2860)-190)<270)continue; // boss clearing
-        if(lakeContains(x,y,100)||riverContains(x,y,100))continue;
+        if(lakeContains(x,y,100)||riverContains(x,y,100)||onWorldPath(x,y,90)||monsterPlan.some(m=>dist(m.x,m.y,x,y)<(m.kind==='boss'?260:145)))continue;
         if(plateaus.some(p=>Math.abs(x-p.stairsX)<200&&y>p.y+p.h-80&&y<p.y+p.h+450))continue;
         if(plateaus.some(p=>x>p.x-75&&x<p.x+p.w+75&&y>p.y-60&&y<p.y+p.h+180))
           continue;
@@ -2241,25 +2314,35 @@
         const kind=rand()<.48?'pine':'oak';
         trees.push({x,y,r:rad,kind,variant:Math.floor(rand()*9),scale:rnd(.77,1.22),wind:rnd(0,TAU)});count++;
       }
+      for(const [lo,hi,limit]of [[8200,WORLD.w,60],[6200,8200,30]]){
+        for(let n=0,a=0;n<limit&&a<3600;a++){
+          const x=rnd(lo+80,hi-80),y=rnd(80,WORLD.h-80);
+          if(onWorldPath(x,y,95)||lakeContains(x,y,100)||riverContains(x,y,100)||heightAt(x,y)||monsterPlan.some(m=>dist(x,y,m.x,m.y)<(m.kind==='boss'?260:145)))continue;
+          if(trees.some(t=>dist(t.x,t.y,x,y)<210))continue;
+          trees.push({x,y,r:rnd(22,30),kind:lo===6200?'pine':rand()<.35?'pine':'oak',variant:Math.floor(rand()*9),scale:rnd(.78,1.15),wind:rnd(0,TAU)});n++;
+        }
+      }
       // Rocks and stumps are decoration; solid trunks are the actual obstacles.
-      for(let i=0;i<110;i++){
+      for(let i=0;i<300;i++){
         const x=rnd(35,WORLD.w-35),y=rnd(35,WORLD.h-35);
-        if(Math.abs(y-pathAt(x))<rnd(48,100))continue;
+        if(onWorldPath(x,y,35))continue;
         if(dist(x,y,start.x,start.y)<90||lakeContains(x,y,40)||riverContains(x,y,50))continue;
         rocks.push({x,y,s:rnd(6,17),type:x<BIOMES.forestEnd&&rand()<.28?'mushroom':'rock'});
       }
-      for(let i=0;i<155;i++){
-        const x=rnd(0,BIOMES.forestEnd-70),y=rnd(0,WORLD.h);
-        if(Math.abs(y-pathAt(x))<90||lakeContains(x,y,45)||riverContains(x,y,55))continue;
+      for(let i=0;i<340;i++){
+        const x=rand()<.65?rnd(0,BIOMES.forestEnd-70):rnd(8250,WORLD.w-60),y=rnd(0,WORLD.h);
+        if(onWorldPath(x,y,55)||lakeContains(x,y,45)||riverContains(x,y,55))continue;
         details.push({x,y,s:rnd(5,11),type:rand()<.62?'fern':'flowers',phase:rnd(0,TAU)});
       }
       for(let i=0;i<95;i++)fireflies.push({x:rnd(0,BIOMES.forestEnd),y:rnd(0,WORLD.h),z:rnd(0,TAU),phase:rnd(0,TAU),speed:rnd(.5,1.5)});
       // Sparse desert props (decorative, non-blocking) make wide combat clearings.
-      for(let i=0;i<60;i++){
-        const x=rnd(BIOMES.forestEnd+150,WORLD.w-50),y=rnd(70,WORLD.h-70);
-        if(Math.abs(y-pathAt(x))<115||lakeContains(x,y,65)||riverContains(x,y,65))continue;
+      for(let i=0;i<100;i++){
+        const x=rnd(BIOMES.forestEnd+150,BIOMES.desertEnd-50),y=rnd(70,WORLD.h-70);
+        if(onWorldPath(x,y,55)||lakeContains(x,y,65)||riverContains(x,y,65))continue;
         details.push({x,y,s:rnd(14,28),type:rand()<.57?'cactus':'drybush',phase:rnd(0,TAU)});
       }
+      for(let i=0;i<110;i++){const x=rnd(6280,8120),y=rnd(80,WORLD.h-80);if(onWorldPath(x,y,55)||lakeContains(x,y,50)||heightAt(x,y))continue;details.push({x,y,s:rnd(12,23),type:'crystal',phase:rnd(0,TAU)});}
+      rebuildTreeIndex();
     }
     function drawRock(o){
       if(drawArt(o.type,o.x,o.y,o.type==='mushroom'?48:Math.round(o.s*5/2)*2))return;
@@ -2528,7 +2611,8 @@
       if(dist(x,y,merchant.x,merchant.y)<24)return true;
       if(structures.some(o=>Math.abs(x-o.x)<o.w/2+12&&Math.abs(y-o.y)<o.h/2+12))return true;
       if(lakeContains(x,y,12)||riverContains(x,y,12))return true;
-      for(const t of trees)if(Math.abs(t.x-x)<62 && Math.abs(t.y-y)<62 && dist(x,y,t.x,t.y)<t.r+12)return true;
+      const gx=Math.floor(x/160),gy=Math.floor(y/160);
+      for(let xx=gx-1;xx<=gx+1;xx++)for(let yy=gy-1;yy<=gy+1;yy++)for(const t of treeBuckets.get(xx+':'+yy)||[])if(dist(x,y,t.x,t.y)<t.r+12)return true;
       return false;
     }
     function moveHero(dx,dy){
@@ -2564,6 +2648,7 @@
       const pop=()=>{const top=heap[0],last=heap.pop();if(heap.length){let k=0;while(k*2+1<heap.length){let c=k*2+1;if(c+1<heap.length&&heap[c+1].f<heap[c].f)c++;if(heap[c].f>=last.f)break;heap[k]=heap[c];k=c;}heap[k]=last;}return top.id;};
       const heur=id=>Math.hypot(id%COLS-e[0],Math.floor(id/COLS)-e[1]);
       push(si,heur(si));
+      const gridTraverse=(fx,fy,tx,ty)=>!blocked[Math.floor(ty/CELL)*COLS+Math.floor(tx/CELL)]&&(heightAt(fx,fy)===heightAt(tx,ty)||stairCrossing(fx,fy,tx,ty));
       const around=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
       while(heap.length){
         const id=pop();if(visited[id])continue;visited[id]=1;if(id===ei)break;
@@ -2573,9 +2658,9 @@
           const ni=ny*COLS+nx;if(blocked[ni]||visited[ni])continue;
           const fx=(cx+.5)*CELL,fy=(cy+.5)*CELL;
           const tx=(nx+.5)*CELL,ty=(ny+.5)*CELL;
-          if(!canTraverse(fx,fy,tx,ty))continue;
-          if(dx&&dy&&(!canTraverse(fx,fy,tx,fy)||!canTraverse(fx,fy,fx,ty)
-            ||!canTraverse(tx,fy,tx,ty)||!canTraverse(fx,ty,tx,ty)))continue;
+          if(!gridTraverse(fx,fy,tx,ty))continue;
+          if(dx&&dy&&(!gridTraverse(fx,fy,tx,fy)||!gridTraverse(fx,fy,fx,ty)
+            ||!gridTraverse(tx,fy,tx,ty)||!gridTraverse(fx,ty,tx,ty)))continue;
           const cost=costs[id]+(dx&&dy?1.4142:1);
           if(cost<costs[ni]){costs[ni]=cost;parents[ni]=id;push(ni,cost+heur(ni));}
         }
@@ -2597,7 +2682,7 @@
       return simplified;
     }
     function update(dt){
-      if(shopOpen||inventoryOpen)return; // Stop combat and movement while in menus.
+      if(shopOpen||inventoryOpen||mapOpen)return; // Stop combat and movement while in menus.
       time+=dt;hero.breath+=dt;
       if(resources.mana<resources.maxMana){
         resources.mana=Math.min(resources.maxMana,resources.mana+MANA_REGEN_PER_SECOND*dt);
@@ -2609,7 +2694,7 @@
       if(keyboard.has('w')||keyboard.has('arrowup'))dy--;
       if(keyboard.has('s')||keyboard.has('arrowdown'))dy++;
       const manual=dx!==0||dy!==0;
-      if(manual){route=[];target=null;}
+      if(manual){route=[];target=null;pendingPortal=false;pendingMerchant=false;}
       else if(route.length){
         let wp=route[0];
         if(dist(hero.x,hero.y,wp.x,wp.y)<9){route.shift();wp=route[0];}
@@ -2632,6 +2717,7 @@
         else hero.dir=dy>0?0:2;
       }
       updateCombat(dt);
+      if(worldRun.portal.active&&dist(hero.x,hero.y,worldRun.portal.x,worldRun.portal.y)<(pendingPortal?120:45))enterNextWorld();
       updateZoneUI();
       if(pendingMerchant&&dist(hero.x,hero.y,merchant.x,merchant.y)<140){
         pendingMerchant=false;openShop();
@@ -2644,14 +2730,49 @@
       const follow=1-Math.exp(-dt*7.5);
       camera.x=lerp(camera.x,tx,follow);camera.y=lerp(camera.y,ty,follow);
     }
+    function castHeal(){
+      if(shopOpen||inventoryOpen||mapOpen||resources.health<=0||time<castUntil||resources.mana<HEAL_MANA_COST)return false;
+      resources.mana-=HEAL_MANA_COST;resources.health=Math.min(resources.maxHealth,resources.health+HEAL_AMOUNT);
+      castStart=time;castUntil=time+1.1;route=[];target=null;updateResourceHUD();markSaveDirty();return true;
+    }
+    document.getElementById('ability-heal').addEventListener('click',castHeal);
+    document.getElementById('ability-potion').addEventListener('click',drinkPotion);
+    function openMap(){if(shopOpen||inventoryOpen||resources.health<=0)return false;mapOpen=true;keyboard.clear();hero.walking=false;document.getElementById('map-overlay').hidden=false;drawMaps();document.getElementById('map-close').focus?.();return true;}
+    function closeMap(){mapOpen=false;document.getElementById('map-overlay').hidden=true;}
+    document.getElementById('map-open').addEventListener('click',openMap);
+    document.getElementById('map-close').addEventListener('click',closeMap);
+    function trackEnemy(){
+      const m=enemies.filter(m=>m.hp>0).sort((a,b)=>dist(hero.x,hero.y,a.x,a.y)-dist(hero.x,hero.y,b.x,b.y))[0];
+      closeMap();if(!m){approachPortal();return;}
+      route=routeTo(m.x,m.y);target=route.at(-1)||null;
+    }
+    document.getElementById('track-enemy').addEventListener('click',trackEnemy);
+    document.getElementById('world-map').addEventListener('pointerdown',event=>{const c=document.getElementById('world-map'),r=c.getBoundingClientRect();const x=(event.clientX-r.left)/r.width*WORLD.w,y=(event.clientY-r.top)/r.height*WORLD.h;closeMap();route=routeTo(x,y);target=route.at(-1)||null;});
+    let lastMapDraw=-1;
+    function drawMaps(){
+      const canvases=[document.getElementById('minimap')];if(mapOpen)canvases.push(document.getElementById('world-map'));
+      for(const c of canvases){const mc=c.getContext('2d'),w=c.width,h=c.height,sx=w/WORLD.w,sy=h/WORLD.h;
+        mc.clearRect(0,0,w,h);for(const r of REGIONS){mc.fillStyle=r.color;mc.fillRect(r.x0*sx,r.y0*sy,(r.x1-r.x0)*sx,(r.y1-r.y0)*sy);}
+        mc.strokeStyle='#e5d7a6';mc.lineWidth=mapOpen&&c.id==='world-map'?3:1;
+        for(const p of worldPaths){mc.beginPath();p.points.forEach((q,i)=>i?mc.lineTo(q[0]*sx,q[1]*sy):mc.moveTo(q[0]*sx,q[1]*sy));mc.stroke();}
+        mc.fillStyle='#73bdc1';for(const l of lakes){mc.beginPath();mc.ellipse((l.x+l.cols*115/2)*sx,(l.y+l.rows*115/2)*sy,(l.cols*115/2)*sx,(l.rows*115/2)*sy,0,0,TAU);mc.fill();}
+        mc.strokeStyle='#73bdc1';mc.lineWidth=river.width*sx;mc.beginPath();for(let y=0;y<WORLD.h;y+=50){const x=riverCenter(y)*sx;if(!y)mc.moveTo(x,0);else mc.lineTo(x,y*sy);}mc.stroke();
+        for(const m of enemies)if(m.hp>0){mc.fillStyle=m.kind==='boss'?'#8d3e58':'#c36558';mc.beginPath();mc.arc(m.x*sx,m.y*sy,c.id==='world-map'?(m.kind==='boss'?4:2.7):1.6,0,TAU);mc.fill();}
+        if(worldRun.portal.active){mc.strokeStyle='#bff5ef';mc.lineWidth=2;mc.beginPath();mc.arc(worldRun.portal.x*sx,worldRun.portal.y*sy,c.id==='world-map'?7:3,0,TAU);mc.stroke();}
+        mc.fillStyle='#fff7d8';mc.strokeStyle='#224c46';mc.lineWidth=2;mc.beginPath();mc.arc(hero.x*sx,hero.y*sy,c.id==='world-map'?5:3,0,TAU);mc.fill();mc.stroke();
+        if(c.id==='world-map'&&c.clientWidth>600){mc.font='600 12px Trebuchet MS';mc.textAlign='center';mc.fillStyle='#fff9e9';mc.shadowColor='#284f43';mc.shadowBlur=4;for(const r of REGIONS)mc.fillText(r.name,(r.x0+r.x1)/2*sx,(r.y0+220)*sy);mc.shadowBlur=0;}
+      }
+    }
+
     let sceneRenderer=null,sceneFailed=false;
-    function sceneState(){return {hero,enemies,trees,rocks,details,lakes,river,riverCenter,lakeRadius,plateaus,plateauBand,heightAt,lakeContains,riverContains,pathAt,merchant,start,structures,WORLD,BIOMES,fireballs,enemyShots,bossZones,loot,combatParticles,floatingNumbers,impactBursts,resources,target,time,shotCastUntil,shotCastStart,castUntil,castStart,heroInvulnerableUntil};}
+    function sceneState(){return {hero,enemies,trees,rocks,details,lakes,river,riverCenter,lakeRadius,plateaus,plateauBand,heightAt,lakeContains,riverContains,pathAt,merchant,start,structures,WORLD,BIOMES,REGIONS,worldPaths,onWorldPath,worldRun,biomeAt,fireballs,enemyShots,bossZones,loot,combatParticles,floatingNumbers,impactBursts,resources,target,time,shotCastUntil,shotCastStart,castUntil,castStart,heroInvulnerableUntil};}
     function render(){
+      if(time-lastMapDraw>.25||mapOpen){drawMaps();lastMapDraw=time;}
       if(window.Nobby3D&&!sceneFailed){
         try{
           if(!sceneRenderer){sceneRenderer=window.Nobby3D.create(canvas,sceneState());ground.width=ground.height=1;atlas.clear();}
           sceneRenderer.render(sceneState());return;
-        }catch(error){sceneFailed=true;console.error('3D-Renderer nicht verfügbar:',error);ground.width=WORLD.w;ground.height=WORLD.h;drawGround();for(let i=0;i<9;i++)for(const kind of ['oak','pine'])atlas.set(`${kind}:${i}`,treeSprite(kind,i));canvas.style.opacity='1';document.getElementById('render-status').textContent='3D nicht verfügbar · 2D-Ansicht';}
+        }catch(error){sceneFailed=true;console.error('3D-Renderer nicht verfügbar:',error);ground.width=WORLD.w*GROUND_SCALE;ground.height=WORLD.h*GROUND_SCALE;g.setTransform(GROUND_SCALE,0,0,GROUND_SCALE,0,0);drawGround();for(let i=0;i<9;i++)for(const kind of ['oak','pine'])atlas.set(`${kind}:${i}`,treeSprite(kind,i));canvas.style.opacity='1';document.getElementById('render-status').textContent='3D nicht verfügbar · 2D-Ansicht';}
       }
       const {w,h,dpr}=viewport;
       ctx.setTransform(dpr,0,0,dpr,0,0);ctx.imageSmoothingEnabled=false;
@@ -2659,8 +2780,8 @@
       const viewW=w/ZOOM,viewH=h/ZOOM;
       ctx.save();ctx.scale(ZOOM,ZOOM);ctx.translate(-Math.round(camera.x),-Math.round(camera.y));
       // Draw visible slice only. DPR remains native browser canvas resolution.
-      ctx.drawImage(ground,Math.max(0,camera.x),Math.max(0,camera.y),
-        Math.min(viewW,WORLD.w-Math.max(0,camera.x)),Math.min(viewH,WORLD.h-Math.max(0,camera.y)),
+      ctx.drawImage(ground,Math.max(0,camera.x)*GROUND_SCALE,Math.max(0,camera.y)*GROUND_SCALE,
+        Math.min(viewW,WORLD.w-Math.max(0,camera.x))*GROUND_SCALE,Math.min(viewH,WORLD.h-Math.max(0,camera.y))*GROUND_SCALE,
         Math.max(0,camera.x),Math.max(0,camera.y),
         Math.min(viewW,WORLD.w-Math.max(0,camera.x)),Math.min(viewH,WORLD.h-Math.max(0,camera.y)));
       // Ground-first scenery keeps the player, monsters and shadows on top.
@@ -2722,6 +2843,7 @@
       renderables.sort((a,b)=>a.y-b.y);
       for(const item of renderables)item.draw();
       drawCombatEffects();
+      if(worldRun.portal.active){const p=worldRun.portal;ctx.save();ctx.fillStyle='#6bd4bf99';ctx.strokeStyle='#ecf2c1';ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(p.x,p.y-55,35,58,0,0,TAU);ctx.fill();ctx.stroke();ctx.fillStyle='#fff6dc';ctx.font='bold 14px Trebuchet MS';ctx.textAlign='center';ctx.fillText('WELT '+(worldRun.level+1),p.x,p.y-125);ctx.restore();}
       if(target){
         const pulse=1+Math.sin(targetAnimation*3.1)*.16;
         ctx.strokeStyle='#dcf7c6b5';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(target.x,target.y,10*pulse,0,TAU);ctx.stroke();
@@ -2760,6 +2882,9 @@
     window.addEventListener('keydown',e=>{
       const key=e.key.toLowerCase();
       if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(key))e.preventDefault();
+      if(mapOpen){if(key==='escape'||key==='k')closeMap();return;}
+      if(key==='k'&&!e.repeat){openMap();return;}
+      if(key==='r'&&!e.repeat&&worldRun.portal.active){approachPortal();return;}
       if(shopOpen){if(key==='escape'||key==='b')closeShop();return;}
       if(inventoryOpen){if(key==='escape'||key==='i')closeInventory();return;}
       if(key==='i'&&!e.repeat){openInventory();return;}
@@ -2770,12 +2895,7 @@
       }
       if(key==='4'&&!e.repeat){drinkPotion();return;}
       if(key==='f'&&!e.repeat)toggleFull();
-      if(key==='e'&&!e.repeat&&time>=castUntil&&resources.mana>=HEAL_MANA_COST){
-        resources.mana-=HEAL_MANA_COST;
-        resources.health=Math.min(resources.maxHealth,resources.health+HEAL_AMOUNT);
-        castStart=time;castUntil=time+1.1;route=[];target=null;
-        updateResourceHUD();markSaveDirty();
-      }
+      if(key==='e'&&!e.repeat)castHeal();
       keyboard.add(key);
     });
     window.addEventListener('keyup',e=>keyboard.delete(e.key.toLowerCase()));
@@ -2787,7 +2907,7 @@
     });
     window.addEventListener('pagehide',()=>saveGame());
     canvas.addEventListener('pointerdown',e=>{
-      if(shopOpen||inventoryOpen)return;
+      if(shopOpen||inventoryOpen||mapOpen)return;
       if(e.pointerType==='mouse'&&e.button!==0)return;
       e.preventDefault();
       const rect=canvas.getBoundingClientRect();
@@ -2795,7 +2915,8 @@
       if(sceneRenderer&&!point)return;
       const x=clamp(point?point.x:(e.clientX-rect.left)/ZOOM+camera.x,26,WORLD.w-26);
       const y=clamp(point?point.y:(e.clientY-rect.top)/ZOOM+camera.y,33,WORLD.h-26);
-      if(point?.enemy){castFireball(point.enemy);return;}
+      if(point?.portal){approachPortal();return;}
+      if(point?.enemy){pendingMerchant=false;pendingPortal=false;castFireball(point.enemy);return;}
 
       if(point?.merchant||dist(x,y,merchant.x,merchant.y-46)<54){
         if(!openShop()){
@@ -2823,7 +2944,7 @@
     }
     document.getElementById('full').addEventListener('click',toggleFull);
     drawGround();generateForest();buildNav();spawnMonsters();resize();
-    restoreGame();updateZoneUI();
+    restoreGame();updateZoneUI();updateWorldProgress();
     requestAnimationFrame(frame);
     const loading=document.getElementById('loading');loading.classList.add('hide');
     setTimeout(()=>loading.remove(),850);

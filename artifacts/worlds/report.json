@@ -1,0 +1,540 @@
+{
+  "browser": "Chrome/WebGL via Playwright",
+  "diagnostics": {
+    "engine": "Three.js",
+    "version": "186",
+    "webgl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+    "texturesReady": true,
+    "drawCalls": 1060,
+    "triangles": 1350751,
+    "geometries": 527,
+    "worldLevel": 1,
+    "portalActive": false,
+    "trees": 210,
+    "fadedTrees": 0,
+    "models": 82,
+    "projection": "orthographic 3D",
+    "shadows": true
+  },
+  "stage2": {
+    "level": 2,
+    "monsters": [
+      {
+        "hp": 89,
+        "level": 2
+      },
+      {
+        "hp": 89,
+        "level": 2
+      },
+      {
+        "hp": 89,
+        "level": 2
+      },
+      {
+        "hp": 89,
+        "level": 2
+      },
+      {
+        "hp": 89,
+        "level": 2
+      },
+      {
+        "hp": 89,
+        "level": 2
+      },
+      {
+        "hp": 89,
+        "level": 2
+      },
+      {
+        "hp": 89,
+        "level": 2
+      },
+      {
+        "hp": 89,
+        "level": 2
+      },
+      {
+        "hp": 151,
+        "level": 2
+      },
+      {
+        "hp": 151,
+        "level": 2
+      },
+      {
+        "hp": 151,
+        "level": 2
+      },
+      {
+        "hp": 151,
+        "level": 2
+      },
+      {
+        "hp": 182,
+        "level": 2
+      },
+      {
+        "hp": 182,
+        "level": 2
+      },
+      {
+        "hp": 182,
+        "level": 2
+      },
+      {
+        "hp": 159,
+        "level": 2
+      },
+      {
+        "hp": 159,
+        "level": 2
+      },
+      {
+        "hp": 159,
+        "level": 2
+      },
+      {
+        "hp": 159,
+        "level": 2
+      },
+      {
+        "hp": 343,
+        "level": 2
+      },
+      {
+        "hp": 754,
+        "level": 2
+      },
+      {
+        "hp": 89,
+        "level": 2
+      },
+      {
+        "hp": 89,
+        "level": 2
+      },
+      {
+        "hp": 89,
+        "level": 2
+      },
+      {
+        "hp": 89,
+        "level": 2
+      },
+      {
+        "hp": 151,
+        "level": 2
+      },
+      {
+        "hp": 151,
+        "level": 2
+      },
+      {
+        "hp": 151,
+        "level": 2
+      },
+      {
+        "hp": 151,
+        "level": 2
+      },
+      {
+        "hp": 151,
+        "level": 2
+      },
+      {
+        "hp": 343,
+        "level": 2
+      },
+      {
+        "hp": 754,
+        "level": 2
+      },
+      {
+        "hp": 182,
+        "level": 2
+      },
+      {
+        "hp": 159,
+        "level": 2
+      },
+      {
+        "hp": 182,
+        "level": 2
+      },
+      {
+        "hp": 159,
+        "level": 2
+      },
+      {
+        "hp": 182,
+        "level": 2
+      },
+      {
+        "hp": 159,
+        "level": 2
+      },
+      {
+        "hp": 182,
+        "level": 2
+      },
+      {
+        "hp": 159,
+        "level": 2
+      },
+      {
+        "hp": 182,
+        "level": 2
+      },
+      {
+        "hp": 159,
+        "level": 2
+      },
+      {
+        "hp": 182,
+        "level": 2
+      },
+      {
+        "hp": 159,
+        "level": 2
+      },
+      {
+        "hp": 182,
+        "level": 2
+      },
+      {
+        "hp": 159,
+        "level": 2
+      },
+      {
+        "hp": 182,
+        "level": 2
+      },
+      {
+        "hp": 159,
+        "level": 2
+      },
+      {
+        "hp": 182,
+        "level": 2
+      },
+      {
+        "hp": 159,
+        "level": 2
+      },
+      {
+        "hp": 861,
+        "level": 2
+      },
+      {
+        "hp": 113,
+        "level": 2
+      },
+      {
+        "hp": 113,
+        "level": 2
+      },
+      {
+        "hp": 113,
+        "level": 2
+      },
+      {
+        "hp": 113,
+        "level": 2
+      },
+      {
+        "hp": 113,
+        "level": 2
+      },
+      {
+        "hp": 113,
+        "level": 2
+      },
+      {
+        "hp": 189,
+        "level": 2
+      },
+      {
+        "hp": 189,
+        "level": 2
+      },
+      {
+        "hp": 189,
+        "level": 2
+      },
+      {
+        "hp": 189,
+        "level": 2
+      },
+      {
+        "hp": 216,
+        "level": 2
+      },
+      {
+        "hp": 216,
+        "level": 2
+      },
+      {
+        "hp": 216,
+        "level": 2
+      },
+      {
+        "hp": 404,
+        "level": 2
+      },
+      {
+        "hp": 404,
+        "level": 2
+      },
+      {
+        "hp": 969,
+        "level": 2
+      },
+      {
+        "hp": 130,
+        "level": 2
+      },
+      {
+        "hp": 130,
+        "level": 2
+      },
+      {
+        "hp": 130,
+        "level": 2
+      },
+      {
+        "hp": 130,
+        "level": 2
+      },
+      {
+        "hp": 209,
+        "level": 2
+      },
+      {
+        "hp": 209,
+        "level": 2
+      },
+      {
+        "hp": 209,
+        "level": 2
+      },
+      {
+        "hp": 209,
+        "level": 2
+      },
+      {
+        "hp": 209,
+        "level": 2
+      },
+      {
+        "hp": 458,
+        "level": 2
+      },
+      {
+        "hp": 458,
+        "level": 2
+      },
+      {
+        "hp": 1076,
+        "level": 2
+      }
+    ],
+    "models": 82
+  },
+  "sceneDiagnostics": {
+    "village": {
+      "engine": "Three.js",
+      "version": "186",
+      "webgl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+      "texturesReady": true,
+      "drawCalls": 2199,
+      "triangles": 1909614,
+      "geometries": 153,
+      "worldLevel": 1,
+      "portalActive": false,
+      "trees": 210,
+      "fadedTrees": 0,
+      "models": 82,
+      "projection": "orthographic 3D",
+      "shadows": true
+    },
+    "bridge": {
+      "engine": "Three.js",
+      "version": "186",
+      "webgl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+      "texturesReady": true,
+      "drawCalls": 2145,
+      "triangles": 1830461,
+      "geometries": 170,
+      "worldLevel": 1,
+      "portalActive": false,
+      "trees": 210,
+      "fadedTrees": 0,
+      "models": 82,
+      "projection": "orthographic 3D",
+      "shadows": true
+    },
+    "forest-boss": {
+      "engine": "Three.js",
+      "version": "186",
+      "webgl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+      "texturesReady": true,
+      "drawCalls": 1655,
+      "triangles": 1413432,
+      "geometries": 192,
+      "worldLevel": 1,
+      "portalActive": false,
+      "trees": 210,
+      "fadedTrees": 0,
+      "models": 82,
+      "projection": "orthographic 3D",
+      "shadows": true
+    },
+    "lake": {
+      "engine": "Three.js",
+      "version": "186",
+      "webgl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+      "texturesReady": true,
+      "drawCalls": 1733,
+      "triangles": 1858075,
+      "geometries": 208,
+      "worldLevel": 1,
+      "portalActive": false,
+      "trees": 210,
+      "fadedTrees": 0,
+      "models": 82,
+      "projection": "orthographic 3D",
+      "shadows": true
+    },
+    "plateau": {
+      "engine": "Three.js",
+      "version": "186",
+      "webgl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+      "texturesReady": true,
+      "drawCalls": 2047,
+      "triangles": 1759598,
+      "geometries": 216,
+      "worldLevel": 1,
+      "portalActive": false,
+      "trees": 210,
+      "fadedTrees": 0,
+      "models": 82,
+      "projection": "orthographic 3D",
+      "shadows": true
+    },
+    "desert": {
+      "engine": "Three.js",
+      "version": "186",
+      "webgl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+      "texturesReady": true,
+      "drawCalls": 699,
+      "triangles": 523483,
+      "geometries": 235,
+      "worldLevel": 1,
+      "portalActive": false,
+      "trees": 210,
+      "fadedTrees": 0,
+      "models": 82,
+      "projection": "orthographic 3D",
+      "shadows": true
+    },
+    "gardens": {
+      "engine": "Three.js",
+      "version": "186",
+      "webgl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+      "texturesReady": true,
+      "drawCalls": 1420,
+      "triangles": 1619717,
+      "geometries": 341,
+      "worldLevel": 1,
+      "portalActive": false,
+      "trees": 210,
+      "fadedTrees": 0,
+      "models": 82,
+      "projection": "orthographic 3D",
+      "shadows": true
+    },
+    "highlands": {
+      "engine": "Three.js",
+      "version": "186",
+      "webgl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+      "texturesReady": true,
+      "drawCalls": 984,
+      "triangles": 829075,
+      "geometries": 468,
+      "worldLevel": 1,
+      "portalActive": false,
+      "trees": 210,
+      "fadedTrees": 0,
+      "models": 82,
+      "projection": "orthographic 3D",
+      "shadows": true
+    },
+    "dusk": {
+      "engine": "Three.js",
+      "version": "186",
+      "webgl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+      "texturesReady": true,
+      "drawCalls": 1060,
+      "triangles": 1350751,
+      "geometries": 527,
+      "worldLevel": 1,
+      "portalActive": false,
+      "trees": 210,
+      "fadedTrees": 0,
+      "models": 82,
+      "projection": "orthographic 3D",
+      "shadows": true
+    }
+  },
+  "placement": {
+    "landInWater": 0,
+    "bowsOnly": true
+  },
+  "projection": {
+    "dx": 0,
+    "dy": 4.547473508864641e-13
+  },
+  "plateauPick": {
+    "dx": 0,
+    "dy": 0.0000020435874148461153
+  },
+  "memory": {
+    "before": 543,
+    "after": 543
+  },
+  "scenes": [
+    "village",
+    "bridge",
+    "forest-boss",
+    "lake",
+    "plateau",
+    "desert",
+    "gardens",
+    "highlands",
+    "dusk"
+  ],
+  "checks": [
+    "genuine WebGL meshes, shadows and loaded ImageGen material textures",
+    "WASD movement",
+    "real 3D mouse selection for frost and arcane",
+    "frost zero damage",
+    "shop and inventory",
+    "healing 50→85",
+    "save write",
+    "screen/world projection round-trip including elevated plateau",
+    "no new geometries per frame",
+    "all land props outside water",
+    "only bow carriers fire",
+    "390px mobile viewport and readable mobile map",
+    "world map opens and closes",
+    "last kill opens a real 3D portal; keyboard and real mesh click both enter",
+    "world 2 and 3 transitions strengthen all 80 enemies",
+    "3D raycasting targets fresh enemies after transition",
+    "world 3 survives page reload"
+  ],
+  "errors": [],
+  "missing": [],
+  "warnings": []
+}
