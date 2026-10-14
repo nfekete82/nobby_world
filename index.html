@@ -49,6 +49,8 @@
       .resource-rune { width:32px; height:32px; font-size:19px; }
       .resource-track { height:17px; }
     }
+    .mobile-hint { display:none; }
+    @media (max-width:680px) { .mobile-hint {display:inline;} }
     .footer { position:fixed; bottom:max(24px,env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:15px; padding:10px 17px; border:1px solid #d9eac522; background:#0c211bc4; backdrop-filter:blur(12px); border-radius:100px; color:#d1decf; white-space:nowrap; font-size:12px; line-height:1; box-shadow:0 12px 34px #09130d50; pointer-events:none; }
     kbd { display:inline-block; border-radius:4px; padding:5px 7px 4px; background:#deeac31b; border:1px solid #deeac32d; color:#f4f7eb; font-size:11px; font-family:inherit; }
     .sep { height:13px; width:1px; background:#d2e5c233; }
@@ -69,7 +71,7 @@
   <div class="hud">
     <div class="kicker">Tiny Swords · Waldabenteuer</div>
     <h1>Nobby World</h1>
-    <div class="subtitle">Erkunde den Wald · Magier: E für Heilmagie</div>
+    <div class="subtitle">Erkunde den Wald · Monster anklicken zum Angreifen</div>
   </div>
   <div class="topright"><button id="full" aria-label="Vollbild umschalten" title="Vollbild (F)">⛶</button></div>
   <section class="resource-hud" aria-label="Status des Magiers">
@@ -87,11 +89,11 @@
     <span class="desktop"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / <kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></span>
     <span class="desktop">Bewegen</span>
     <span class="sep desktop"></span>
-    <span>Klicken / Tippen zum Laufen</span>
+    <span class="desktop">Boden: Laufen · Monster: Feuerkugel</span><span class="mobile-hint">Tippen: Laufen / Angreifen</span>
     <span class="sep desktop"></span>
     <span class="desktop"><kbd>Shift</kbd> Sprinten</span><span class="sep desktop"></span><span class="desktop"><kbd>E</kbd> Heilmagie</span>
   </div>
-  <div class="hint">NOBBY WORLD · TINY SWORDS 0.2</div>
+  <div class="hint">NOBBY WORLD · FOREST COMBAT 0.3</div>
   <script>
   (() => {
     'use strict';
@@ -135,6 +137,220 @@
     let keyboard=new Set();
     let target=null,route=[],targetAnimation=0;
     let time=0,last=0,paused=false;
+    // Forest combat: independent from navigation so ground clicks always remain click-to-move.
+    const enemies=[],fireballs=[],combatParticles=[],floatingNumbers=[];
+    const FIREBALL_COST=9,FIREBALL_DAMAGE=26,FIREBALL_SPEED=540,FIREBALL_RANGE=690,FIREBALL_COOLDOWN=.29;
+    let nextFireballAt=0,shotCastUntil=0,shotCastStart=0,heroInvulnerableUntil=0,heroRespawnAt=0;
+    let defeatedMonsters=0;
+    function spawnMonsters(){
+      // Safe starting area; slimes remain on or near the woodland path.
+      const spots=[
+        [-265,-12],[245,14],[385,-55],[-430,34],[580,19],
+        [-665,-32],[815,-16],[-945,35],[1040,20]
+      ];
+      enemies.length=0;
+      for(let i=0;i<spots.length;i++){
+        const x=clamp(start.x+spots[i][0],50,WORLD.w-50);
+        let y=clamp(pathAt(x)+spots[i][1],55,WORLD.h-55);
+        // Keep collision and click targets on reachable ground.
+        if(collides(x,y))y=pathAt(x);
+        if(collides(x,y))continue;
+        enemies.push({
+          id:i,x,y,homeX:x,homeY:y,hp:66,maxHp:66,
+          phase:i*1.76,speed:43+i%3*7,attackAt:time+2.5,
+          hitUntil:0,respawnAt:0,deadAt:0,selectedUntil:0
+        });
+      }
+    }
+    function findMonsterAt(x,y){
+      let closest=null,best=36;
+      for(const m of enemies){
+        if(m.hp<=0)continue;
+        const d=dist(x,y,m.x,m.y-26);
+        if(d<best){best=d;closest=m;}
+      }
+      return closest;
+    }
+    function burst(x,y,color,count=11){
+      for(let i=0;i<count;i++){
+        const angle=Math.random()*TAU,speed=30+Math.random()*115;
+        combatParticles.push({
+          x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed-20,
+          age:0,life:.35+Math.random()*.3,color,radius:1.6+Math.random()*3
+        });
+      }
+      if(combatParticles.length>180)combatParticles.splice(0,combatParticles.length-180);
+    }
+    function floatNumber(x,y,text,color){
+      floatingNumbers.push({x,y,text,color,age:0,life:1});
+      if(floatingNumbers.length>25)floatingNumbers.shift();
+    }
+    function castFireball(m){
+      if(m.hp<=0||resources.health<=0||time<nextFireballAt||resources.mana<FIREBALL_COST)return;
+      if(dist(hero.x,hero.y,m.x,m.y)>FIREBALL_RANGE){
+        floatNumber(hero.x,hero.y-85,'Zu weit entfernt','#cbd9d5');
+        return;
+      }
+      resources.mana=Math.max(0,resources.mana-FIREBALL_COST);
+      updateResourceHUD();
+      nextFireballAt=time+FIREBALL_COOLDOWN;
+      shotCastStart=time;shotCastUntil=time+.27;
+      // Face the target, keep the character stationary only during this initial cast.
+      const dx=m.x-hero.x,dy=m.y-hero.y;
+      hero.dir=Math.abs(dx)>Math.abs(dy)?(dx>=0?1:3):(dy>=0?0:2);
+      route=[];target=null;hero.walking=false;
+      m.selectedUntil=time+.55;
+      fireballs.push({x:hero.x,y:hero.y-53,targetId:m.id,age:0,trail:[]});
+      burst(hero.x,hero.y-53,'#66deff',5);
+    }
+    function damageHero(amount){
+      if(time<heroInvulnerableUntil||resources.health<=0)return;
+      resources.health=Math.max(0,resources.health-amount);
+      heroInvulnerableUntil=time+.7;
+      floatNumber(hero.x,hero.y-95,'-'+amount,'#ff8a7c');
+      burst(hero.x,hero.y-44,'#fa777e',9);
+      updateResourceHUD();
+      if(resources.health<=0){
+        route=[];target=null;heroRespawnAt=time+2.2;
+        floatNumber(hero.x,hero.y-120,'Wiederbelebung ...','#ffffff');
+      }
+    }
+    function hurtMonster(m){
+      if(m.hp<=0)return;
+      m.hp=Math.max(0,m.hp-FIREBALL_DAMAGE);
+      m.hitUntil=time+.17;
+      m.selectedUntil=time+.45;
+      floatNumber(m.x,m.y-78,'-'+FIREBALL_DAMAGE,'#a1eaff');
+      burst(m.x,m.y-34,'#51bffb',16);
+      if(m.hp<=0){
+        m.deadAt=time;m.respawnAt=time+10;
+        defeatedMonsters++;
+        burst(m.x,m.y-24,'#af8be9',16);
+      }
+    }
+    function updateCombat(dt){
+      if(heroRespawnAt&&time>=heroRespawnAt){
+        hero.x=start.x;hero.y=start.y;resources.health=resources.maxHealth;
+        resources.mana=Math.max(resources.mana,40);
+        heroRespawnAt=0;heroInvulnerableUntil=time+2;
+        updateResourceHUD();
+      }
+      for(const m of enemies){
+        if(m.hp<=0){
+          if(time>=m.respawnAt){
+            m.x=m.homeX;m.y=m.homeY;m.hp=m.maxHp;m.attackAt=time+1.3;
+          }
+          continue;
+        }
+        if(resources.health<=0)continue;
+        const d=dist(hero.x,hero.y,m.x,m.y);
+        if(d<215&&d>38){
+          const dx=(hero.x-m.x)/d,dy=(hero.y-m.y)/d,step=m.speed*dt;
+          // Slide along trees instead of clipping through them.
+          if(!collides(m.x+dx*step,m.y))m.x+=dx*step;
+          if(!collides(m.x,m.y+dy*step))m.y+=dy*step;
+        }else if(d>320){
+          // Reset only far-away slimes that wandered beyond their clearing.
+          const homeD=dist(m.x,m.y,m.homeX,m.homeY);
+          if(homeD>55){
+            const vx=(m.homeX-m.x)/homeD,vy=(m.homeY-m.y)/homeD,step=m.speed*.5*dt;
+            if(!collides(m.x+vx*step,m.y))m.x+=vx*step;
+            if(!collides(m.x,m.y+vy*step))m.y+=vy*step;
+          }
+        }
+        if(d<42&&time>=m.attackAt){damageHero(8);m.attackAt=time+1.35;}
+      }
+      for(let i=fireballs.length-1;i>=0;i--){
+        const p=fireballs[i];p.age+=dt;
+        const m=enemies.find(e=>e.id===p.targetId&&e.hp>0);
+        if(!m||p.age>2.3){fireballs.splice(i,1);continue;}
+        const dx=m.x-p.x,dy=m.y-32-p.y,d=Math.hypot(dx,dy);
+        const step=FIREBALL_SPEED*dt;
+        if(d<=step+16){
+          hurtMonster(m);fireballs.splice(i,1);
+        }else{
+          p.trail.push({x:p.x,y:p.y});if(p.trail.length>8)p.trail.shift();
+          p.x+=dx/d*step;p.y+=dy/d*step;
+        }
+      }
+      for(let i=combatParticles.length-1;i>=0;i--){
+        const p=combatParticles[i];p.age+=dt;
+        p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=Math.exp(-3*dt);p.vy*=Math.exp(-3*dt);
+        if(p.age>=p.life)combatParticles.splice(i,1);
+      }
+      for(let i=floatingNumbers.length-1;i>=0;i--){
+        const p=floatingNumbers[i];p.age+=dt;p.y-=22*dt;
+        if(p.age>=p.life)floatingNumbers.splice(i,1);
+      }
+    }
+    function drawSlime(m){
+      if(m.hp<=0&&time-m.deadAt>.45)return;
+      const dying=m.hp<=0,age=time*4+m.phase;
+      const bounce=Math.abs(Math.sin(age))*4;
+      const squash=1+Math.sin(age*2)*.055;
+      const flash=time<m.hitUntil;
+      ctx.save();ctx.globalAlpha=dying?Math.max(0,1-(time-m.deadAt)/.45):1;
+      ctx.fillStyle='#0b172170';ctx.beginPath();ctx.ellipse(m.x,m.y+2,25,8,0,0,TAU);ctx.fill();
+      ctx.translate(m.x,m.y-9-bounce);ctx.scale(squash,2-squash);
+      ctx.fillStyle='#35264f';
+      ctx.beginPath();ctx.moveTo(-27,0);ctx.bezierCurveTo(-27,-13,-21,-39,-2,-43);
+      ctx.bezierCurveTo(20,-47,29,-27,28,-5);ctx.quadraticCurveTo(25,10,0,10);
+      ctx.quadraticCurveTo(-23,11,-27,0);ctx.fill();
+      const body=ctx.createLinearGradient(0,-42,0,13);
+      body.addColorStop(0,flash?'#e6f9ff':'#bca4ea');
+      body.addColorStop(.48,flash?'#c8f7ff':'#9467c5');
+      body.addColorStop(1,flash?'#82d6fa':'#583e91');
+      ctx.fillStyle=body;ctx.beginPath();ctx.moveTo(-23,0);
+      ctx.bezierCurveTo(-25,-14,-16,-36,0,-38);
+      ctx.bezierCurveTo(17,-40,24,-19,23,0);
+      ctx.quadraticCurveTo(16,7,0,7);
+      ctx.quadraticCurveTo(-17,8,-23,0);ctx.fill();
+      ctx.fillStyle='#ffffff7a';ctx.beginPath();ctx.ellipse(-8,-27,8,4,-.65,0,TAU);ctx.fill();
+      ctx.fillStyle='#251a41';ctx.beginPath();ctx.ellipse(-9,-13,3.8,5.5,0,0,TAU);ctx.ellipse(9,-13,3.8,5.5,0,0,TAU);ctx.fill();
+      ctx.fillStyle='#f7e9ff';ctx.fillRect(-10,-16,2,2);ctx.fillRect(8,-16,2,2);
+      ctx.strokeStyle='#432254';ctx.lineWidth=2;ctx.lineCap='round';ctx.beginPath();ctx.arc(0,-6,4,0,Math.PI);ctx.stroke();
+      ctx.restore();
+      if(m.hp>0){
+        const barW=49,barY=m.y-66-bounce;
+        ctx.fillStyle='#13191de5';ctx.fillRect(m.x-barW/2-2,barY-2,barW+4,9);
+        ctx.fillStyle='#4b2137';ctx.fillRect(m.x-barW/2,barY,barW,5);
+        ctx.fillStyle='#d5648c';ctx.fillRect(m.x-barW/2,barY,barW*m.hp/m.maxHp,5);
+        if(time<m.selectedUntil){
+          ctx.strokeStyle='#6bc8ffdd';ctx.lineWidth=2;
+          ctx.beginPath();ctx.ellipse(m.x,m.y,29,12,0,0,TAU);ctx.stroke();
+        }
+      }
+    }
+    function drawCombatEffects(){
+      ctx.save();
+      ctx.globalCompositeOperation='lighter';
+      for(const p of fireballs){
+        for(let k=0;k<p.trail.length;k++){
+          const t=p.trail[k],a=(k+1)/p.trail.length;
+          ctx.fillStyle='rgba(38,143,255,'+(a*.30)+')';
+          ctx.beginPath();ctx.arc(t.x,t.y,2+a*5,0,TAU);ctx.fill();
+        }
+        const glow=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,24);
+        glow.addColorStop(0,'#e6fbff');glow.addColorStop(.2,'#8fe9ff');
+        glow.addColorStop(.48,'#168effb5');glow.addColorStop(1,'#168eff00');
+        ctx.fillStyle=glow;ctx.beginPath();ctx.arc(p.x,p.y,24,0,TAU);ctx.fill();
+        ctx.fillStyle='#e2fbff';ctx.beginPath();ctx.arc(p.x,p.y,5.2,0,TAU);ctx.fill();
+      }
+      for(const p of combatParticles){
+        ctx.globalAlpha=Math.max(0,1-p.age/p.life);
+        ctx.fillStyle=p.color;ctx.beginPath();
+        ctx.arc(p.x,p.y,p.radius*(1-p.age/p.life*.6),0,TAU);ctx.fill();
+      }
+      ctx.restore();
+      ctx.save();ctx.textAlign='center';ctx.font='bold 16px system-ui, sans-serif';
+      for(const n of floatingNumbers){
+        ctx.globalAlpha=Math.max(0,1-n.age/n.life);
+        ctx.lineWidth=3;ctx.strokeStyle='#071920';
+        ctx.strokeText(n.text,n.x,n.y);
+        ctx.fillStyle=n.color;ctx.fillText(n.text,n.x,n.y);
+      }
+      ctx.restore();
+    }
     const trees=[],rocks=[],details=[],fireflies=[];
     const atlas=new Map();
     // Uploaded 352×192 forest spritesheet; remains separate from the placeholder hero.
@@ -424,11 +640,11 @@
     function drawHero(){
 
       if(tinyReady&&tiny.monkIdle){
-        const casting=time<castUntil;
+        const casting=time<castUntil||time<shotCastUntil;
         const key=casting?'monkHeal':hero.walking?'monkRun':'monkIdle';
         const img=tiny[key]||tiny.monkIdle;
         const frames=Math.floor(img.width/192);
-        const frame=casting?Math.min(frames-1,Math.floor((time-castStart)*10)):Math.floor((hero.walking?hero.walkCycle*.85:time*8))%frames;
+        const frame=casting?Math.min(frames-1,Math.floor((time-(time<castUntil?castStart:shotCastStart))*10)):Math.floor((hero.walking?hero.walkCycle*.85:time*8))%frames;
         const size=175;
         ctx.save();
         ctx.fillStyle='#0a1d185b';ctx.beginPath();ctx.ellipse(hero.x,hero.y,21,7,0,0,TAU);ctx.fill();
@@ -438,7 +654,7 @@
         // Frame transparency trims the monk naturally. Foot pivot is y=135/192.
         ctx.drawImage(img,frame*192,0,192,192,-size/2,-size*(135/192),size,size);
         ctx.restore();
-        if(casting){
+        if(time<castUntil){
           const effect=tiny.monkEffect;
           if(effect) sprite('monkEffect',Math.min(10,Math.floor((time-castStart)*10)),192,192,
             hero.x-95,hero.y-130,190,190,.86);
@@ -585,6 +801,7 @@
         if(Math.abs(dx)>Math.abs(dy))hero.dir=dx>0?1:3;
         else hero.dir=dy>0?0:2;
       }
+      updateCombat(dt);
       targetAnimation+=dt;
       const viewW=viewport.w/ZOOM,viewH=viewport.h/ZOOM;
       const tx=clamp(hero.x-viewW/2,0,Math.max(0,WORLD.w-viewW));
@@ -611,7 +828,15 @@
 
       for(const t of trees)if(t.x>camera.x-175&&t.x<camera.x+viewW+175&&t.y>camera.y-115&&t.y<camera.y+viewH+320)
         renderables.push({y:t.y,draw:()=>drawTree(t)});
-      renderables.push({y:hero.y,draw:drawHero});
+      for(const m of enemies)if(m.hp>0||time-m.deadAt<.45){
+        if(m.x>camera.x-70&&m.x<camera.x+viewW+70&&m.y>camera.y-90&&m.y<camera.y+viewH+70)
+          renderables.push({y:m.y,draw:()=>drawSlime(m)});
+      }
+      renderables.push({y:hero.y,draw:()=>{
+        ctx.save();
+        if(time<heroInvulnerableUntil&&Math.floor(time*12)%2===0)ctx.globalAlpha=.58;
+        drawHero();ctx.restore();
+      }});
 
       if(tinyReady&&tiny.house){
         const hx=start.x-520,hy=pathAt(start.x-520)-270;
@@ -623,6 +848,7 @@
 
       renderables.sort((a,b)=>a.y-b.y);
       for(const item of renderables)item.draw();
+      drawCombatEffects();
       if(target){
         const pulse=1+Math.sin(targetAnimation*3.1)*.16;
         ctx.strokeStyle='#dcf7c6b5';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(target.x,target.y,10*pulse,0,TAU);ctx.stroke();
@@ -675,9 +901,17 @@
     window.addEventListener('focus',()=>{paused=false;last=performance.now();});
     document.addEventListener('visibilitychange',()=>{paused=document.hidden;last=performance.now();});
     canvas.addEventListener('pointerdown',e=>{
+      if(e.pointerType==='mouse'&&e.button!==0)return;
       e.preventDefault();
       const rect=canvas.getBoundingClientRect();
-      const x=clamp((e.clientX-rect.left)/ZOOM+camera.x,26,WORLD.w-26),y=clamp((e.clientY-rect.top)/ZOOM+camera.y,33,WORLD.h-26);
+      const x=clamp((e.clientX-rect.left)/ZOOM+camera.x,26,WORLD.w-26);
+      const y=clamp((e.clientY-rect.top)/ZOOM+camera.y,33,WORLD.h-26);
+      const monster=findMonsterAt(x,y);
+      if(monster){
+        castFireball(monster);
+        return; // Important: clicking a monster must NOT issue click-to-move.
+      }
+      if(resources.health<=0)return;
       route=routeTo(x,y);
       target=route.length?route[route.length-1]:null;
       targetAnimation=0;
@@ -687,7 +921,7 @@
       catch(e){console.warn('Vollbild nicht verfügbar',e);}
     }
     document.getElementById('full').addEventListener('click',toggleFull);
-    drawGround();generateForest();buildNav();resize();
+    drawGround();generateForest();buildNav();spawnMonsters();resize();
     requestAnimationFrame(frame);
     const loading=document.getElementById('loading');loading.classList.add('hide');
     setTimeout(()=>loading.remove(),850);
