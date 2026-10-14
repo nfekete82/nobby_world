@@ -13,10 +13,12 @@ const bootAnchor = 'drawGround();generateForest();buildNav();spawnMonsters();res
 assert.ok(script.includes(bootAnchor), 'game initialization changed; adjust test hook');
 const instrumented = script.replace(
   bootAnchor,
-  bootAnchor + '\nwindow.__test={enemies,fireballs,resources,progress,loot,hero,camera,update,hurtMonster,grantXP,damageHero,drawCombatEffects,route:()=>route,target:()=>target};'
+  bootAnchor + '\nwindow.__test={enemies,fireballs,resources,progress,loot,hero,merchant,equipment,camera,update,hurtMonster,grantXP,damageHero,drawCombatEffects,drawMerchant,openShop,closeShop,buyItem,saveGame,route:()=>route,target:()=>target,shopState:()=>shopOpen};'
 );
 
-function boot() {
+function boot(initialSave = null) {
+  const stored = new Map();
+  if(initialSave)stored.set('nobby_world_save_v1', JSON.stringify(initialSave));
   const callbacks = new Map();
   const gradient = () => ({ addColorStop() {} });
   const ctx = new Proxy({
@@ -35,7 +37,7 @@ function boot() {
   };
   const elements = new Map([['world', canvas]]);
   const fakeElement = () => ({
-    classList: { add() {} }, style: {}, setAttribute() {}, remove() {},
+    classList: { add() {} }, style: {}, hidden: false, focus() {}, setAttribute() {}, remove() {},
     addEventListener() {}, getContext() { return ctx; }
   });
   const document = {
@@ -51,15 +53,19 @@ function boot() {
     addEventListener(name, cb) { callbacks.set('window.' + name, cb); }
   };
   class Image { set src(value) { this.url = value; } }
+  const localStorage = {
+    getItem(key) { return stored.get(key) ?? null; },
+    setItem(key, value) { stored.set(key, value); }
+  };
   vm.runInNewContext(instrumented, {
-    console, document, window, Image, innerWidth: 1280, innerHeight: 800,
+    console, document, window, Image, localStorage, innerWidth: 1280, innerHeight: 800,
     devicePixelRatio: 1, performance: { now: () => 0 },
     setTimeout() {}, requestAnimationFrame() {}
   }, { timeout: 10000 });
   const g = window.__test;
   assert.ok(g, 'game test hook missing');
   return {
-    g,
+    g, stored,
     click(x,y,button=0) {
       callbacks.get('canvas.pointerdown')({
         pointerType:'mouse', button,
@@ -186,4 +192,81 @@ test('spell cast visual effects can be drawn without sprite assets', () => {
   const m=g.enemies[0];
   click(m.x,m.y-26);
   assert.doesNotThrow(()=>g.drawCombatEffects());
+});
+
+test('Galdor merchant opens nearby, freezes combat and closes cleanly', () => {
+  const {g}=boot();
+  g.hero.x=g.merchant.x;g.hero.y=g.merchant.y+80;
+  assert.equal(g.openShop(),true);
+  assert.equal(g.shopState(),true);
+  const hp=g.resources.health;
+  const m=g.enemies[0];m.x=g.hero.x+25;m.y=g.hero.y;m.attackAt=0;
+  g.update(.2);
+  assert.equal(g.resources.health,hp);
+  g.closeShop();
+  assert.equal(g.shopState(),false);
+});
+
+test('permanent focus purchase spends gold, boosts fireball and blocks duplicate buys', () => {
+  const {g,stored}=boot();
+  g.hero.x=g.merchant.x;g.hero.y=g.merchant.y+80;
+  g.progress.gold=20;g.openShop();
+  assert.equal(g.buyItem('focus'),true);
+  assert.equal(g.progress.gold,8);
+  assert.equal(g.equipment.focus,true);
+  assert.equal(g.buyItem('focus'),false);
+  assert.ok(stored.has('nobby_world_save_v1'));
+  const monster=g.enemies[0];g.hurtMonster(monster);
+  assert.equal(monster.hp,30);
+});
+
+test('boots and charm are one-time purchases with immediate bonuses', () => {
+  const {g}=boot();
+  g.hero.x=g.merchant.x;g.hero.y=g.merchant.y+80;
+  g.progress.gold=50;g.openShop();
+  assert.equal(g.buyItem('boots'),true);
+  assert.equal(g.buyItem('charm'),true);
+  assert.equal(g.progress.gold,25);
+  assert.equal(g.equipment.boots,true);
+  assert.equal(g.resources.maxHealth,125);
+  assert.equal(g.resources.health,125);
+});
+
+test('save restores level, XP, gold, equipment and resources', () => {
+  const {g,stored}=boot();
+  g.progress.level=4;g.progress.xp=25;g.progress.gold=37;
+  g.equipment.focus=true;g.equipment.charm=true;
+  g.resources.maxHealth=155;g.resources.maxMana=115;
+  g.resources.health=90;g.resources.mana=60;
+  assert.equal(g.saveGame(),true);
+  const loaded=JSON.parse(stored.get('nobby_world_save_v1'));
+  const next=boot(loaded).g;
+  assert.equal(next.progress.level,4);
+  assert.equal(next.progress.xp,25);
+  assert.equal(next.progress.gold,37);
+  assert.equal(next.equipment.focus,true);
+  assert.equal(next.equipment.charm,true);
+  assert.equal(next.resources.maxHealth,155);
+  assert.equal(next.resources.health,90);
+  assert.equal(next.resources.mana,60);
+});
+
+test('tampered save values are safely clamped and unknown equipment is ignored', () => {
+  const {g}=boot({
+    version:1, progress:{level:999,xp:-10,gold:-200,kills:-1},
+    equipment:{focus:true,boots:'yes',charm:true},
+    resources:{health:999999,mana:-5},hero:{x:-500,y:999999}
+  });
+  assert.equal(g.progress.level,100);
+  assert.equal(g.progress.xp,0);
+  assert.equal(g.progress.gold,0);
+  assert.equal(g.equipment.focus,true);
+  assert.equal(g.equipment.boots,false);
+  assert.equal(g.resources.health,g.resources.maxHealth);
+  assert.equal(g.resources.mana,0);
+});
+
+test('merchant sprite renderer works even when Tiny Swords are not loaded', () => {
+  const {g}=boot();
+  assert.doesNotThrow(()=>g.drawMerchant());
 });
