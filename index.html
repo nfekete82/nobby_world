@@ -1177,8 +1177,11 @@
       }else{
         frame=Math.floor(time*2.5+m.phase)%2===0?0:7;
       }
-      const h=185,w=h*256/682;
-      const y=m.y-h*(658/682)-bounce;
+      // Source contains a large transparent strip BELOW the character:
+      // visible feet end around source y=444, not at the 682px sheet edge.
+      const h=187,w=h*256/682;
+      const footY=444;
+      const y=m.y-h*footY/682; // feet exactly touch m.y, no hovering.
       ctx.save();ctx.imageSmoothingEnabled=false;
       // The supplied goblin faces right; mirror when the hero is on the left.
       if(hero.x<m.x){ctx.translate(m.x*2,0);ctx.scale(-1,1);}
@@ -1206,8 +1209,10 @@
       }else{
         frame=Math.floor(time*2+m.phase)%2===0?0:7;
       }
-      const h=248,w=h*160/426;
-      const y=m.y-h*(410/426)-bounce;
+      const h=340,w=h*160/426;
+      // Align frame-specific feet so the treant stays planted when striking.
+      const frameFeet=[408,404,403,414,426,417,407,416];
+      const y=m.y-h*frameFeet[frame]/426;
       ctx.save();ctx.imageSmoothingEnabled=false;
       if(hero.x<m.x){ctx.translate(m.x*2,0);ctx.scale(-1,1);}
       ctx.drawImage(rootGuardianSheet,frame*160,0,160,426,
@@ -1222,12 +1227,13 @@
       const boss=m.kind==='boss',elite=m.kind==='elite',raider=m.kind==='raider';
       const scarab=m.kind==='scarab';
       const scale=boss?2.5:elite?1.8:scarab?1.1:1;
-      const bounce=Math.abs(Math.sin(time*5+m.phase))*3;
+      const bounce=(m.kind==='goblin'||m.kind==='elite'||m.kind==='boss')
+        ?0:Math.abs(Math.sin(time*5+m.phase))*3;
       const blink=time<m.hitUntil;
       ctx.save();
       ctx.globalAlpha=m.hp<=0?Math.max(0,1-(time-m.deadAt)/.45):1;
       ctx.fillStyle='#101c2577';
-      ctx.beginPath();ctx.ellipse(m.x,m.y+3,(boss?67:elite?48:31),boss?18:10,0,0,TAU);ctx.fill();
+      ctx.beginPath();ctx.ellipse(m.x,m.y+3,(boss?105:elite?64:31),boss?23:elite?16:10,0,0,TAU);ctx.fill();
       // The free pack contains red warrior/archer humans; fall back to a
       // custom cartoon opponent if those sprite files are unavailable.
       const key=m.kind==='goblin'?(m.state==='chase'?'redWarriorRun':'redWarrior'):
@@ -1297,9 +1303,9 @@
         }
       }
       ctx.restore();
-      const bw=boss?145:elite?100:67;
-      const by=m.y-(boss?250:elite&&rendered?254:elite?184:
-        raider?130:m.kind==='goblin'&&rendered?174:110)-bounce;
+      const bw=boss?200:elite?120:67;
+      const by=m.y-(boss?420:elite&&rendered?334:elite?184:
+        raider?130:m.kind==='goblin'&&rendered?133:110)-bounce;
       const fraction=clamp(m.hp/m.maxHp,0,1);
       ctx.fillStyle='#15202ddf';ctx.fillRect(m.x-bw/2-3,by-3,bw+6,15);
       ctx.fillStyle='#603347';ctx.fillRect(m.x-bw/2,by,bw,9);
@@ -2124,7 +2130,7 @@
       for(const t of trees)if(t.x>camera.x-175&&t.x<camera.x+viewW+175&&t.y>camera.y-115&&t.y<camera.y+viewH+320)
         renderables.push({y:t.y,draw:()=>drawTree(t)});
       for(const m of enemies)if(m.hp>0||time-m.deadAt<.45){
-        if(m.x>camera.x-180&&m.x<camera.x+viewW+180&&m.y>camera.y-290&&m.y<camera.y+viewH+130)
+        if(m.x>camera.x-230&&m.x<camera.x+viewW+230&&m.y>camera.y-510&&m.y<camera.y+viewH+130)
           renderables.push({y:m.y,draw:()=>drawAdventureEnemy(m)});
       }
       if(merchant.x>camera.x-100&&merchant.x<camera.x+viewW+100
