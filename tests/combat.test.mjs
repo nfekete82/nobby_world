@@ -561,7 +561,7 @@ test('forest goblin uses 8 transparent frames with ground-aligned sprite dimensi
   assert.equal(call[3],256);
   assert.equal(call[4],682);
   assert.ok(call[2]>=0&&call[2]<2048,'source frame must stay inside the sheet');
-  assert.ok(call[7]>160&&call[7]<200,'character should scale to the game world');
+  assert.ok(call[8]>160&&call[8]<200,'character should scale to the game world');
   drawCalls.length=0;
   goblin.attackAnimStart=0;goblin.attackAnimUntil=.55;
   g.update(.2);
