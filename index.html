@@ -96,7 +96,7 @@
     // Frame layout: 192px human units, 192px trees, 128px bushes, 64px rocks.
     const tiny={};
     const tinyFiles={
-      grass:"Terrain/grass.png",
+      grass:"Terrain/Tileset/Tilemap_color1.png",
       tree1:"Terrain/Resources/Wood/Trees/Tree1.png",
       tree2:"Terrain/Resources/Wood/Trees/Tree2.png",
       tree3:"Terrain/Resources/Wood/Trees/Tree3.png",
@@ -121,8 +121,16 @@
     let tinyReady=false,castUntil=0,castStart=0;
     for(const [key,path] of Object.entries(tinyFiles)){
       const img=new Image();
-      img.onload=()=>{tiny[key]=img;if(key==='grass'){tinyReady=true;drawGround();}};
-      img.onerror=()=>{if(key==='grass')console.info('Tiny Swords noch nicht importiert: python3 scripts/import_tiny_swords.py ~/Downloads/Tiny\\ Swords\\ \\(Free\\ Pack\\).zip');};
+      img.onload=()=>{
+        if(key==='grass'){
+          // The top-left tilemap contains a 192px grass patch; its center is a clean 64px floor tile.
+          const tile=document.createElement('canvas');tile.width=64;tile.height=64;
+          const tc=tile.getContext('2d');tc.imageSmoothingEnabled=false;
+          tc.drawImage(img,64,64,64,64,0,0,64,64);
+          tiny.grass=tile;tinyReady=true;drawGround();
+        }else tiny[key]=img;
+      };
+      img.onerror=()=>{if(key==='grass')console.info('Tiny Swords noch nicht importiert: python3 scripts/import_tiny_swords.py');};
       img.src='assets/tiny-swords/'+path.split('/').map(encodeURIComponent).join('/');
     }
     function sprite(key,frame,fw,fh,x,y,w,h,alpha=1){
