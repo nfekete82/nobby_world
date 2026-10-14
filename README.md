@@ -1,6 +1,6 @@
 # Nobby World 🌲
 
-**v0.6 – Tiny Swords Spells, Inventory & Sound** · Private browser game with a controllable, animated magic hero.
+**v0.7 – Tiny Swords Comic Combat & Two Spells** · Private browser game with a controllable, animated magic hero.
 
 ## Start in OrbStack (port 8088)
 
@@ -44,14 +44,14 @@ The Nginx image **contains** the game and the locally imported Tiny Swords asset
 | Open Galdor's shop nearby | B or click the merchant |
 | Close the shop | Escape / B / × |
 | Open/close inventory | I / Escape |
-| Select arcane fireball, frost lance or arcane burst | 1 / 2 / 3 |
+| Select blue Arcane Orb or zero-damage Slow | 1 / 2 |
 | Drink health potion | 4 (when injured) |
 | Toggle sound | M (or sound button, top right) |
 | Fullscreen | F |
 
 ## Health & mana HUD
 
-A compact, centered HUD above the controls displays **Health (red)** and **Mana (blue)**, both starting at **100 / 100**. Mana regenerates at **8 points per second** while playing, and healing with **E** spends **25 mana** to restore up to **35 health**. Healing does not activate without enough mana. The red health bar responds to incoming monster damage. The interface updates live and works at desktop and mobile widths.
+A larger comic-fantasy HUD with thick dark outlines, golden accents and vivid **Health (red)** and **Mana (blue)** bars above the controls displays, both starting at **100 / 100**. Mana regenerates at **8 points per second** while playing, and healing with **E** spends **25 mana** to restore up to **35 health**. Healing does not activate without enough mana. The red health bar responds to incoming monster damage. The interface updates live and works at desktop and mobile widths.
 
 ## First combat prototype
 
@@ -101,27 +101,28 @@ Purchases are one-time, with disabled controls if an item is already owned or th
 
 The merchant has no player-versus-monster collision damage while the shop is open. Visit the trader to convert gold drops into meaningful equipment.
 
-## Three magic spells, inventory and sound (v0.6)
+## Two spells with comic visuals (v0.7)
 
-**Magic bar:** Select a spell using the three clickable buttons above the bottom HP/Mana HUD or keys `1`, `2`, `3`. Left-clicking a slime casts the selected spell; left-clicking empty ground still moves.
+**Two-slot spell bar:** Click the two large, framed, fantasy-comic buttons just above the HP/Mana HUD or press `1`/`2`. Left-clicking a slime casts the currently selected spell; clicking empty ground continues to pathfind.
 
 | Spell | Mana | Effect |
 | --- | ---: | --- |
-| `1` Blue Arcane Orb | 9 | 26 direct damage (36 with Arcane Focus); fast cooldown |
-| `2` Frost Lance | 14 | 20 damage and slows the monster to 48% speed for 2.6 seconds |
-| `3` Arcane Burst | 22 | 19 direct damage and 60%-damage splash to nearby slimes within 110 world units |
+| `1` Arkane Kugel (Blue Arcane Orb) | 9 | 26 direct damage (36 with equipped Arcane Focus), fast cooldown |
+| `2` Verlangsamen (Frost Slow) | 14 | **0 damage**, slows the target to 34% of its usual movement speed for **3 seconds** |
 
-The Arcane Focus adds 10 direct damage to any of these spells, while splash damage remains proportional to the primary impact. Spell projectiles use different glow colors and cooldowns.
+**Important:** Frost never deals damage, never triggers knockback, XP or loot, and **Arcane Focus does not increase its damage**. There is no third combat spell. Slime base movement speed increased from **43–61** to **78–96 world units/second**. Frost controls their increased pressure; its translucent crystalline aura lasts until the debuff expires. Existing saved `nova` spell selections transparently fall back to the Arcane Orb without losing purchased equipment or progress.
+
+**Comic styling:** Health and mana bars are now larger with chunky dark outlines, segmented vivid fills and a stylized XP bar. The two oversized magic buttons feature brighter fantasy-frame ornaments, distinctive ice/arcane colors and active-state glow. In combat, projectiles have prominent energy glints; spell impacts flash as a comic starburst; damage, healing and XP numbers pop with stronger outlines. Floating frost text explicitly reads `LANGSAM!` rather than showing fake damage.
 
 **Inventory:** Press `I` or the top-right Inventory button. The panel contains three equipment slots and a backpack slot for healing potions. Gear bought from Galdor is automatically equipped but can now be removed and equipped again. Bonuses apply only when equipped: focus damage, boots movement speed, charm maximum HP.
 
 Every fourth slime kill drops one green **healing potion** in addition to normal loot. It is auto-collected when close. Drink it from the inventory or press `4` to heal 40 HP, up to your maximum.
 
-**Sound:** Lightweight Web Audio synthesis adds distinct effects for casting, ice, Arcane Burst, hits, taking damage, loot pickups, merchant purchases, drinking potions and leveling up. The top-right controls provide on/off and adjustable volume; `M` toggles mute. Audio is initialized only after user interaction and gracefully disabled if Web Audio is not supported.
+**Sound:** Lightweight Web Audio synthesis adds distinct effects for casting, slowing, hits, taking damage, loot pickups, merchant purchases, drinking potions and leveling up. The top-right controls provide on/off and adjustable volume; `M` toggles mute. Audio is initialized only after user interaction and gracefully disabled if Web Audio is not supported.
 
-**Persistence:** v0.6 retains the same browser key `nobby_world_save_v1` and loads old v0.5 saves. New fields contain equipped states, healing potions, selected spell and sound preferences. Existing purchases from v0.5 are treated as equipped by default, so their bonuses survive upgrading. No external backend or database is needed.
+**Persistence:** v0.7 retains the same browser key `nobby_world_save_v1` and loads old v0.5 saves. New fields contain equipped states, healing potions, selected spell and sound preferences. Existing purchases from v0.5 are treated as equipped by default, so their bonuses survive upgrading. No external backend or database is needed.
 
-Use `npm test` to run all **24 headless logic tests**. Full visual and audio checks still require opening the game in a real browser.
+Use `npm test` to run all **26 headless logic tests**. Full visual and audio checks still require opening the game in a real browser.
 
 ## Graphics implemented
 
@@ -146,6 +147,6 @@ The supplied current **Free Pack** is cartoon fantasy pixel art, not Diablo's gr
 
 ## Next
 
-Expand to quests, a small boss encounter, upgraded monster sprite sheets and world locations. A savegame export/import and optional music track may be added later.
+With the combat UX simplified, expand to quests, a small boss encounter, upgraded monster sprite sheets and world locations. A savegame export/import and optional music track may be added later.
 
 **Authoring project:** [nfekete82/nobby_world](https://github.com/nfekete82/nobby_world) (private).
