@@ -238,6 +238,119 @@
       }
     }
     updateResourceHUD();
+    // Vendor and permanent gear; no extra runtime or backend needed.
+    const merchant={x:start.x+140,y:pathAt(start.x+140)-92};
+    const equipment={focus:false,boots:false,charm:false};
+    const shopItems={
+      focus:{price:12,label:'Arkaner Fokus'},
+      boots:{price:10,label:'Windläuferstiefel'},
+      charm:{price:15,label:'Hüteramulett'}
+    };
+    const shopUI={
+      overlay:document.getElementById('shop-overlay'),
+      close:document.getElementById('shop-close'),
+      wallet:document.getElementById('shop-gold'),
+      status:document.getElementById('shop-save-status'),
+      buttons:{
+        focus:document.getElementById('shop-buy-focus'),
+        boots:document.getElementById('shop-buy-boots'),
+        charm:document.getElementById('shop-buy-charm')
+      }
+    };
+    const SAVE_KEY='nobby_world_save_v1';
+    let shopOpen=false,pendingMerchant=false,saveDirty=false,nextSaveAt=0;
+    const finiteNumber=(value,fallback,min,max)=>
+      typeof value==='number'&&Number.isFinite(value)?clamp(value,min,max):fallback;
+    function updateShopUI(){
+      shopUI.wallet.textContent=String(progress.gold);
+      for(const [key,item] of Object.entries(shopItems)){
+        const btn=shopUI.buttons[key];
+        btn.textContent=equipment[key]?'Gekauft':item.price+' Gold';
+        btn.disabled=equipment[key]||progress.gold<item.price;
+        btn.setAttribute('aria-label',item.label+', '+btn.textContent);
+      }
+    }
+    function snapshotSave(){
+      return {
+        version:1,
+        progress:{level:progress.level,xp:progress.xp,gold:progress.gold,kills:progress.kills},
+        equipment:{...equipment},
+        resources:{health:resources.health,mana:resources.mana},
+        hero:{x:hero.x,y:hero.y}
+      };
+    }
+    function markSaveDirty(){saveDirty=true;}
+    function saveGame(){
+      try{
+        if(typeof localStorage==='undefined')return false;
+        localStorage.setItem(SAVE_KEY,JSON.stringify(snapshotSave()));
+        saveDirty=false;nextSaveAt=time+4;
+        shopUI.status.textContent='Fortschritt lokal gespeichert';
+        return true;
+      }catch(error){
+        shopUI.status.textContent='Speichern im Browser nicht verfügbar';
+        return false;
+      }
+    }
+    function restoreGame(){
+      try{
+        if(typeof localStorage==='undefined')return false;
+        const raw=localStorage.getItem(SAVE_KEY);
+        if(!raw)return false;
+        const state=JSON.parse(raw);
+        if(!state||state.version!==1||!state.progress)return false;
+        const savedProgress=state.progress;
+        progress.level=Math.trunc(finiteNumber(savedProgress.level,1,1,100));
+        progress.xp=Math.trunc(finiteNumber(savedProgress.xp,0,0,xpForLevel(progress.level)-1));
+        progress.gold=Math.trunc(finiteNumber(savedProgress.gold,0,0,10000000));
+        progress.kills=Math.trunc(finiteNumber(savedProgress.kills,0,0,10000000));
+        for(const key of Object.keys(shopItems))equipment[key]=state.equipment?.[key]===true;
+        resources.maxHealth=100+(progress.level-1)*10+(equipment.charm?25:0);
+        resources.maxMana=100+(progress.level-1)*5;
+        resources.health=finiteNumber(state.resources?.health,resources.maxHealth,0,resources.maxHealth);
+        resources.mana=finiteNumber(state.resources?.mana,resources.maxMana,0,resources.maxMana);
+        if(resources.health<=0)resources.health=resources.maxHealth;
+        const x=finiteNumber(state.hero?.x,start.x,25,WORLD.w-25);
+        const y=finiteNumber(state.hero?.y,start.y,32,WORLD.h-25);
+        if(!collides(x,y)){hero.x=x;hero.y=y;}
+        updateProgressHUD();updateResourceHUD();updateShopUI();
+        shopUI.status.textContent='Spielstand geladen';
+        return true;
+      }catch(error){
+        console.warn('Nobby World: Spielstand nicht lesbar',error);
+        return false;
+      }
+    }
+    function openShop(){
+      if(resources.health<=0||dist(hero.x,hero.y,merchant.x,merchant.y)>145)return false;
+      pendingMerchant=false;route=[];target=null;keyboard.clear();hero.walking=false;
+      shopOpen=true;shopUI.overlay.hidden=false;updateShopUI();
+      shopUI.close.focus?.();
+      return true;
+    }
+    function closeShop(){
+      shopOpen=false;shopUI.overlay.hidden=true;
+      if(saveDirty)saveGame();
+    }
+    function buyItem(key){
+      const item=shopItems[key];
+      if(!shopOpen||!item||equipment[key]||progress.gold<item.price)return false;
+      progress.gold-=item.price;equipment[key]=true;
+      if(key==='charm'){
+        resources.maxHealth+=25;
+        resources.health=Math.min(resources.maxHealth,resources.health+25);
+        updateResourceHUD();
+      }
+      updateProgressHUD();updateShopUI();
+      floatNumber(hero.x,hero.y-90,item.label,'#ffdc9d');
+      burst(hero.x,hero.y-45,'#ffe9aa',16);
+      markSaveDirty();saveGame();
+      return true;
+    }
+    for(const key of Object.keys(shopItems))
+      shopUI.buttons[key].addEventListener('click',()=>buyItem(key));
+    shopUI.close.addEventListener('click',closeShop);
+    shopUI.overlay.addEventListener('click',e=>{if(e.target===shopUI.overlay)closeShop();});
     let keyboard=new Set();
     let target=null,route=[],targetAnimation=0;
     let time=0,last=0,paused=false;
