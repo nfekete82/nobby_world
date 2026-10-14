@@ -157,6 +157,108 @@
     .loading span { font-family:Georgia,serif; font-size:38px; color:#e5f3d7; }
     .loading small { margin-top:15px; letter-spacing:.18em; color:#9ec59b; text-transform:uppercase; }
     @media (max-width: 680px) { .footer { bottom:max(24px,env(safe-area-inset-bottom)); font-size:11px; gap:8px; padding:9px 12px; } .footer .desktop { display:none; } .hint { display:none; } .subtitle{max-width:210px;line-height:1.4;} }
+
+    /* Nobby World v0.7: chunky hand-drawn fantasy HUD. Inspired by the native
+       monster HP bars, not by glossy web dashboard components. */
+    .resource-hud {
+      bottom:calc(81px + env(safe-area-inset-bottom));
+      width:min(668px,calc(100vw - 28px));
+      padding:14px 19px 12px; gap:13px;
+      grid-template-columns:minmax(0,1fr) 58px minmax(0,1fr);
+      border:3px solid #162b2b; border-radius:12px;
+      outline:2px solid #b8a06b; outline-offset:-6px;
+      background:linear-gradient(170deg,#405443f5 0%,#253b32f7 32%,#132b27f9 100%);
+      box-shadow:0 0 0 3px #111d20,0 0 0 5px #a49063b0,
+        0 13px 0 -5px #081e19,0 14px 36px #00130fbb,inset 0 3px #6e865660;
+      backdrop-filter:none;
+    }
+    .resource { display:flex; flex-direction:column; justify-content:center; gap:6px; }
+    .resource-top { margin-bottom:0; align-items:center; }
+    .resource-name { font-family:"Trebuchet MS",system-ui,sans-serif; font-size:16px;
+      font-weight:900; text-transform:uppercase; letter-spacing:.1em;
+      color:#ffebbf; text-shadow:2px 2px 0 #13251b,-1px -1px 0 #142b20; }
+    .resource-value { font-size:15px; font-weight:900; color:#f7f1dc;
+      text-shadow:2px 2px 0 #112524; }
+    .resource-track { height:30px; border:3px solid #0b2023; border-radius:5px;
+      background:#1c2630; overflow:hidden;
+      box-shadow:0 0 0 2px #a5976c,inset 0 4px 5px #081315,0 3px #101b1a; }
+    .resource-fill { transition:width .15s linear; box-shadow:inset 0 5px 0 #ffffff65,
+      inset 0 -5px 0 #00000050; }
+    .resource-fill::after { background:repeating-linear-gradient(90deg,
+      transparent 0,transparent calc(20% - 2px),#1b1a2844 calc(20% - 2px),#1b1a2844 20%);
+      box-shadow:inset 0 1px 0 #fff9; }
+    .resource-health .resource-fill { background:linear-gradient(180deg,
+      #ffa38b 0%,#ef5b69 24%,#b3284b 60%,#75152e 100%); }
+    .resource-mana .resource-fill { background:linear-gradient(180deg,
+      #b4fbff 0%,#54caff 24%,#2773d6 65%,#174393 100%); }
+    .resource-rune { width:58px; height:58px; font-size:33px; border-radius:14px;
+      border:3px solid #bda76f; color:#ffe8a0; outline:3px solid #172923;
+      background:radial-gradient(circle at 35% 23%,#708879,#334d46 45%,#12251f 76%);
+      box-shadow:inset 0 0 0 3px #233b32,0 5px #06170f,0 0 20px #e7c78144;
+      text-shadow:0 0 14px #ffe19d,2px 2px #332620; transform:rotate(-7deg); }
+    .progression { gap:11px; margin-top:5px; padding-top:10px;
+      border-top:2px solid #9caa7455; }
+    .level-badge { font-family:"Trebuchet MS",system-ui,sans-serif; font-size:13px;
+      color:#ffdf86; font-weight:900; text-shadow:1px 2px #192422; }
+    .xp-track { height:10px; border:2px solid #10272a; border-radius:4px;
+      box-shadow:0 0 0 1px #a2a577;background:#132c30; }
+    .xp-fill { background:linear-gradient(180deg,#e3f8b4,#8cde95 53%,#3c9d7a);
+      box-shadow:inset 0 2px 0 #fff9; }
+    .xp-count { font-size:12px; font-weight:800; color:#e1d9ad; }
+    /* Two big readable chunky magic tiles, with a framed inset spell picture. */
+    .spellbar { bottom:calc(224px + env(safe-area-inset-bottom)); gap:15px; }
+    .spell-choice { position:relative; width:144px; height:102px; flex-shrink:0;
+      gap:4px; border:4px solid #172727; border-radius:14px;
+      outline:2px solid #998358; outline-offset:-8px;
+      background:linear-gradient(145deg,#4d6456,#213b39 47%,#142a32);
+      box-shadow:0 0 0 2px #857553,0 8px 0 -2px #0c2526,0 12px 24px #00150daf,
+        inset 0 3px 0 #b9c39e55;
+      transform:translateY(0); transition:transform .13s,box-shadow .13s,filter .13s;
+      overflow:visible;
+    }
+    .spell-choice::before { content:""; position:absolute; inset:8px 11px 28px;
+      border:2px solid #101f2fd0; border-radius:9px; pointer-events:none;
+      background:radial-gradient(ellipse at 50% 55%,#4dc7ff77,#14517f65 45%,#091d2896 80%);
+      box-shadow:inset 0 2px #e2f7fb38; }
+    #spell-ice::before { background:radial-gradient(ellipse at 50% 55%,
+      #a4ffffa1,#286c9b85 45%,#102d428f 82%); }
+    .spell-choice[aria-pressed="true"] { border-color:#e0ba69;
+      background:linear-gradient(145deg,#69826b,#295a58 55%,#163a45);
+      box-shadow:0 0 0 3px #f6de91,0 0 24px #72e6ff8f,0 9px 0 -2px #102828,
+        0 13px 24px #00150daf,inset 0 3px 0 #fff7;
+      transform:translateY(-4px);
+    }
+    .spell-choice:hover { filter:brightness(1.13); transform:translateY(-5px); }
+    .spell-choice:active { transform:translateY(-1px) scale(.97); }
+    .spell-icon { position:relative; z-index:1; display:grid; place-items:center;
+      height:43px; font-family:"Trebuchet MS",system-ui,sans-serif; font-size:39px;
+      font-weight:900; color:#c8faff; text-shadow:0 0 14px #21aafa,2px 3px #10295d;
+      line-height:1; }
+    #spell-ice .spell-icon { color:#e2ffff; text-shadow:0 0 15px #68f4ff,2px 3px #1c5872; }
+    .spell-name { position:relative; z-index:1; font-family:"Trebuchet MS",system-ui,sans-serif;
+      font-size:14px; line-height:1.1; font-weight:900; white-space:nowrap;
+      color:#fff2c9; text-shadow:2px 2px #0f2026; }
+    .spell-key { position:relative; z-index:1; font-size:11px;
+      color:#f2f6ed; font-weight:800; text-shadow:1px 1px #092b34; }
+    .spell-choice[aria-pressed="true"] .spell-key { color:#ffe498; }
+    @media (max-width:680px) {
+      .resource-hud { bottom:calc(67px + env(safe-area-inset-bottom));
+        grid-template-columns:minmax(0,1fr) 39px minmax(0,1fr);
+        padding:10px 10px 9px; gap:8px; }
+      .resource-name { font-size:12px; letter-spacing:.04em; }
+      .resource-value { font-size:11px; }
+      .resource-track { height:22px; border-width:2px; }
+      .resource-rune { width:39px; height:39px; font-size:25px; border-width:2px; }
+      .progression { gap:6px; margin-top:4px; padding-top:7px; }
+      .level-badge,.xp-count { font-size:10px; }
+      .xp-track { height:8px; }
+      .spellbar { bottom:calc(198px + env(safe-area-inset-bottom)); gap:12px; }
+      .spell-choice { width:124px; height:88px; border-width:3px; }
+      .spell-choice::before { inset:7px 10px 23px; }
+      .spell-icon { height:34px; font-size:32px; }
+      .spell-name { font-size:12px; }
+      .spell-key { font-size:10px; }
+    }
   </style>
 </head>
 <body>
@@ -179,7 +281,7 @@
       <div class="resource-top"><span class="resource-name">Leben</span><span class="resource-value" id="health-value">100 / 100</span></div>
       <div class="resource-track" id="health-meter" role="progressbar" aria-label="Lebenspunkte" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div class="resource-fill" id="health-fill"></div></div>
     </div>
-    <div class="resource-rune" aria-hidden="true">✦</div>
+    <div class="resource-rune" aria-hidden="true">✥</div>
     <div class="resource resource-mana">
       <div class="resource-top"><span class="resource-name">Mana</span><span class="resource-value" id="mana-value">100 / 100</span></div>
       <div class="resource-track" id="mana-meter" role="progressbar" aria-label="Manapunkte" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div class="resource-fill" id="mana-fill"></div></div>
@@ -192,7 +294,7 @@
   </section>
   <div class="spellbar" role="group" aria-label="Zauberauswahl">
     <button class="spell-choice" id="spell-fire" type="button" aria-pressed="true" title="1 – Blaue Feuerkugel, 9 Mana">
-      <span class="spell-icon">✦</span><span class="spell-name">Arkane Kugel</span><span class="spell-key">1 · 9 Mana</span></button>
+      <span class="spell-icon">✹</span><span class="spell-name">Arkane Kugel</span><span class="spell-key">1 · 9 Mana</span></button>
     <button class="spell-choice" id="spell-ice" type="button" aria-pressed="false" title="2 – Verlangsamen (3 Sekunden, 0 Schaden), 14 Mana">
       <span class="spell-icon">❄</span><span class="spell-name">Verlangsamen</span><span class="spell-key">2 · 14 Mana · 0 Schaden</span></button>
   </div>
