@@ -259,6 +259,25 @@
       .spell-name { font-size:12px; }
       .spell-key { font-size:10px; }
     }
+    .zone-banner { position:fixed; top:76px; left:50%; transform:translateX(-50%);
+      pointer-events:none; z-index:7; padding:7px 17px; min-width:156px; text-align:center;
+      color:#ffeabb; font:900 13px "Trebuchet MS",system-ui,sans-serif; letter-spacing:.055em;
+      border:2px solid #c4af71a8; border-radius:9px; background:#142b27d9;
+      box-shadow:0 5px 12px #0008;text-shadow:1px 2px #13251d; }
+    .boss-hud[hidden] { display:none; }
+    .boss-hud { position:fixed; left:50%; top:115px; transform:translateX(-50%);
+      z-index:8; width:min(470px,calc(100vw - 30px)); text-align:center;
+      border:3px solid #4f2331; outline:2px solid #cf9870; border-radius:10px;
+      background:linear-gradient(#32202ae8,#160f1ae8);
+      box-shadow:0 8px 23px #0009; padding:8px 12px; pointer-events:none; }
+    #boss-title { display:block; font:900 14px "Trebuchet MS",system-ui,sans-serif;
+      color:#ffe1b0; letter-spacing:.15em; margin-bottom:5px;text-shadow:1px 2px #160d13; }
+    .boss-track { height:18px; border:2px solid #210d1b; border-radius:5px;
+      background:#210e1a; overflow:hidden;box-shadow:0 0 0 1px #b67863; }
+    #boss-health { height:100%;width:100%;transition:width .2s;
+      background:linear-gradient(#ffb59a,#d74d68 48%,#82214b); }
+    #boss-health-text { display:block; color:#f4d0b8; font-size:11px; font-weight:bold; margin-top:4px; }
+    @media(max-width:680px){.zone-banner{top:72px;font-size:11px;}.boss-hud{top:110px;}}
   </style>
 </head>
 <body>
@@ -298,6 +317,12 @@
     <button class="spell-choice" id="spell-ice" type="button" aria-pressed="false" title="2 – Verlangsamen (3 Sekunden, 0 Schaden), 14 Mana">
       <span class="spell-icon">❄</span><span class="spell-name">Verlangsamen</span><span class="spell-key">2 · 14 Mana · 0 Schaden</span></button>
   </div>
+  <div class="zone-banner" id="zone-banner" aria-live="polite">🌲 Smaragdwald</div>
+  <section class="boss-hud" id="boss-hud" aria-label="Bossleben" hidden>
+    <span id="boss-title">WÄCHTER DES WALDES</span>
+    <div class="boss-track"><div id="boss-health"></div></div>
+    <span id="boss-health-text">600 / 600</span>
+  </section>
   <div class="treasure-counter" aria-label="Gesammelte Münzen">◈ <strong id="gold-count">0</strong></div>
   <button type="button" id="inventory-open" class="inventory-open" title="Inventar (I)" aria-label="Inventar öffnen">◈ Inventar [I]</button>
   <div class="inventory-overlay" id="inventory-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="inventory-title">
@@ -368,7 +393,11 @@
     'use strict';
     const canvas = document.getElementById('world');
     const ctx = canvas.getContext('2d', {alpha:false});
-    const WORLD = {w:3200,h:2400};
+    const WORLD = {w:5200,h:2800};
+    // Preserve the original start coordinates and old savegame positions.
+    const BIOMES={forestEnd:3100,transitionEnd:4050,desertStart:3770};
+    const biomeBlend=x=>clamp((x-BIOMES.forestEnd)/(BIOMES.transitionEnd-BIOMES.forestEnd),0,1);
+    const biomeAt=x=>x<BIOMES.forestEnd?'forest':x<BIOMES.transitionEnd?'badlands':'desert';
     const TAU=Math.PI*2;
     const ZOOM=1.22; // Art scale; keep camera and pointer coordinates in world units.
     const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
@@ -379,7 +408,7 @@
     const rnd=(a,b)=>a+(b-a)*rand();
     const choose=arr=>arr[Math.floor(rand()*arr.length)];
     const pathAt=x=>1205+178*Math.sin(x/560)+68*Math.sin(x/203);
-    const start={x:WORLD.w/2,y:pathAt(WORLD.w/2)};
+    const start={x:1600,y:pathAt(1600)}; // Original spawn remains stable for existing saves.
     let viewport={w:innerWidth,h:innerHeight,dpr:1};
     let camera={x:start.x-innerWidth/(2*ZOOM),y:start.y-innerHeight/(2*ZOOM)};
     let hero={x:start.x,y:start.y,speed:192,dir:0,walking:false,walkCycle:0,breath:0};
@@ -1248,10 +1277,63 @@
     }
     const campfires=[
       {x:start.x-400,y:pathAt(start.x-400)-115},
-      {x:start.x+720,y:pathAt(start.x+720)+160}
+      {x:start.x+720,y:pathAt(start.x+720)+160},
+      {x:2870,y:pathAt(2870)+125},
+      {x:4050,y:pathAt(4050)-95}
     ];
 
     const g=ground.getContext('2d',{alpha:false});
+    const zoneBanner=document.getElementById('zone-banner');
+    const bossUI={panel:document.getElementById('boss-hud'),
+      name:document.getElementById('boss-title'),fill:document.getElementById('boss-health'),
+      value:document.getElementById('boss-health-text')};
+    let activeZone='';
+    function updateZoneUI(){
+      const zone=biomeAt(hero.x);
+      if(zone===activeZone)return;
+      activeZone=zone;
+      zoneBanner.textContent=zone==='forest'?'🌲 Smaragdwald':
+        zone==='badlands'?'🪨 Trockene Grenzlande':'☀️ Goldene Wüste';
+    }
+    function paintBiomes(){
+      // All colors and dunes are generated: no unlicensed desert assets required.
+      // 16px bands with a soft alpha transition avoid an abrupt biome seam.
+      g.save();
+      for(let x=BIOMES.forestEnd;x<WORLD.w;x+=16){
+        const t=biomeBlend(x),alpha=Math.min(.98,.04+t*.94);
+        g.fillStyle='rgba(223,185,118,'+alpha.toFixed(3)+')';
+        g.fillRect(x,0,16,WORLD.h);
+      }
+      // Golden sand ridges get stronger toward the East.
+      for(let i=0;i<1800;i++){
+        const x=rnd(BIOMES.forestEnd,WORLD.w),y=rnd(0,WORLD.h);
+        if(rand()>Math.max(.05,biomeBlend(x)))continue;
+        const length=rnd(8,75),thickness=rnd(1.1,4.5);
+        g.strokeStyle=choose(['#fff0b158','#ae7b4650','#f6d69378','#d59c5970']);
+        g.lineWidth=thickness;g.beginPath();g.moveTo(x,y);
+        g.quadraticCurveTo(x+length*.45,y-8,x+length,y);g.stroke();
+      }
+      // Restore a continuous, readable pale dirt track through all biomes.
+      const trail=[];for(let x=BIOMES.forestEnd-25;x<=WORLD.w+25;x+=15)trail.push([x,pathAt(x)]);
+      g.lineCap='round';g.lineJoin='round';
+      for(const [width,color] of [[200,'#8d794125'],[152,'#98794970'],[118,'#d1a16dcb'],[89,'#ebcb91bd']]){
+        g.beginPath();trail.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));
+        g.lineWidth=width;g.strokeStyle=color;g.stroke();
+      }
+      // Orientation: understated hand-painted wayfinding signs on the main road.
+      function mark(x,label){
+        const y=pathAt(x)-118;
+        g.fillStyle='#483624';g.fillRect(x-3,y-5,6,75);
+        g.fillStyle='#9f7444';g.fillRect(x-66,y-28,132,32);
+        g.strokeStyle='#513c28';g.lineWidth=3;g.strokeRect(x-66,y-28,132,32);
+        g.fillStyle='#fff0c5';g.font='bold 12px system-ui';g.textAlign='center';
+        g.fillText(label,x,y-8);
+      }
+      mark(2900,'WALDWÄCHTER');
+      mark(3690,'ZUR WÜSTE →');
+      mark(4490,'SANDPFAD →');
+      g.restore();
+    }
 
     function gradientCircle(c,x,y,r,colors) {
       const gr=c.createRadialGradient(x,y,0,x,y,r);
@@ -1280,6 +1362,7 @@
           g.globalAlpha=rnd(.15,.45);g.fillRect(Math.round(x/3)*3,Math.round(y/3)*3,rnd(2,6),rnd(1,3));
         }
         g.globalAlpha=1;
+        paintBiomes();
         return;
       }
 
@@ -1320,6 +1403,7 @@
         g.save();g.translate(x,y);g.rotate(rnd(0,TAU));g.scale(rnd(12,55),rnd(4,12));
         g.fillStyle=choose(['#c8d68b15','#173d321f','#a9aa5e12']);g.beginPath();g.arc(0,0,1,0,TAU);g.fill();g.restore();
       }
+      paintBiomes();
     }
     function treeSprite(type,variation){
       const c=document.createElement('canvas');c.width=290;c.height=304;
@@ -1357,27 +1441,35 @@
     function generateForest(){
       for(let i=0;i<9;i++)for(let kind of ['oak','pine'])atlas.set(`${kind}:${i}`,treeSprite(kind,i));
       let count=0, attempts=0;
-      while(count<390 && attempts<3200){attempts++;
-        const x=rnd(65,WORLD.w-65),y=rnd(75,WORLD.h-60);
-        if(Math.abs(y-pathAt(x))<rnd(92,154)||dist(x,y,start.x,start.y)<205)continue;
+      // Approximately 25% less forest density despite the much larger overall map.
+      while(count<335 && attempts<5400){attempts++;
+        const x=rnd(65,BIOMES.forestEnd-30),y=rnd(75,WORLD.h-60);
+        if(Math.abs(y-pathAt(x))<rnd(125,185)||dist(x,y,start.x,start.y)<260)continue;
+        if(dist(x,y,2860,pathAt(2860)-190)<270)continue; // boss clearing
         const rad=rnd(22,35);
         if(trees.some(t=>dist(t.x,t.y,x,y)<t.r+rad+rnd(12,34)))continue;
         const kind=rand()<.48?'pine':'oak';
         trees.push({x,y,r:rad,kind,variant:Math.floor(rand()*9),scale:rnd(.77,1.22),wind:rnd(0,TAU)});count++;
       }
       // Rocks and stumps are decoration; solid trunks are the actual obstacles.
-      for(let i=0;i<110;i++){
+      for(let i=0;i<170;i++){
         const x=rnd(35,WORLD.w-35),y=rnd(35,WORLD.h-35);
         if(Math.abs(y-pathAt(x))<rnd(48,100))continue;
         if(dist(x,y,start.x,start.y)<75)continue;
         rocks.push({x,y,s:rnd(6,17),type:rand()<.28?'mushroom':'rock'});
       }
-      for(let i=0;i<210;i++){
+      for(let i=0;i<250;i++){
         const x=rnd(0,WORLD.w),y=rnd(0,WORLD.h);
         if(Math.abs(y-pathAt(x))<70)continue;
         details.push({x,y,s:rnd(5,11),type:rand()<.62?'fern':'flowers',phase:rnd(0,TAU)});
       }
-      for(let i=0;i<95;i++)fireflies.push({x:rnd(0,WORLD.w),y:rnd(0,WORLD.h),z:rnd(0,TAU),phase:rnd(0,TAU),speed:rnd(.5,1.5)});
+      for(let i=0;i<95;i++)fireflies.push({x:rnd(0,BIOMES.forestEnd),y:rnd(0,WORLD.h),z:rnd(0,TAU),phase:rnd(0,TAU),speed:rnd(.5,1.5)});
+      // Sparse desert props (decorative, non-blocking) make wide combat clearings.
+      for(let i=0;i<115;i++){
+        const x=rnd(BIOMES.forestEnd+150,WORLD.w-50),y=rnd(70,WORLD.h-70);
+        if(Math.abs(y-pathAt(x))<105)continue;
+        details.push({x,y,s:rnd(14,28),type:rand()<.57?'cactus':'drybush',phase:rnd(0,TAU)});
+      }
     }
     function drawRock(o){
 
@@ -1403,7 +1495,23 @@
       ctx.restore();
     }
     function drawDetails(o){
-
+      if(o.type==='cactus'||o.type==='drybush'){
+        ctx.save();ctx.translate(o.x,o.y);
+        ctx.fillStyle='#37291f48';ctx.beginPath();ctx.ellipse(0,0,o.s*.8,5,0,0,TAU);ctx.fill();
+        if(o.type==='cactus'){
+          ctx.strokeStyle='#22534a';ctx.lineWidth=o.s*.47;ctx.lineCap='round';
+          ctx.beginPath();ctx.moveTo(0,-1);ctx.lineTo(0,-o.s*2);ctx.stroke();
+          ctx.lineWidth=o.s*.29;ctx.beginPath();
+          ctx.moveTo(0,-o.s*.78);ctx.lineTo(-o.s*.65,-o.s*.92);ctx.lineTo(-o.s*.65,-o.s*1.43);
+          ctx.moveTo(0,-o.s*.58);ctx.lineTo(o.s*.67,-o.s*.78);ctx.lineTo(o.s*.67,-o.s*1.28);ctx.stroke();
+          ctx.strokeStyle='#86b894';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-3,-o.s*.25);ctx.lineTo(-3,-o.s*1.9);ctx.stroke();
+        }else{
+          ctx.strokeStyle='#8f7650';ctx.lineWidth=3;ctx.lineCap='round';
+          for(let i=-3;i<=3;i++){ctx.beginPath();ctx.moveTo(0,0);
+            ctx.quadraticCurveTo(i*o.s*.29,-o.s*.7,i*o.s*.43,-o.s*.78);ctx.stroke();}
+        }
+        ctx.restore();return;
+      }
       if(tinyReady){
         const variant=1+(Math.floor(o.phase*10)%4);
         const key='bush'+variant;
@@ -1657,6 +1765,7 @@
         else hero.dir=dy>0?0:2;
       }
       updateCombat(dt);
+      updateZoneUI();
       if(pendingMerchant&&dist(hero.x,hero.y,merchant.x,merchant.y)<140){
         pendingMerchant=false;openShop();
       }
@@ -1809,7 +1918,7 @@
     }
     document.getElementById('full').addEventListener('click',toggleFull);
     drawGround();generateForest();buildNav();spawnMonsters();resize();
-    restoreGame();
+    restoreGame();updateZoneUI();
     requestAnimationFrame(frame);
     const loading=document.getElementById('loading');loading.classList.add('hide');
     setTimeout(()=>loading.remove(),850);
