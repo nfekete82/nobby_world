@@ -387,7 +387,7 @@
     <span class="sep desktop"></span>
     <span class="desktop"><kbd>Shift</kbd> Sprinten</span><span class="sep desktop"></span><span class="desktop"><kbd>E</kbd> Heilen</span><span class="sep desktop"></span><span class="desktop"><kbd>B</kbd> Händler</span>
   </div>
-  <div class="hint">NOBBY WORLD · WALDKOBOLD 0.8.1</div>
+  <div class="hint">NOBBY WORLD · WALDGEGNER 0.8.2</div>
   <script>
   (() => {
     'use strict';
@@ -715,7 +715,7 @@
     function addMonster(kind,x,y,overrides={}){
       const archetypes={
         slime:{name:'Waldschleim',hp:66,speed:90,damage:8,reach:42,attackDelay:1.35,respawn:10,xp:15,radius:32},
-        goblin:{name:'Waldkobold',hp:112,speed:112,damage:12,reach:46,attackDelay:1.1,respawn:15,xp:25,radius:40},
+        goblin:{name:'Waldkobold',hp:112,speed:110,damage:10,reach:45,attackDelay:1.55,respawn:15,xp:25,radius:40,ranged:true,minRange:55,maxRange:345,projectileSpeed:275,projectileColor:'red'},
         raider:{name:'Dünenräuber',hp:135,speed:98,damage:8,reach:39,attackDelay:2.4,respawn:18,xp:32,radius:41,ranged:true},
         scarab:{name:'Sandkäfer',hp:118,speed:131,damage:10,reach:40,attackDelay:1.05,respawn:16,xp:28,radius:35},
         elite:{name:'Wurzelhüter · ELITE',hp:255,speed:95,damage:18,reach:62,attackDelay:1.75,respawn:28,xp:70,radius:63},
@@ -729,6 +729,8 @@
         hp:spec.hp,maxHp:spec.hp,speed:spec.speed,baseSpeed:spec.speed,damage:spec.damage,
         reach:spec.reach,radius:spec.radius,xp:spec.xp,
         attackDelay:spec.attackDelay,respawn:spec.respawn,ranged:!!spec.ranged,
+        minRange:spec.minRange??60,maxRange:spec.maxRange??330,
+        projectileSpeed:spec.projectileSpeed??285,projectileColor:spec.projectileColor??'orange',
         phase:id*1.76,attackAt:time+2.5,attackAnimStart:0,attackAnimUntil:0,
         hitUntil:0,respawnAt:0,deadAt:0,selectedUntil:0,slowUntil:0,
         aggroUntil:0,staggerUntil:0,state:'idle',provoked:false,bossPhase:1,
@@ -997,7 +999,7 @@
             m.speed=m.baseSpeed;m.attackAt=time+1.3;
             m.attackAnimStart=0;m.attackAnimUntil=0;
             m.aggroUntil=0;m.staggerUntil=0;m.slowUntil=0;m.state='idle';
-          m.bossPhase=1;
+            m.bossPhase=1;
             m.provoked=false;m.chasePath=[];m.nextRepathAt=0;
           }
           continue;
@@ -1062,13 +1064,27 @@
               radius:m.bossPhase===2?126:106,
               damage:m.bossPhase===2?25:18,owner:m.id});
             m.attackAt=time+(m.bossPhase===2?1.85:2.7);
-          }else if(m.ranged&&rangeNow<330&&rangeNow>60){
-            const dx=(hero.x-m.x)/rangeNow,dy=(hero.y-m.y)/rangeNow;
-            enemyShots.push({x:m.x,y:m.y-43,vx:dx*285,vy:dy*285,
-              damage:m.damage,age:0,life:2.1,kind:m.kind});
+          }else if(m.ranged&&rangeNow<m.maxRange&&rangeNow>m.minRange){
+            // Different elemental colours distinguish the forest goblin from
+            // the dune raider. Aim at the hero's body from the casting hand.
+            const side=hero.x>=m.x?1:-1;
+            const shotX=m.x+(m.kind==='goblin'?side*22:0);
+            const shotY=m.y-(m.kind==='goblin'?53:43);
+            const deltaX=hero.x-shotX,deltaY=hero.y-20-shotY;
+            const length=Math.max(.01,Math.hypot(deltaX,deltaY));
+            if(m.kind==='goblin'){
+              m.attackAnimStart=time;
+              m.attackAnimUntil=time+.55;
+              burst(shotX,shotY,'#ff6076',9);
+            }
+            enemyShots.push({x:shotX,y:shotY,
+              vx:deltaX/length*m.projectileSpeed,
+              vy:deltaY/length*m.projectileSpeed,
+              damage:m.damage,age:0,life:2.1,kind:m.kind,
+              color:m.projectileColor});
             m.attackAt=time+m.attackDelay;
           }else if(rangeNow<m.reach){
-            if(m.kind==='goblin'){
+            if(m.kind==='goblin'||m.kind==='elite'){
               m.attackAnimStart=time;
               m.attackAnimUntil=time+.55;
             }
@@ -1094,7 +1110,8 @@
           enemyShots.splice(i,1);continue;
         }
         if(resources.health>0&&dist(shot.x,shot.y,hero.x,hero.y-20)<24){
-          damageHero(shot.damage);burst(shot.x,shot.y,'#ffa16d',12);
+          damageHero(shot.damage);
+          burst(shot.x,shot.y,shot.color==='red'?'#ff6178':'#ffa16d',12);
           enemyShots.splice(i,1);
         }
       }
@@ -1171,6 +1188,34 @@
       return true;
     }
 
+    // 8 transparent Root Guardian frames, downsampled losslessly in alpha to
+    // 160x426 each for fast browser loading (original user artwork: 256x682).
+    const rootGuardianSheet=new Image();
+    rootGuardianSheet.src='assets/custom/root_guardian.png';
+    function drawRootGuardianSprite(m,bounce=0){
+      if(!rootGuardianSheet.complete
+        ||rootGuardianSheet.naturalWidth!==1280
+        ||rootGuardianSheet.naturalHeight!==426)return false;
+      const attacking=time<(m.attackAnimUntil||0);
+      let frame;
+      if(attacking){
+        const elapsed=Math.max(0,time-(m.attackAnimStart||0));
+        frame=Math.min(6,2+Math.floor(elapsed/.1));
+      }else if(m.state==='chase'){
+        frame=[0,1,7,1][Math.floor(time*5+m.phase)%4];
+      }else{
+        frame=Math.floor(time*2+m.phase)%2===0?0:7;
+      }
+      const h=248,w=h*160/426;
+      const y=m.y-h*(410/426)-bounce;
+      ctx.save();ctx.imageSmoothingEnabled=false;
+      if(hero.x<m.x){ctx.translate(m.x*2,0);ctx.scale(-1,1);}
+      ctx.drawImage(rootGuardianSheet,frame*160,0,160,426,
+        m.x-w/2,y,w,h);
+      ctx.restore();
+      return true;
+    }
+
     function drawAdventureEnemy(m){
       if(m.kind==='slime'){drawSlime(m);return;}
       if(m.hp<=0&&time-m.deadAt>.45)return;
@@ -1187,7 +1232,8 @@
       // custom cartoon opponent if those sprite files are unavailable.
       const key=m.kind==='goblin'?(m.state==='chase'?'redWarriorRun':'redWarrior'):
         raider?(m.state==='chase'?'redArcherRun':'redArcher'):null;
-      let rendered=m.kind==='goblin'&&drawForestGoblinSprite(m,bounce);
+      let rendered=m.kind==='goblin'?drawForestGoblinSprite(m,bounce):
+        elite?drawRootGuardianSprite(m,bounce):false;
       if(!rendered&&key&&tiny[key]){
         const fw=192,fh=192,sz=raider?167:158;
         rendered=sprite(key,Math.floor(time*(m.state==='chase'?10:6)+m.phase)%8,
@@ -1252,7 +1298,8 @@
       }
       ctx.restore();
       const bw=boss?145:elite?100:67;
-      const by=m.y-(boss?250:elite?184:raider?130:m.kind==='goblin'&&rendered?174:110)-bounce;
+      const by=m.y-(boss?250:elite&&rendered?254:elite?184:
+        raider?130:m.kind==='goblin'&&rendered?174:110)-bounce;
       const fraction=clamp(m.hp/m.maxHp,0,1);
       ctx.fillStyle='#15202ddf';ctx.fillRect(m.x-bw/2-3,by-3,bw+6,15);
       ctx.fillStyle='#603347';ctx.fillRect(m.x-bw/2,by,bw,9);
@@ -1388,10 +1435,27 @@
         ctx.restore();
       }
       for(const shot of enemyShots){
-        const glow=ctx.createRadialGradient(shot.x,shot.y,0,shot.x,shot.y,17);
-        glow.addColorStop(0,'#fff3ce');glow.addColorStop(.3,'#ffa951');glow.addColorStop(1,'#c7441800');
-        ctx.fillStyle=glow;ctx.beginPath();ctx.arc(shot.x,shot.y,17,0,TAU);ctx.fill();
-        ctx.fillStyle='#ffe2ae';ctx.beginPath();ctx.arc(shot.x,shot.y,4,0,TAU);ctx.fill();
+        const red=shot.color==='red';
+        const radius=red?23:17;
+        const glow=ctx.createRadialGradient(shot.x,shot.y,0,shot.x,shot.y,radius);
+        glow.addColorStop(0,red?'#ffe4ed':'#fff3ce');
+        glow.addColorStop(.27,red?'#ff5e77':'#ffa951');
+        glow.addColorStop(.65,red?'#b91c42aa':'#ca62278a');
+        glow.addColorStop(1,red?'#7f142000':'#c7441800');
+        ctx.fillStyle=glow;ctx.beginPath();ctx.arc(shot.x,shot.y,radius,0,TAU);ctx.fill();
+        ctx.fillStyle=red?'#ffd7e0':'#ffe2ae';
+        ctx.beginPath();ctx.arc(shot.x,shot.y,red?6:4,0,TAU);ctx.fill();
+        if(red){
+          // Tiny magic sparkle makes the crimson missile readable in a busy forest.
+          ctx.save();ctx.translate(shot.x,shot.y);ctx.rotate(time*6);
+          ctx.strokeStyle='#ff9bab';ctx.lineWidth=2;
+          for(let i=0;i<4;i++){
+            const a=i*Math.PI/2;
+            ctx.beginPath();ctx.moveTo(Math.cos(a)*12,Math.sin(a)*12);
+            ctx.lineTo(Math.cos(a)*19,Math.sin(a)*19);ctx.stroke();
+          }
+          ctx.restore();
+        }
       }
       for(const p of fireballs){
         for(let k=0;k<p.trail.length;k++){
