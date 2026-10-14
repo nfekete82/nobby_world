@@ -678,7 +678,7 @@
     let target=null,route=[],targetAnimation=0;
     let time=0,last=0,paused=false;
     // Forest combat: independent from navigation so ground clicks always remain click-to-move.
-    const enemies=[],fireballs=[],combatParticles=[],floatingNumbers=[],loot=[];
+    const enemies=[],fireballs=[],combatParticles=[],floatingNumbers=[],loot=[],impactBursts=[];
     let nextLootId=0;
     const FIREBALL_COST=9,FIREBALL_DAMAGE=26,FIREBALL_SPEED=540,FIREBALL_RANGE=690,FIREBALL_COOLDOWN=.29;
     let nextFireballAt=0,shotCastUntil=0,shotCastStart=0,heroInvulnerableUntil=0,heroRespawnAt=0;
@@ -724,8 +724,8 @@
       if(combatParticles.length>180)combatParticles.splice(0,combatParticles.length-180);
     }
     function floatNumber(x,y,text,color){
-      floatingNumbers.push({x,y,text,color,age:0,life:1});
-      if(floatingNumbers.length>25)floatingNumbers.shift();
+      floatingNumbers.push({x,y,text,color,age:0,life:1.2,tilt:(rand()-.5)*.12});
+      if(floatingNumbers.length>32)floatingNumbers.shift();
     }
     function castFireball(m){
       const spec=spellSpecs[selectedSpell];
@@ -869,8 +869,9 @@
         m.slowUntil=Math.max(m.slowUntil||0,time+3);
         m.aggroUntil=Math.max(m.aggroUntil,time+3);
         m.selectedUntil=time+.5;
-        floatNumber(m.x,m.y-86,'LANGSAM!','#b2f8ff');
-        burst(m.x,m.y-36,'#b7f8ff',24);
+        floatNumber(m.x,m.y-86,'❄ LANGSAM!','#b2f8ff');
+        impactBursts.push({x:m.x,y:m.y-34,age:0,life:.56,kind:'ice'});
+        burst(m.x,m.y-36,'#b7f8ff',30);
         playSfx('ice');
         return;
       }
@@ -886,7 +887,8 @@
         if(!collides(nx,ny)){m.x=nx;m.y=ny;}
       }
       floatNumber(m.x,m.y-78,'-'+damage,'#a1eaff');
-      burst(m.x,m.y-34,'#51bffb',22);
+      burst(m.x,m.y-34,'#51bffb',26);
+      impactBursts.push({x:m.x,y:m.y-34,age:0,life:.4,kind:'fire'});
       playSfx('hit');
       if(m.hp<=0){
         m.deadAt=time;m.respawnAt=time+10;
@@ -968,13 +970,17 @@
         }
       }
       updateLoot(dt);
+      for(let i=impactBursts.length-1;i>=0;i--){
+        const impact=impactBursts[i];impact.age+=dt;
+        if(impact.age>=impact.life)impactBursts.splice(i,1);
+      }
       for(let i=combatParticles.length-1;i>=0;i--){
         const p=combatParticles[i];p.age+=dt;
         p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=Math.exp(-3*dt);p.vy*=Math.exp(-3*dt);
         if(p.age>=p.life)combatParticles.splice(i,1);
       }
       for(let i=floatingNumbers.length-1;i>=0;i--){
-        const p=floatingNumbers[i];p.age+=dt;p.y-=22*dt;
+        const p=floatingNumbers[i];p.age+=dt;p.y-=32*dt;
         if(p.age>=p.life)floatingNumbers.splice(i,1);
       }
     }
@@ -984,6 +990,21 @@
       const bounce=Math.abs(Math.sin(age))*4;
       const squash=1+Math.sin(age*2)*.055;
       const flash=time<m.hitUntil;
+      const chilled=m.hp>0&&time<(m.slowUntil||0);
+      if(chilled){
+        // Persisting ice outline and hand-drawn crystalline shards show the slow status.
+        ctx.save();
+        ctx.strokeStyle='#b9fcff';ctx.lineWidth=3;ctx.globalAlpha=.65+.2*Math.sin(time*8);
+        ctx.beginPath();ctx.ellipse(m.x,m.y-14,31,32,0,0,TAU);ctx.stroke();
+        for(let k=0;k<5;k++){
+          const a=k*TAU/5+time*.9+m.phase;
+          const x=m.x+Math.cos(a)*35,y=m.y-24+Math.sin(a)*25;
+          ctx.fillStyle='#bdfdff';ctx.strokeStyle='#276d9f';ctx.lineWidth=1.5;
+          ctx.beginPath();ctx.moveTo(x,y-7);ctx.lineTo(x+4,y);
+          ctx.lineTo(x,y+7);ctx.lineTo(x-4,y);ctx.closePath();ctx.fill();ctx.stroke();
+        }
+        ctx.restore();
+      }
       if(m.state==='chase'&&m.hp>0&&time>m.attackAt-.42&&time<m.attackAt
           &&dist(hero.x,hero.y,m.x,m.y)<61){
         // Telegraph the contact attack before the next hit.
@@ -1049,6 +1070,27 @@
       drawLoot();
       ctx.save();
       ctx.globalCompositeOperation='lighter';
+      for(const impact of impactBursts){
+        const t=impact.age/impact.life,ice=impact.kind==='ice';
+        const radius=(ice?51:43)*(0.33+t*.78);
+        ctx.save();ctx.globalAlpha=(1-t)*.9;ctx.translate(impact.x,impact.y);
+        ctx.rotate(ice?Math.PI/8:impact.age*1.2);
+        ctx.strokeStyle=ice?'#a6f5ff':'#c8faff';ctx.lineWidth=ice?4:5;
+        ctx.beginPath();ctx.arc(0,0,radius,0,TAU);ctx.stroke();
+        ctx.fillStyle=ice?'#92edff':'#39beff';
+        ctx.strokeStyle='#0e3c67';ctx.lineWidth=2.5;
+        const rays=ice?8:10;
+        for(let k=0;k<rays;k++){
+          const a=k*TAU/rays;
+          const inner=radius*.43,outer=radius*(ice?1.16:1.42);
+          ctx.beginPath();
+          ctx.moveTo(Math.cos(a-.14)*inner,Math.sin(a-.14)*inner);
+          ctx.lineTo(Math.cos(a)*outer,Math.sin(a)*outer);
+          ctx.lineTo(Math.cos(a+.14)*inner,Math.sin(a+.14)*inner);
+          ctx.closePath();ctx.fill();ctx.stroke();
+        }
+        ctx.restore();
+      }
       for(const p of fireballs){
         for(let k=0;k<p.trail.length;k++){
           const t=p.trail[k],a=(k+1)/p.trail.length;
@@ -1064,6 +1106,15 @@
         ctx.fillStyle=glow;ctx.beginPath();ctx.arc(p.x,p.y,radius,0,TAU);ctx.fill();
         ctx.fillStyle=ice?'#e1ffff':'#e2fbff';
         ctx.beginPath();ctx.arc(p.x,p.y,ice?6:8.5,0,TAU);ctx.fill();
+        // Chunky comic glints instead of only diffuse digital glow.
+        ctx.save();ctx.translate(p.x,p.y);ctx.rotate(time*4);
+        ctx.strokeStyle=ice?'#d7ffff':'#f3ffff';ctx.lineWidth=3;
+        for(let k=0;k<4;k++){
+          const a=k*Math.PI/2,r=ice?12:16;
+          ctx.beginPath();ctx.moveTo(Math.cos(a)*r,Math.sin(a)*r);
+          ctx.lineTo(Math.cos(a)*(r+7),Math.sin(a)*(r+7));ctx.stroke();
+        }
+        ctx.restore();
       }
       for(const p of combatParticles){
         ctx.globalAlpha=Math.max(0,1-p.age/p.life);
@@ -1071,12 +1122,23 @@
         ctx.arc(p.x,p.y,p.radius*(1-p.age/p.life*.6),0,TAU);ctx.fill();
       }
       ctx.restore();
-      ctx.save();ctx.textAlign='center';ctx.font='bold 16px system-ui, sans-serif';
+      ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';
       for(const n of floatingNumbers){
-        ctx.globalAlpha=Math.max(0,1-n.age/n.life);
-        ctx.lineWidth=3;ctx.strokeStyle='#071920';
-        ctx.strokeText(n.text,n.x,n.y);
-        ctx.fillStyle=n.color;ctx.fillText(n.text,n.x,n.y);
+        const t=n.age/n.life;
+        const pop=1+Math.max(0,.27-n.age)*1.9;
+        const big=n.text.startsWith('-')||n.text.includes('LANGSAM')||
+          n.text.includes('STUFENAUFSTIEG');
+        ctx.save();ctx.translate(n.x,n.y);
+        ctx.rotate(n.tilt||0);ctx.scale(pop,pop);
+        ctx.globalAlpha=Math.max(0,1-t*t);
+        ctx.font=(big?'900 23px':'900 16px')+' "Trebuchet MS", system-ui, sans-serif';
+        ctx.lineJoin='round';ctx.lineWidth=big?6:4;
+        ctx.strokeStyle='#122330';
+        ctx.strokeText(n.text,1,3);
+        ctx.strokeStyle='#091922';ctx.lineWidth=2;ctx.strokeText(n.text,0,0);
+        ctx.shadowColor=n.color;ctx.shadowBlur=big?13:5;
+        ctx.fillStyle=n.color;ctx.fillText(n.text,0,0);
+        ctx.restore();
       }
       ctx.restore();
     }
