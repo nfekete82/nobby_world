@@ -13,7 +13,7 @@ const bootAnchor = 'drawGround();generateForest();buildNav();spawnMonsters();res
 assert.ok(script.includes(bootAnchor), 'game initialization changed; adjust test hook');
 const instrumented = script.replace(
   bootAnchor,
-  bootAnchor + '\nwindow.__test={enemies,fireballs,resources,progress,loot,hero,merchant,WORLD,BIOMES,trees,details,biomeAt,pathAt,drawAdventureEnemy,bossZones,enemyShots,equipment,equipped,bag,selectSpell,openInventory,closeInventory,toggleEquipment,drinkPotion,spellSpecs,camera,update,castFireball,provokeMonster,routeTo,hurtMonster,grantXP,damageHero,drawCombatEffects,drawMerchant,openShop,closeShop,buyItem,saveGame,route:()=>route,target:()=>target,shopState:()=>shopOpen};'
+  bootAnchor + '\nwindow.__test={enemies,fireballs,resources,progress,loot,hero,merchant,WORLD,BIOMES,trees,details,biomeAt,pathAt,drawAdventureEnemy,drawForestGoblinSprite,forestGoblinSheet,bossZones,enemyShots,equipment,equipped,bag,selectSpell,openInventory,closeInventory,toggleEquipment,drinkPotion,spellSpecs,camera,update,castFireball,provokeMonster,routeTo,hurtMonster,grantXP,damageHero,drawCombatEffects,drawMerchant,openShop,closeShop,buyItem,saveGame,route:()=>route,target:()=>target,shopState:()=>shopOpen};'
 );
 
 function boot(initialSave = null) {
@@ -21,7 +21,9 @@ function boot(initialSave = null) {
   if(initialSave)stored.set('nobby_world_save_v1', JSON.stringify(initialSave));
   const callbacks = new Map();
   const gradient = () => ({ addColorStop() {} });
+  const drawCalls = [];
   const ctx = new Proxy({
+    drawImage(...args) { drawCalls.push(args); },
     createLinearGradient: gradient,
     createRadialGradient: gradient,
     createPattern() { return '#263'; },
@@ -66,7 +68,7 @@ function boot(initialSave = null) {
   const g = window.__test;
   assert.ok(g, 'game test hook missing');
   return {
-    g, stored,
+    g, stored, drawCalls,
     click(x,y,button=0) {
       callbacks.get('canvas.pointerdown')({
         pointerType:'mouse', button,
@@ -537,4 +539,35 @@ test('defeating the boss grants bonus XP and a shower of gold', () => {
   assert.ok(g.loot.filter(i=>i.kind==='gold').length>=18);
   assert.ok(g.loot.some(i=>i.kind==='potion'));
   assert.ok(boss.respawnAt>20);
+});
+
+test('uploaded forest goblin sheet is loaded from the committed custom assets path', () => {
+  const {g}=boot();
+  assert.equal(g.forestGoblinSheet.url,'assets/custom/forest_goblin.png');
+  const goblin=g.enemies.find(e=>e.kind==='goblin');
+  assert.ok(goblin);
+  assert.equal(g.drawForestGoblinSprite(goblin),false,'missing image uses a safe fallback');
+  assert.doesNotThrow(()=>g.drawAdventureEnemy(goblin));
+});
+
+test('forest goblin uses 8 transparent frames with ground-aligned sprite dimensions', () => {
+  const {g,drawCalls}=boot();
+  const goblin=g.enemies.find(e=>e.kind==='goblin');
+  const image=g.forestGoblinSheet;
+  image.complete=true;image.naturalWidth=2048;image.naturalHeight=682;
+  assert.equal(g.drawForestGoblinSprite(goblin),true);
+  let call=drawCalls.find(c=>c[0]===image);
+  assert.ok(call,'must draw actual uploaded sprite instead of a red-warrior placeholder');
+  assert.equal(call[3],256);
+  assert.equal(call[4],682);
+  assert.ok(call[2]>=0&&call[2]<2048,'source frame must stay inside the sheet');
+  assert.ok(call[7]>160&&call[7]<200,'character should scale to the game world');
+  drawCalls.length=0;
+  goblin.attackAnimStart=0;goblin.attackAnimUntil=.55;
+  g.update(.2);
+  assert.equal(g.drawForestGoblinSprite(goblin),true);
+  call=drawCalls.find(c=>c[0]===image);
+  assert.ok(call);
+  assert.ok(call[1]>=256 && call[1]<=6*256,
+    'active melee attack must use spear slash and thrust frames');
 });
