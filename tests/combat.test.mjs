@@ -270,3 +270,16 @@ test('merchant sprite renderer works even when Tiny Swords are not loaded', () =
   const {g}=boot();
   assert.doesNotThrow(()=>g.drawMerchant());
 });
+
+test('B opens the shop from spawn, Escape closes, and navigation remains usable', () => {
+  const {g,keydown,click}=boot();
+  keydown('b');
+  assert.equal(g.shopState(),true);
+  const before=g.hero.x;
+  g.update(.1);
+  assert.equal(g.hero.x,before);
+  keydown('escape');
+  assert.equal(g.shopState(),false);
+  click(g.hero.x-80,g.hero.y);
+  assert.ok(g.route().length>0);
+});
