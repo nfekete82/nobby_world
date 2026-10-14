@@ -13,7 +13,7 @@ const bootAnchor = 'drawGround();generateForest();buildNav();spawnMonsters();res
 assert.ok(script.includes(bootAnchor), 'game initialization changed; adjust test hook');
 const instrumented = script.replace(
   bootAnchor,
-  bootAnchor + '\nwindow.__test={enemies,fireballs,resources,progress,loot,hero,merchant,equipment,camera,update,hurtMonster,grantXP,damageHero,drawCombatEffects,drawMerchant,openShop,closeShop,buyItem,saveGame,route:()=>route,target:()=>target,shopState:()=>shopOpen};'
+  bootAnchor + '\nwindow.__test={enemies,fireballs,resources,progress,loot,hero,merchant,equipment,equipped,bag,selectSpell,openInventory,closeInventory,toggleEquipment,drinkPotion,spellSpecs,camera,update,hurtMonster,grantXP,damageHero,drawCombatEffects,drawMerchant,openShop,closeShop,buyItem,saveGame,route:()=>route,target:()=>target,shopState:()=>shopOpen};'
 );
 
 function boot(initialSave = null) {
@@ -38,7 +38,8 @@ function boot(initialSave = null) {
   const elements = new Map([['world', canvas]]);
   const fakeElement = () => ({
     classList: { add() {} }, style: {}, hidden: false, focus() {}, setAttribute() {}, remove() {},
-    addEventListener() {}, getContext() { return ctx; }
+    listeners:{},addEventListener(name,fn) {this.listeners[name]=fn;},
+    click(){this.listeners.click?.();},getContext() { return ctx; }
   });
   const document = {
     getElementById(id) {
@@ -235,7 +236,7 @@ test('boots and charm are one-time purchases with immediate bonuses', () => {
 test('save restores level, XP, gold, equipment and resources', () => {
   const {g,stored}=boot();
   g.progress.level=4;g.progress.xp=25;g.progress.gold=37;
-  g.equipment.focus=true;g.equipment.charm=true;
+  g.equipment.focus=true;g.equipment.charm=true;g.equipped.focus=true;g.equipped.charm=true;
   g.resources.maxHealth=155;g.resources.maxMana=115;
   g.resources.health=90;g.resources.mana=60;
   assert.equal(g.saveGame(),true);
