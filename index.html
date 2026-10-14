@@ -304,8 +304,9 @@
         const d=dist(item.x,item.y,hero.x,hero.y-12);
         if(d<100&&d>0){
           const speed=260+(100-d)*3;
-          item.x+=(hero.x-item.x)/d*speed*dt;
-          item.y+=(hero.y-12-item.y)/d*speed*dt;
+          const pull=Math.min(d,speed*dt);
+          item.x+=(hero.x-item.x)/d*pull;
+          item.y+=(hero.y-12-item.y)/d*pull;
         }
         if(dist(item.x,item.y,hero.x,hero.y-12)<24){
           if(item.kind==='gold'){
