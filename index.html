@@ -2184,13 +2184,11 @@
       ctx.fillText(text,merchant.x,merchant.y-113+bob);
       ctx.restore();
     }
-    // Packed from the user-supplied original at native sprite detail.
-    // Every cell is now an independently cropped 192x192 sprite; the seven
-    // original row origins were IRREGULAR, so naive height/7 slicing mixed
-    // the head, cape and magic from unrelated poses.
+    // Newly generated mage: separately cropped and foot-aligned sprites.
+    // Idle uses ONE frozen frame to prevent visible foot sliding.
     const MAGE_FRAME=192,MAGE_FOOT=173,MAGE_RENDER=150;
     const playerMageSheet=new Image();
-    playerMageSheet.src='assets/custom/player_mage_aligned.png';
+    playerMageSheet.src='assets/custom/player_mage_v2.png';
     function mageAnimationFrame(){
       const casting=time<castUntil||time<shotCastUntil;
       const side=hero.dir===1||hero.dir===3;
@@ -2202,13 +2200,12 @@
         const duration=isHealing?Math.max(.35,castUntil-castStart):
           Math.max(.12,shotCastUntil-shotCastStart);
         const t=clamp((time-began)/duration,0,.9999);
-        // Frames 0-2 of the side/back cast rows include art that overflowed
-        // the original column boundaries. Choose clean pose frames instead.
-        const sequence=row===4||row===6?[3,4,5,6,7]:[0,1,2,3,4,5,6,7];
+        // Prefer intact spell poses: large energy FX can touch atlas edges.
+        const sequence=row===4||row===6?[0,4,7]:[0,1,3,4,7];
         return {row,frame:sequence[Math.floor(t*sequence.length)]};
       }
-      const frame=hero.walking?Math.floor(hero.walkCycle*.85)%8:
-        Math.floor(time*2.3)%8;
+      // Old idle cycling was responsible for the standing twitch.
+      const frame=hero.walking?Math.floor(hero.walkCycle*.85)%8:0;
       return {row,frame};
     }
     function drawPlayerMageSprite(){
