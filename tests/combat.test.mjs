@@ -13,7 +13,7 @@ const bootAnchor = 'drawGround();generateForest();buildNav();spawnMonsters();res
 assert.ok(script.includes(bootAnchor), 'game initialization changed; adjust test hook');
 const instrumented = script.replace(
   bootAnchor,
-  bootAnchor + '\nwindow.__test={enemies,fireballs,resources,progress,loot,hero,merchant,equipment,equipped,bag,selectSpell,openInventory,closeInventory,toggleEquipment,drinkPotion,spellSpecs,camera,update,castFireball,provokeMonster,routeTo,hurtMonster,grantXP,damageHero,drawCombatEffects,drawMerchant,openShop,closeShop,buyItem,saveGame,route:()=>route,target:()=>target,shopState:()=>shopOpen};'
+  bootAnchor + '\nwindow.__test={enemies,fireballs,resources,progress,loot,hero,merchant,WORLD,BIOMES,trees,details,biomeAt,pathAt,drawAdventureEnemy,bossZones,enemyShots,equipment,equipped,bag,selectSpell,openInventory,closeInventory,toggleEquipment,drinkPotion,spellSpecs,camera,update,castFireball,provokeMonster,routeTo,hurtMonster,grantXP,damageHero,drawCombatEffects,drawMerchant,openShop,closeShop,buyItem,saveGame,route:()=>route,target:()=>target,shopState:()=>shopOpen};'
 );
 
 function boot(initialSave = null) {
@@ -81,7 +81,8 @@ function boot(initialSave = null) {
 
 test('forest combat spawns healthy enemies', () => {
   const {g}=boot();
-  assert.equal(g.enemies.length,9);
+  assert.equal(g.enemies.length,22);
+  assert.equal(g.enemies.filter(e=>e.kind==='slime').length,9);
   assert.ok(g.enemies.every(e => e.hp===e.maxHp && e.hp>0));
   assert.equal(g.resources.health,100);
   assert.equal(g.resources.mana,100);
@@ -456,4 +457,84 @@ test('an unprovoked far-away slime still returns to its own territory', () => {
   g.update(.05);
   assert.equal(m.provoked,false);
   assert.equal(m.state,'return');
+});
+
+test('expanded world preserves old start and softly separates forest, badlands and desert', () => {
+  const {g}=boot();
+  assert.equal(g.WORLD.w,5200);
+  assert.equal(g.WORLD.h,2800);
+  assert.equal(g.hero.x,1600,'player start must not jump after a map expansion');
+  assert.equal(g.biomeAt(1600),'forest');
+  assert.equal(g.biomeAt(3550),'badlands');
+  assert.equal(g.biomeAt(4700),'desert');
+  assert.ok(g.trees.length<=335);
+  assert.ok(g.trees.every(t=>t.x<g.BIOMES.forestEnd));
+  assert.ok(g.details.some(o=>o.type==='cactus'));
+  assert.ok(g.details.some(o=>o.type==='drybush'));
+});
+
+test('new enemy classes have distinct health, damage and loot tiers', () => {
+  const {g}=boot();
+  const expected=['slime','goblin','raider','scarab','elite','boss'];
+  for(const kind of expected)
+    assert.ok(g.enemies.some(e=>e.kind===kind),'missing enemy type '+kind);
+  const slime=g.enemies.find(e=>e.kind==='slime');
+  const elite=g.enemies.find(e=>e.kind==='elite');
+  const boss=g.enemies.find(e=>e.kind==='boss');
+  assert.ok(elite.maxHp>slime.maxHp*3);
+  assert.ok(boss.maxHp>elite.maxHp);
+  assert.ok(boss.damage>elite.damage);
+  assert.ok(boss.x<g.BIOMES.forestEnd);
+});
+
+test('all enemy variants render even without Tiny Swords sprite images', () => {
+  const {g}=boot();
+  for(const enemy of g.enemies)
+    assert.doesNotThrow(()=>g.drawAdventureEnemy(enemy));
+});
+
+test('boss second phase begins below half HP and draws a visible health bar nearby', () => {
+  const {g}=boot(),boss=g.enemies.find(e=>e.kind==='boss');
+  g.hero.x=boss.x+150;g.hero.y=boss.y;
+  g.hurtMonster(boss,290);
+  assert.equal(boss.hp,270);
+  g.update(.05);
+  assert.equal(boss.bossPhase,2);
+  assert.equal(boss.state,'chase');
+  assert.ok(boss.speed>83);
+});
+
+test('forest boss warns before a dodgeable AoE slam', () => {
+  const {g}=boot(),boss=g.enemies.find(e=>e.kind==='boss');
+  g.hero.x=boss.x+150;g.hero.y=boss.y;g.provokeMonster(boss);
+  boss.attackAt=0;
+  const startHealth=g.resources.health;
+  g.update(.05);
+  assert.equal(g.bossZones.length,1,'boss must telegraph before dealing damage');
+  assert.equal(g.resources.health,startHealth,'damage must not occur before windup');
+  g.hero.x+=250; // sidestep warning circle
+  for(let i=0;i<20;i++)g.update(.05);
+  assert.equal(g.bossZones.length,0);
+  assert.equal(g.resources.health,startHealth,'dodging boss warning circle must work');
+});
+
+test('desert raider fires projectiles, not only basic melee attacks', () => {
+  const {g}=boot(),m=g.enemies.find(e=>e.kind==='raider');
+  g.hero.x=m.x+155;g.hero.y=m.y;
+  g.provokeMonster(m);
+  m.attackAt=0;
+  g.update(.05);
+  assert.ok(g.enemyShots.length>0,'raider should shoot at a medium-distance target');
+  assert.equal(g.enemyShots[0].kind,'raider');
+});
+
+test('defeating the boss grants bonus XP and a shower of gold', () => {
+  const {g}=boot(),boss=g.enemies.find(e=>e.kind==='boss');
+  g.hurtMonster(boss,560);
+  assert.equal(boss.hp,0);
+  assert.equal(g.progress.xp,5); // 200 XP rolls over through several levels.
+  assert.ok(g.progress.level>=3);
+  assert.ok(g.loot.filter(i=>i.kind==='gold').length>=18);
+  assert.ok(g.loot.some(i=>i.kind==='potion'));
+  assert.ok(boss.respawnAt>20);
 });
