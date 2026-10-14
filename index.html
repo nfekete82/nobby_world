@@ -14,6 +14,41 @@
     .kicker { color:#d5bd87; font-weight:700; font-size:10px; letter-spacing:.36em; text-transform:uppercase; opacity:.88; }
     h1 { margin:6px 0 2px; font-family: Georgia, "Times New Roman", serif; font-weight:400; font-size:clamp(29px,4vw,46px); letter-spacing:-.02em; line-height:1; color:#fffbed; }
     .subtitle { margin-top:8px; color:#d0dec9; font-size:12px; letter-spacing:.07em; opacity:.83; }
+    /* Compact centered Diablo-inspired vitality/magic HUD. */
+    .resource-hud {
+      position:fixed; left:50%; bottom:calc(82px + env(safe-area-inset-bottom));
+      transform:translateX(-50%); z-index:4; width:min(552px,calc(100vw - 28px));
+      display:grid; grid-template-columns:minmax(0,1fr) 42px minmax(0,1fr);
+      align-items:center; gap:8px; padding:11px 15px;
+      border:1px solid #d1bd8970; border-radius:15px;
+      background:linear-gradient(180deg,#253027eb,#0b1715f2);
+      box-shadow:0 2px 0 #0a120c,0 10px 32px #000a,inset 0 1px 0 #f2deb52b;
+      backdrop-filter:blur(12px); pointer-events:none;
+    }
+    .resource { min-width:0; }
+    .resource-top { display:flex; justify-content:space-between; align-items:baseline; gap:5px; margin-bottom:6px; }
+    .resource-name { color:#ddcfaa; font-family:Georgia,serif; font-size:13px; letter-spacing:.09em; }
+    .resource-value { color:#f7f2e4; font-size:12px; font-weight:700; font-variant-numeric:tabular-nums; text-shadow:0 1px 3px #000; }
+    .resource-track { height:19px; overflow:hidden; border:2px solid #8d7b59; border-radius:5px;
+      background:#101517; box-shadow:inset 0 2px 5px #000c,0 1px 0 #d8c29230; }
+    .resource-fill { height:100%; width:100%; position:relative; transition:width .18s ease-out;
+      box-shadow:inset 0 2px 1px #fff5,inset 0 -3px 4px #0007; }
+    .resource-fill::after { content:""; position:absolute; inset:0;
+      background:repeating-linear-gradient(90deg,transparent 0,transparent calc(25% - 1px),#0003 calc(25% - 1px),#0003 25%); }
+    .resource-health .resource-fill { background:linear-gradient(180deg,#fc8a72 0%,#b82d39 42%,#731825 100%); }
+    .resource-mana .resource-fill { background:linear-gradient(180deg,#9be2ff 0%,#267be0 45%,#183e8f 100%); }
+    .resource-rune { display:grid; place-items:center; width:42px; height:42px; border-radius:50%;
+      color:#ead8a5; font-size:25px; text-shadow:0 2px 7px #d8b8799a;
+      border:2px solid #aa9260; background:radial-gradient(circle at 32% 25%,#546049,#202d25 60%,#0c1714);
+      box-shadow:inset 0 0 0 3px #121e19,0 3px 12px #0009; }
+    @media (max-width:680px) {
+      .resource-hud { bottom:calc(78px + env(safe-area-inset-bottom)); padding:9px; gap:6px;
+        grid-template-columns:minmax(0,1fr) 32px minmax(0,1fr); }
+      .resource-name { font-size:11px; } .resource-value { font-size:10px; }
+      .resource-top { margin-bottom:5px; }
+      .resource-rune { width:32px; height:32px; font-size:19px; }
+      .resource-track { height:17px; }
+    }
     .footer { position:fixed; bottom:max(24px,env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:15px; padding:10px 17px; border:1px solid #d9eac522; background:#0c211bc4; backdrop-filter:blur(12px); border-radius:100px; color:#d1decf; white-space:nowrap; font-size:12px; line-height:1; box-shadow:0 12px 34px #09130d50; pointer-events:none; }
     kbd { display:inline-block; border-radius:4px; padding:5px 7px 4px; background:#deeac31b; border:1px solid #deeac32d; color:#f4f7eb; font-size:11px; font-family:inherit; }
     .sep { height:13px; width:1px; background:#d2e5c233; }
@@ -37,6 +72,17 @@
     <div class="subtitle">Erkunde den Wald · Magier: E für Heilmagie</div>
   </div>
   <div class="topright"><button id="full" aria-label="Vollbild umschalten" title="Vollbild (F)">⛶</button></div>
+  <section class="resource-hud" aria-label="Status des Magiers">
+    <div class="resource resource-health">
+      <div class="resource-top"><span class="resource-name">Leben</span><span class="resource-value" id="health-value">100 / 100</span></div>
+      <div class="resource-track" id="health-meter" role="progressbar" aria-label="Lebenspunkte" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div class="resource-fill" id="health-fill"></div></div>
+    </div>
+    <div class="resource-rune" aria-hidden="true">✦</div>
+    <div class="resource resource-mana">
+      <div class="resource-top"><span class="resource-name">Mana</span><span class="resource-value" id="mana-value">100 / 100</span></div>
+      <div class="resource-track" id="mana-meter" role="progressbar" aria-label="Manapunkte" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div class="resource-fill" id="mana-fill"></div></div>
+    </div>
+  </section>
   <div class="footer">
     <span class="desktop"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / <kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></span>
     <span class="desktop">Bewegen</span>
@@ -66,6 +112,26 @@
     let viewport={w:innerWidth,h:innerHeight,dpr:1};
     let camera={x:start.x-innerWidth/(2*ZOOM),y:start.y-innerHeight/(2*ZOOM)};
     let hero={x:start.x,y:start.y,speed:192,dir:0,walking:false,walkCycle:0,breath:0};
+    const resources={health:100,maxHealth:100,mana:100,maxMana:100};
+    const HEAL_MANA_COST=25,HEAL_AMOUNT=35,MANA_REGEN_PER_SECOND=8;
+    const resourceUI={
+      health:{fill:document.getElementById('health-fill'),value:document.getElementById('health-value'),meter:document.getElementById('health-meter')},
+      mana:{fill:document.getElementById('mana-fill'),value:document.getElementById('mana-value'),meter:document.getElementById('mana-meter')}
+    };
+    const lastShown={health:-1,mana:-1};
+    function updateResourceHUD(){
+      for(const kind of ['health','mana']){
+        const current=Math.min(resources['max'+kind[0].toUpperCase()+kind.slice(1)],Math.max(0,resources[kind]));
+        const max=resources['max'+kind[0].toUpperCase()+kind.slice(1)];
+        const shown=Math.ceil(current);
+        if(shown===lastShown[kind])continue;
+        lastShown[kind]=shown;
+        resourceUI[kind].value.textContent=shown+' / '+max;
+        resourceUI[kind].fill.style.width=(current/max*100)+'%';
+        resourceUI[kind].meter.setAttribute('aria-valuenow',String(shown));
+      }
+    }
+    updateResourceHUD();
     let keyboard=new Set();
     let target=null,route=[],targetAnimation=0;
     let time=0,last=0,paused=false;
@@ -490,6 +556,10 @@
     }
     function update(dt){
       time+=dt;hero.breath+=dt;
+      if(resources.mana<resources.maxMana){
+        resources.mana=Math.min(resources.maxMana,resources.mana+MANA_REGEN_PER_SECOND*dt);
+        updateResourceHUD();
+      }
       let dx=0,dy=0;
       if(keyboard.has('a')||keyboard.has('arrowleft'))dx--;
       if(keyboard.has('d')||keyboard.has('arrowright'))dx++;
@@ -592,7 +662,12 @@
       const key=e.key.toLowerCase();
       if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(key))e.preventDefault();
       if(key==='f'&&!e.repeat)toggleFull();
-      if(key==='e'&&!e.repeat&&time>=castUntil){castStart=time;castUntil=time+1.1;route=[];target=null;}
+      if(key==='e'&&!e.repeat&&time>=castUntil&&resources.mana>=HEAL_MANA_COST){
+        resources.mana-=HEAL_MANA_COST;
+        resources.health=Math.min(resources.maxHealth,resources.health+HEAL_AMOUNT);
+        castStart=time;castUntil=time+1.1;route=[];target=null;
+        updateResourceHUD();
+      }
       keyboard.add(key);
     });
     window.addEventListener('keyup',e=>keyboard.delete(e.key.toLowerCase()));
