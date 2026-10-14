@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#171c19">
+  <title>Nobby World – Forest Prototype</title>
+  <style>
+    :root { color-scheme: dark; font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin:0; overflow:hidden; background:#0c1916; color:#e9eee7; user-select:none; -webkit-user-select:none; }
+    canvas { display:block; width:100vw; height:100vh; touch-action:none; cursor:crosshair; }
+    .hud { position:fixed; top:clamp(24px,5vw,48px); left:clamp(24px,5vw,56px); pointer-events:none; filter:drop-shadow(0 1px 12px #091411cc); }
+    .kicker { color:#d5bd87; font-weight:700; font-size:10px; letter-spacing:.36em; text-transform:uppercase; opacity:.88; }
+    h1 { margin:6px 0 2px; font-family: Georgia, "Times New Roman", serif; font-weight:400; font-size:clamp(29px,4vw,46px); letter-spacing:-.02em; line-height:1; color:#fffbed; }
+    .subtitle { margin-top:8px; color:#d0dec9; font-size:12px; letter-spacing:.07em; opacity:.83; }
+    .footer { position:fixed; bottom:max(24px,env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:15px; padding:10px 17px; border:1px solid #d9eac522; background:#0c211bc4; backdrop-filter:blur(12px); border-radius:100px; color:#d1decf; white-space:nowrap; font-size:12px; line-height:1; box-shadow:0 12px 34px #09130d50; pointer-events:none; }
+    kbd { display:inline-block; border-radius:4px; padding:5px 7px 4px; background:#deeac31b; border:1px solid #deeac32d; color:#f4f7eb; font-size:11px; font-family:inherit; }
+    .sep { height:13px; width:1px; background:#d2e5c233; }
+    .topright { position:fixed; top:clamp(20px,4vw,40px); right:clamp(20px,4vw,40px); display:flex; gap:10px; align-items:center; }
+    button { color:#e6f1df; background:#102821cc; border:1px solid #e7f5da35; border-radius:50%; width:40px; height:40px; font-size:18px; cursor:pointer; backdrop-filter:blur(10px); transition:background .2s,transform .2s; }
+    button:hover { background:#234839; transform:translateY(-1px); }
+    .hint { position:fixed; right:clamp(20px,4vw,40px); bottom:max(27px,env(safe-area-inset-bottom)); font-size:10px; letter-spacing:.1em; color:#d6edd3af; pointer-events:none; }
+    .loading { position:fixed; inset:0; display:grid; place-content:center; text-align:center; background:#10231d; z-index:10; transition:opacity .8s; pointer-events:none; }
+    .loading.hide { opacity:0; }
+    .loading span { font-family:Georgia,serif; font-size:38px; color:#e5f3d7; }
+    .loading small { margin-top:15px; letter-spacing:.18em; color:#9ec59b; text-transform:uppercase; }
+    @media (max-width: 680px) { .footer { bottom:max(24px,env(safe-area-inset-bottom)); font-size:11px; gap:8px; padding:9px 12px; } .footer .desktop { display:none; } .hint { display:none; } .subtitle{max-width:210px;line-height:1.4;} }
+  </style>
+</head>
+<body>
+  <canvas id="world" aria-label="Spielwelt Nobby World"></canvas>
+  <div class="loading" id="loading"><span>Nobby World</span><small>Dein Abenteuer beginnt …</small></div>
+  <div class="hud">
+    <div class="kicker">Dunkle Wälder · Erste Reise</div>
+    <h1>Nobby World</h1>
+    <div class="subtitle">Ein Held. Ein Wald. Deine Welt.</div>
+  </div>
+  <div class="topright"><button id="full" aria-label="Vollbild umschalten" title="Vollbild (F)">⛶</button></div>
+  <div class="footer">
+    <span class="desktop"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / <kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></span>
+    <span class="desktop">Bewegen</span>
+    <span class="sep desktop"></span>
+    <span>Klicken / Tippen zum Laufen</span>
+    <span class="sep desktop"></span>
+    <span class="desktop"><kbd>Shift</kbd> Sprinten</span>
+  </div>
+  <div class="hint">NOBBY WORLD · FOREST 0.1</div>
+  <script>
+  (() => {
+    'use strict';
+    const canvas = document.getElementById('world');
+    const ctx = canvas.getContext('2d', {alpha:false});
+    const WORLD = {w:3200,h:2400};
+    const TAU=Math.PI*2;
+    const ZOOM=1.22; // Art scale; keep camera and pointer coordinates in world units.
+    const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
+    const lerp=(a,b,t)=>a+(b-a)*t;
+    const dist=(a,b,x,y)=>Math.hypot(a-x,b-y);
+    let seed=3971982;
+    const rand=()=> { seed=(1664525*seed+1013904223)>>>0; return seed/4294967296; };
+    const rnd=(a,b)=>a+(b-a)*rand();
+    const choose=arr=>arr[Math.floor(rand()*arr.length)];
+    const pathAt=x=>1205+178*Math.sin(x/560)+68*Math.sin(x/203);
+    const start={x:WORLD.w/2,y:pathAt(WORLD.w/2)};
+    let viewport={w:innerWidth,h:innerHeight,dpr:1};
+    let camera={x:start.x-innerWidth/(2*ZOOM),y:start.y-innerHeight/(2*ZOOM)};
+    let hero={x:start.x,y:start.y,speed:192,dir:0,walking:false,walkCycle:0,breath:0};
+    let keyboard=new Set();
+    let target=null,route=[],targetAnimation=0;
+    let time=0,last=0,paused=false;
+    const trees=[],rocks=[],details=[],fireflies=[];
+    const atlas=new Map();
+    // Uploaded 352×192 forest spritesheet; remains separate from the placeholder hero.
+    const forestAtlas=new Image();
+    let forestAtlasReady=false;
+    forestAtlas.onload=()=>{forestAtlasReady=true;};
+    forestAtlas.onerror=()=>{console.warn('Wald-Spritesheet nicht geladen – verwende Fallback-Grafik.');};
+    forestAtlas.src='assets/woods.png';
+    // Coordinates refer to the original, unscaled image pixels.
+    const forestSprites={
+      oak:[273,0,67,82], smallOak:[272,91,36,51], pine:[308,91,42,53],
+      boulder:[238,92,34,34], bush:[227,46,27,30], flower:[240,63,27,21]
+    };
+    function drawForestSprite(frame,x,y,w,h,alpha=1){
+      if(!forestAtlasReady)return false;
+      const s=forestSprites[frame];if(!s)return false;
+      ctx.save();ctx.globalAlpha*=alpha;ctx.imageSmoothingEnabled=false;
+      ctx.filter='brightness(.82) saturate(.88)';
+      ctx.drawImage(forestAtlas,s[0],s[1],s[2],s[3],x,y,w,h);
+      ctx.restore();return true;
+    }
+    const ground=document.createElement('canvas'); ground.width=WORLD.w; ground.height=WORLD.h;
+    const g=ground.getContext('2d',{alpha:false});
+
+    function gradientCircle(c,x,y,r,colors) {
+      const gr=c.createRadialGradient(x,y,0,x,y,r);
+      for(const [offset,color] of colors) gr.addColorStop(offset,color);
+      c.fillStyle=gr;c.beginPath();c.arc(x,y,r,0,TAU);c.fill();
+    }
+    function drawGround(){
+      g.fillStyle='#344f3b';g.fillRect(0,0,WORLD.w,WORLD.h);
+      // Broad painterly bands give the woods a natural, less tiled appearance.
+      for(let i=0;i<1700;i++) {
+        const x=rnd(0,WORLD.w),y=rnd(0,WORLD.h),r=rnd(30,170);
+        gradientCircle(g,x,y,r,[[0,choose(['#63845a32','#1b39273f','#7f85482c','#48614728','#193b4b19'])],[1,'#334b3800']]);
+      }
+      // Old forest trail: soft grass fringe, compact earth, center highlights.
+      const trail=[];for(let x=-30;x<=WORLD.w+30;x+=16)trail.push([x,pathAt(x)]);
+      g.lineCap='round';g.lineJoin='round';
+      for(const [width,color] of [[186,'#84937023'],[164,'#a2a87c35'],[142,'#9478548f'],[125,'#947958ad'],[98,'#a28b68ad'],[74,'#b39a77a2']]){
+        g.beginPath();trail.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));g.lineWidth=width;g.strokeStyle=color;g.stroke();
+      }
+      gradientCircle(g,start.x,start.y,205,[[0,'#b4a17f77'],[.45,'#ab967477'],[1,'#9b8d6800']]);
+      // Grass, fallen leaves, small flowers, trail pebbles.
+      for(let i=0;i<11000;i++){
+        const x=rnd(0,WORLD.w),y=rnd(0,WORLD.h);
+        const trailDelta=Math.abs(y-pathAt(x));
+        const onPath=trailDelta<65;
+        const z=rnd(.5,2.2);
+        if(onPath){
+          g.fillStyle=choose(['#e1c39765','#66584154','#ded0aa40']);
+          g.beginPath();g.ellipse(x,y,z*rnd(1,2.3),z*.5,rnd(-1,1),0,TAU);g.fill();
+        } else {
+          g.strokeStyle=choose(['#89a8756e','#87b47d52','#193d315c','#a2b07a70']);
+          g.lineWidth=rnd(.65,1.65);g.beginPath();g.moveTo(x,y+2*z);g.quadraticCurveTo(x-2*z,y,x+rnd(-3,3)*z,y-rnd(1,4)*z);g.stroke();
+          if(rand()<.095){
+            g.fillStyle=choose(['#d1bc6d','#e2e3b4','#adc7c2','#e6b8a2']);
+            g.beginPath();g.arc(x,y,rnd(.8,1.7),0,TAU);g.fill();
+          }
+        }
+      }
+      // Decorative semi-transparent pools of grass and moss.
+      for(let i=0;i<300;i++){
+        const x=rnd(0,WORLD.w),y=rnd(0,WORLD.h);if(Math.abs(y-pathAt(x))<90)continue;
+        g.save();g.translate(x,y);g.rotate(rnd(0,TAU));g.scale(rnd(12,55),rnd(4,12));
+        g.fillStyle=choose(['#c8d68b15','#173d321f','#a9aa5e12']);g.beginPath();g.arc(0,0,1,0,TAU);g.fill();g.restore();
+      }
+    }
+    function treeSprite(type,variation){
+      const c=document.createElement('canvas');c.width=290;c.height=304;
+      const p=c.getContext('2d');
+      const dark=type==='pine';
+      // Roots and trunk anchor at sprite x=145,y=256.
+      p.fillStyle='#091a143f';p.beginPath();p.ellipse(145,256,44,13,-.10,0,TAU);p.fill();
+      p.strokeStyle='#332d25';p.lineWidth=17;p.lineCap='round';p.beginPath();p.moveTo(145,257);p.lineTo(143,150);p.stroke();
+      p.strokeStyle='#9b7654';p.lineWidth=5;p.beginPath();p.moveTo(139,246);p.lineTo(136,169);p.stroke();
+      p.strokeStyle='#3f3327';p.lineWidth=4;p.beginPath();p.moveTo(144,219);p.lineTo(127,208);p.moveTo(144,192);p.lineTo(160,184);p.stroke();
+      const centers=dark?[
+        [144,86,58],[101,129,53],[186,126,56],[133,156,57],[170,163,49],[145,49,44]
+      ]:[
+        [145,86,64],[94,122,53],[196,119,52],[112,172,52],[174,168,53],[147,131,61],[154,58,43]
+      ];
+      for(let j=0;j<centers.length;j++){
+        let [x,y,r]=centers[j]; x+=((variation*7+j*13)%11)-5;
+        const base=dark?['#193d33','#245846','#2d634a','#32664d']:['#28533c','#346848','#4b8052','#56875a'];
+        const color=base[(variation+j)%base.length];
+        const gr=p.createRadialGradient(x-r*.35,y-r*.4,r*.07,x,y,r);
+        gr.addColorStop(0,dark?'#79966c': '#a8bc78');
+        gr.addColorStop(.37,color);gr.addColorStop(.83,dark?'#244b3b':'#356145');gr.addColorStop(1,'#132c2480');
+        p.fillStyle=gr;p.beginPath();p.ellipse(x,y,r,r*.83,rnd(-.3,.3),0,TAU);p.fill();
+      }
+      // Speckles make the individual leaves read at different scales.
+      for(let j=0;j<140;j++){
+        const x=rnd(60,225),y=rnd(31,201);
+        const dx=(x-145)/108,dy=(y-122)/99;
+        if(dx*dx+dy*dy>1.1)continue;
+        p.fillStyle=choose(['#b4c88b66','#e2d68b42','#1c51385a','#e2e4b733']);
+        p.beginPath();p.ellipse(x,y,rnd(1,3.8),rnd(.8,2.2),rnd(-2,2),0,TAU);p.fill();
+      }
+      return c;
+    }
+    function generateForest(){
+      for(let i=0;i<9;i++)for(let kind of ['oak','pine'])atlas.set(`${kind}:${i}`,treeSprite(kind,i));
+      let count=0, attempts=0;
+      while(count<390 && attempts<3200){attempts++;
+        const x=rnd(65,WORLD.w-65),y=rnd(75,WORLD.h-60);
+        if(Math.abs(y-pathAt(x))<rnd(92,154)||dist(x,y,start.x,start.y)<205)continue;
+        const rad=rnd(22,35);
+        if(trees.some(t=>dist(t.x,t.y,x,y)<t.r+rad+rnd(12,34)))continue;
+        const kind=rand()<.48?'pine':'oak';
+        trees.push({x,y,r:rad,kind,variant:Math.floor(rand()*9),scale:rnd(.77,1.22),wind:rnd(0,TAU)});count++;
+      }
+      // Rocks and stumps are decoration; solid trunks are the actual obstacles.
+      for(let i=0;i<110;i++){
+        const x=rnd(35,WORLD.w-35),y=rnd(35,WORLD.h-35);
+        if(Math.abs(y-pathAt(x))<rnd(48,100))continue;
+        if(dist(x,y,start.x,start.y)<75)continue;
+        rocks.push({x,y,s:rnd(6,17),type:rand()<.28?'mushroom':'rock'});
+      }
+      for(let i=0;i<210;i++){
+        const x=rnd(0,WORLD.w),y=rnd(0,WORLD.h);
+        if(Math.abs(y-pathAt(x))<70)continue;
+        details.push({x,y,s:rnd(5,11),type:rand()<.62?'fern':'flowers',phase:rnd(0,TAU)});
+      }
+      for(let i=0;i<95;i++)fireflies.push({x:rnd(0,WORLD.w),y:rnd(0,WORLD.h),z:rnd(0,TAU),phase:rnd(0,TAU),speed:rnd(.5,1.5)});
+    }
+    function drawRock(o){
+      if(o.type==='rock' && drawForestSprite('boulder',o.x-o.s,o.y-o.s*1.4,o.s*2.2,o.s*2.1))return;
+      ctx.save();ctx.translate(o.x,o.y);
+      if(o.type==='mushroom'){
+        ctx.fillStyle='#d8c7a0';ctx.fillRect(-1,-4,3,7);
+        ctx.fillStyle='#b4684b';ctx.beginPath();ctx.ellipse(0,-5,o.s*.55,o.s*.42,0,Math.PI,TAU);ctx.fill();
+        ctx.fillStyle='#f6e1bd';ctx.beginPath();ctx.arc(-2,-8,1.2,0,TAU);ctx.arc(3,-7,1,0,TAU);ctx.fill();
+      } else {
+        ctx.fillStyle='#11251f73';ctx.beginPath();ctx.ellipse(3,2,o.s*1.15,o.s*.45,0,0,TAU);ctx.fill();
+        ctx.fillStyle='#748477';ctx.beginPath();ctx.moveTo(-o.s,1);ctx.lineTo(-o.s*.65,-o.s*.5);ctx.lineTo(0,-o.s*.78);ctx.lineTo(o.s*.9,-o.s*.2);ctx.lineTo(o.s,2);ctx.closePath();ctx.fill();
+        ctx.fillStyle='#a5b4a3';ctx.beginPath();ctx.moveTo(-o.s*.65,-o.s*.5);ctx.lineTo(0,-o.s*.78);ctx.lineTo(o.s*.33,-o.s*.37);ctx.lineTo(-o.s*.21,-o.s*.24);ctx.closePath();ctx.fill();
+      }
+      ctx.restore();
+    }
+    function drawDetails(o){
+      if(o.type==='fern' && drawForestSprite('bush',o.x-o.s,o.y-o.s*1.15,o.s*2,o.s*1.85,.78))return;
+      if(o.type==='flowers' && drawForestSprite('flower',o.x-o.s,o.y-o.s,o.s*2,o.s*1.5,.85))return;
+      ctx.save();ctx.translate(o.x,o.y);
+      if(o.type==='flowers'){
+        for(let i=0;i<4;i++){
+          const a=i*2.3+o.phase;
+          const x=Math.cos(a)*o.s, y=Math.sin(a)*o.s*.45;
+          ctx.fillStyle=i%2?'#e8bd9b':'#ece4b2';ctx.beginPath();ctx.arc(x,y,1.5,0,TAU);ctx.fill();
+        }
+      } else {
+        ctx.strokeStyle='#82a777aa';ctx.lineWidth=1.3;ctx.lineCap='round';
+        for(let i=-2;i<=2;i++){
+          const w=i*.33;ctx.beginPath();ctx.moveTo(0,0);ctx.quadraticCurveTo(w*o.s,-o.s*.75,w*o.s*1.8,-o.s);ctx.stroke();
+        }
+      }
+      ctx.restore();
+    }
+    function drawTree(t){
+      // The woods pack provides actual canopy/trunk assets, with depth and fade preserved.
+      const spriteName=t.kind==='pine'?'pine':(t.variant%4===0?'smallOak':'oak');
+      const spriteW=spriteName==='pine'?109:(spriteName==='smallOak'?89:153);
+      const spriteH=spriteName==='pine'?136:(spriteName==='smallOak'?127:182);
+      const scale=t.scale;
+      const spriteDistance=dist(t.x,t.y,hero.x,hero.y);
+      const spriteObscures=t.y>hero.y-8 && spriteDistance<105*scale;
+      const alpha=spriteObscures?clamp((spriteDistance-37)/(75*scale),.24,1):1;
+      const spriteSway=Math.sin(time*.43+t.wind)*.8;
+      if(drawForestSprite(spriteName,t.x-spriteW*scale*.5+spriteSway,t.y-spriteH*scale+9*scale,spriteW*scale,spriteH*scale,alpha))return;
+      const asset=atlas.get(`${t.kind}:${t.variant}`);
+      const w=290*t.scale,h=304*t.scale;
+      // Subtle sway affects only the leafy mass, not collision geometry.
+      const sway=Math.sin(time*.43+t.wind)*1.2;
+      // Trees closer to the camera become translucent when their crown hides the hero.
+      // This prevents losing the character in dense forest undergrowth.
+      const distanceToHero=dist(t.x,t.y,hero.x,hero.y);
+      const obscuresHero=t.y>hero.y-8 && distanceToHero<150*t.scale;
+      if(obscuresHero){ctx.save();ctx.globalAlpha=clamp((distanceToHero-45)/(125*t.scale),.19,1);}
+      ctx.drawImage(asset,t.x-145*t.scale+sway,t.y-256*t.scale,w,h);
+      if(obscuresHero)ctx.restore();
+    }
+    function drawHero(){
+      const a=hero.walking?Math.sin(hero.walkCycle)*1:0;
+      const bob=hero.walking?Math.abs(a)*1.7:Math.sin(time*2)*.55;
+      const isBack=hero.dir===2;
+      ctx.save();ctx.translate(hero.x,hero.y-bob);
+      // Shadow fixed on ground to preserve depth perception.
+      ctx.fillStyle='#081a1559';ctx.beginPath();ctx.ellipse(0,3+bob,19,7,0,0,TAU);ctx.fill();
+      // Mirroring is reserved for the side-facing variants.
+      if(hero.dir===3)ctx.scale(-1,1);
+      const side=hero.dir===1||hero.dir===3;
+      // Boots step out of phase; knee shadows keep them grounded.
+      ctx.fillStyle='#302b29';
+      ctx.beginPath();ctx.ellipse(-7,-2+Math.max(0,a)*4,5.3,8,-.1,0,TAU);ctx.fill();
+      ctx.beginPath();ctx.ellipse(7,-2+Math.max(0,-a)*4,5.3,8,.1,0,TAU);ctx.fill();
+      ctx.fillStyle='#c8ac83';ctx.beginPath();ctx.ellipse(-7,0+Math.max(0,a)*4,3,2.2,0,0,TAU);ctx.ellipse(7,0+Math.max(0,-a)*4,3,2.2,0,0,TAU);ctx.fill();
+      // Cape silhouette and embroidered hem.
+      const c=ctx.createLinearGradient(-18,-40,20,0);c.addColorStop(0,'#385d59');c.addColorStop(.55,'#1c3f44');c.addColorStop(1,'#0e3037');
+      ctx.fillStyle=c;ctx.strokeStyle='#0c2728';ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(-12,-34);ctx.quadraticCurveTo(-15,-22,-17,-5);ctx.quadraticCurveTo(0,-10,17,-5);ctx.quadraticCurveTo(15,-27,12,-35);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.strokeStyle='#91b7a875';ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(-13,-10);ctx.quadraticCurveTo(0,-14,13,-10);ctx.stroke();
+      if(!isBack){
+        ctx.fillStyle='#bba17c';ctx.fillRect(-11,-31,22,4);
+        ctx.fillStyle='#5c4835';ctx.fillRect(-4,-31,8,6);
+      }
+      // Arms alternate with feet for a little walk cycle.
+      ctx.strokeStyle='#4e5140';ctx.lineWidth=8;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(-14,-33);ctx.lineTo(-16-(side?0:a*2),-18+(side?0:a*3));ctx.stroke();
+      ctx.beginPath();ctx.moveTo(14,-33);ctx.lineTo(16+(side?0:a*2),-18-(side?0:a*3));ctx.stroke();
+      ctx.fillStyle='#cda985';ctx.beginPath();ctx.arc(-16-(side?0:a*2),-17+(side?0:a*3),4,0,TAU);ctx.arc(16+(side?0:a*2),-17-(side?0:a*3),4,0,TAU);ctx.fill();
+      // Head, dark hair, hood/collar. Back view has no eyes.
+      ctx.fillStyle='#182d2c';ctx.beginPath();ctx.ellipse(0,-44,14,15,0,0,TAU);ctx.fill();
+      ctx.fillStyle='#d4b28d';ctx.beginPath();ctx.ellipse(side?3:0,-43,10.5,11,0,0,TAU);ctx.fill();
+      ctx.fillStyle='#312826';ctx.beginPath();ctx.moveTo(-11,-44);ctx.quadraticCurveTo(-14,-59,0,-57);ctx.quadraticCurveTo(15,-57,12,-44);ctx.lineTo(7,-50);ctx.quadraticCurveTo(-2,-45,-10,-48);ctx.closePath();ctx.fill();
+      if(!isBack){
+        ctx.fillStyle='#332c26';
+        if(side){ctx.fillRect(9,-43,2.3,2);}
+        else {ctx.fillRect(-5,-42,2.3,2);ctx.fillRect(4,-42,2.3,2);}
+      } else {
+        ctx.fillStyle='#312826';ctx.beginPath();ctx.ellipse(0,-46,10.8,10,0,0,TAU);ctx.fill();
+      }
+      ctx.fillStyle='#dec698';ctx.beginPath();ctx.arc(0,-33,3.5,0,TAU);ctx.fill();
+      ctx.restore();
+    }
+    function collides(x,y){
+      if(x<25||y<32||x>WORLD.w-25||y>WORLD.h-25)return true;
+      for(const t of trees)if(Math.abs(t.x-x)<62 && Math.abs(t.y-y)<62 && dist(x,y,t.x,t.y)<t.r+12)return true;
+      return false;
+    }
+    function moveHero(dx,dy){
+      // Axis-separated collision resolves glancing motion along tree trunks.
+      if(dx && !collides(hero.x+dx,hero.y))hero.x+=dx;
+      if(dy && !collides(hero.x,hero.y+dy))hero.y+=dy;
+    }
+    // Grid navigation gives click-to-move real routing around trees.
+    const CELL=37,COLS=Math.ceil(WORLD.w/CELL),ROWS=Math.ceil(WORLD.h/CELL);
+    let blocked=[];
+    function buildNav(){
+      blocked=new Uint8Array(COLS*ROWS);
+      for(let j=0;j<ROWS;j++)for(let i=0;i<COLS;i++)
+        blocked[j*COLS+i]=collides(i*CELL+CELL/2,j*CELL+CELL/2)?1:0;
+    }
+    function closestFree(gx,gy){
+      gx=clamp(gx,0,COLS-1);gy=clamp(gy,0,ROWS-1);
+      if(!blocked[gy*COLS+gx])return [gx,gy];
+      for(let r=1;r<=8;r++)for(let yy=gy-r;yy<=gy+r;yy++)for(let xx=gx-r;xx<=gx+r;xx++){
+        if(xx<0||yy<0||xx>=COLS||yy>=ROWS)continue;
+        if(!blocked[yy*COLS+xx])return [xx,yy];
+      }
+      return [gx,gy];
+    }
+    function routeTo(x,y){
+      const s=closestFree(Math.floor(hero.x/CELL),Math.floor(hero.y/CELL));
+      const e=closestFree(Math.floor(x/CELL),Math.floor(y/CELL));
+      const si=s[1]*COLS+s[0],ei=e[1]*COLS+e[0];
+      let costs=new Float64Array(COLS*ROWS).fill(Infinity),parents=new Int32Array(COLS*ROWS).fill(-1),visited=new Uint8Array(COLS*ROWS);
+      costs[si]=0;
+      const heap=[];
+      const push=(id,f)=>{heap.push({id,f});let k=heap.length-1;while(k>0){let p=(k-1)>>1;if(heap[p].f<=f)break;heap[k]=heap[p];k=p;}heap[k]={id,f};};
+      const pop=()=>{const top=heap[0],last=heap.pop();if(heap.length){let k=0;while(k*2+1<heap.length){let c=k*2+1;if(c+1<heap.length&&heap[c+1].f<heap[c].f)c++;if(heap[c].f>=last.f)break;heap[k]=heap[c];k=c;}heap[k]=last;}return top.id;};
+      const heur=id=>Math.hypot(id%COLS-e[0],Math.floor(id/COLS)-e[1]);
+      push(si,heur(si));
+      const around=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+      while(heap.length){
+        const id=pop();if(visited[id])continue;visited[id]=1;if(id===ei)break;
+        const cx=id%COLS,cy=(id/COLS)|0;
+        for(const [dx,dy] of around){
+          const nx=cx+dx,ny=cy+dy;if(nx<0||ny<0||nx>=COLS||ny>=ROWS)continue;
+          const ni=ny*COLS+nx;if(blocked[ni]||visited[ni])continue;
+          if(dx&&dy&&(blocked[cy*COLS+nx]||blocked[ny*COLS+cx]))continue;
+          const cost=costs[id]+(dx&&dy?1.4142:1);
+          if(cost<costs[ni]){costs[ni]=cost;parents[ni]=id;push(ni,cost+heur(ni));}
+        }
+      }
+      if(si!==ei && parents[ei]===-1)return [];
+      const path=[];let p=ei;while(p!==si && p!==-1){path.push({x:(p%COLS+.5)*CELL,y:(((p/COLS)|0)+.5)*CELL});p=parents[p];}
+      path.reverse();
+      // Light simplification: skip redundant waypoints in straight segments.
+      const simplified=[];
+      for(let i=0;i<path.length;i++){
+        const a=path[i-1],b=path[i],c=path[i+1];
+        if(a&&c && Math.abs((b.x-a.x)*(c.y-b.y)-(b.y-a.y)*(c.x-b.x))<.1)continue;
+        simplified.push(b);
+      }
+      const final={x:ei===Math.floor(y/CELL)*COLS+Math.floor(x/CELL)?x:(e[0]+.5)*CELL,
+                   y:ei===Math.floor(y/CELL)*COLS+Math.floor(x/CELL)?y:(e[1]+.5)*CELL};
+      if(simplified.length)simplified[simplified.length-1]=final;
+      else simplified.push(final);
+      return simplified;
+    }
+    function update(dt){
+      time+=dt;hero.breath+=dt;
+      let dx=0,dy=0;
+      if(keyboard.has('a')||keyboard.has('arrowleft'))dx--;
+      if(keyboard.has('d')||keyboard.has('arrowright'))dx++;
+      if(keyboard.has('w')||keyboard.has('arrowup'))dy--;
+      if(keyboard.has('s')||keyboard.has('arrowdown'))dy++;
+      const manual=dx!==0||dy!==0;
+      if(manual){route=[];target=null;}
+      else if(route.length){
+        let wp=route[0];
+        if(dist(hero.x,hero.y,wp.x,wp.y)<9){route.shift();wp=route[0];}
+        if(wp){dx=wp.x-hero.x;dy=wp.y-hero.y;}
+        else target=null;
+      }
+      const len=Math.hypot(dx,dy);
+      hero.walking=len>.2;
+      if(hero.walking){
+        dx/=len;dy/=len;
+        const speed=hero.speed*(keyboard.has('shift')?1.64:1);
+        const oldx=hero.x,oldy=hero.y;
+        moveHero(dx*speed*dt,dy*speed*dt);
+        if(Math.abs(hero.x-oldx)+Math.abs(hero.y-oldy)<.005){hero.walking=false;}
+        else hero.walkCycle+=dt*12*(keyboard.has('shift')?1.35:1);
+        if(Math.abs(dx)>Math.abs(dy))hero.dir=dx>0?1:3;
+        else hero.dir=dy>0?0:2;
+      }
+      targetAnimation+=dt;
+      const viewW=viewport.w/ZOOM,viewH=viewport.h/ZOOM;
+      const tx=clamp(hero.x-viewW/2,0,Math.max(0,WORLD.w-viewW));
+      const ty=clamp(hero.y-viewH/2,0,Math.max(0,WORLD.h-viewH));
+      const follow=1-Math.exp(-dt*7.5);
+      camera.x=lerp(camera.x,tx,follow);camera.y=lerp(camera.y,ty,follow);
+    }
+    function render(){
+      const {w,h,dpr}=viewport;
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      ctx.fillStyle='#172d25';ctx.fillRect(0,0,w,h);
+      const viewW=w/ZOOM,viewH=h/ZOOM;
+      ctx.save();ctx.scale(ZOOM,ZOOM);ctx.translate(-camera.x,-camera.y);
+      // Draw visible slice only. DPR remains native browser canvas resolution.
+      ctx.drawImage(ground,Math.max(0,camera.x),Math.max(0,camera.y),
+        Math.min(viewW,WORLD.w-Math.max(0,camera.x)),Math.min(viewH,WORLD.h-Math.max(0,camera.y)),
+        Math.max(0,camera.x),Math.max(0,camera.y),
+        Math.min(viewW,WORLD.w-Math.max(0,camera.x)),Math.min(viewH,WORLD.h-Math.max(0,camera.y)));
+      for(const o of details)if(o.x>camera.x-20&&o.x<camera.x+viewW+20&&o.y>camera.y-20&&o.y<camera.y+viewH+20)drawDetails(o);
+      for(const o of rocks)if(o.x>camera.x-30&&o.x<camera.x+viewW+30&&o.y>camera.y-30&&o.y<camera.y+viewH+30)drawRock(o);
+      // Depth sorting: the hero passes behind tree crowns while visible before trunks below them.
+      const renderables=[];
+      for(const t of trees)if(t.x>camera.x-175&&t.x<camera.x+viewW+175&&t.y>camera.y-115&&t.y<camera.y+viewH+320)
+        renderables.push({y:t.y,draw:()=>drawTree(t)});
+      renderables.push({y:hero.y,draw:drawHero});
+      renderables.sort((a,b)=>a.y-b.y);
+      for(const item of renderables)item.draw();
+      if(target){
+        const pulse=1+Math.sin(targetAnimation*3.1)*.16;
+        ctx.strokeStyle='#dcf7c6b5';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(target.x,target.y,10*pulse,0,TAU);ctx.stroke();
+        ctx.strokeStyle='#dcf7c657';ctx.beginPath();ctx.arc(target.x,target.y,17*pulse,0,TAU);ctx.stroke();
+        ctx.fillStyle='#e7ffcf';ctx.beginPath();ctx.arc(target.x,target.y,2.8,0,TAU);ctx.fill();
+      }
+      // Small drifting forest lights.
+      for(const f of fireflies){
+        const fx=f.x+Math.sin(time*f.speed+f.phase)*15,fy=f.y+Math.cos(time*.63+f.phase)*12;
+        if(fx<camera.x||fx>camera.x+viewW||fy<camera.y||fy>camera.y+viewH)continue;
+        const alpha=.1+Math.max(0,Math.sin(time*f.speed*1.7+f.z))*.55;
+        gradientCircle(ctx,fx,fy,10,[[0,`rgba(233,245,166,${alpha})`],[1,'rgba(233,245,166,0)']]);
+        ctx.fillStyle=`rgba(254,246,184,${alpha})`;ctx.beginPath();ctx.arc(fx,fy,.9,0,TAU);ctx.fill();
+      }
+      ctx.restore();
+      // Soft amber atmosphere and vignette preserve the painterly look.
+      const sunlight=ctx.createLinearGradient(0,0,w,h);
+      sunlight.addColorStop(0,'#eddca016');sunlight.addColorStop(.52,'#d5c18800');sunlight.addColorStop(1,'#091e1e28');
+      ctx.fillStyle=sunlight;ctx.fillRect(0,0,w,h);
+      const vg=ctx.createRadialGradient(w*.52,h*.51,Math.min(w,h)*.12,w*.52,h*.51,Math.max(w,h)*.77);
+      vg.addColorStop(0,'#030f0b00');vg.addColorStop(.65,'#06120d21');vg.addColorStop(1,'#04120ca9');
+      ctx.fillStyle=vg;ctx.fillRect(0,0,w,h);
+    }
+    function frame(now){
+      const dt=Math.min(.05,(now-last)/1000||.016);last=now;
+      if(!paused)update(dt);
+      render();requestAnimationFrame(frame);
+    }
+    function resize(){
+      const w=innerWidth,h=innerHeight,dpr=Math.min(devicePixelRatio||1,2);
+      viewport={w,h,dpr};canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
+      camera.x=clamp(hero.x-w/(2*ZOOM),0,Math.max(0,WORLD.w-w/ZOOM));
+      camera.y=clamp(hero.y-h/(2*ZOOM),0,Math.max(0,WORLD.h-h/ZOOM));
+    }
+    window.addEventListener('resize',resize);
+    window.addEventListener('keydown',e=>{
+      const key=e.key.toLowerCase();
+      if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(key))e.preventDefault();
+      if(key==='f'&&!e.repeat)toggleFull();
+      keyboard.add(key);
+    });
+    window.addEventListener('keyup',e=>keyboard.delete(e.key.toLowerCase()));
+    window.addEventListener('blur',()=>{keyboard.clear();paused=true;});
+    window.addEventListener('focus',()=>{paused=false;last=performance.now();});
+    document.addEventListener('visibilitychange',()=>{paused=document.hidden;last=performance.now();});
+    canvas.addEventListener('pointerdown',e=>{
+      e.preventDefault();
+      const rect=canvas.getBoundingClientRect();
+      const x=clamp((e.clientX-rect.left)/ZOOM+camera.x,26,WORLD.w-26),y=clamp((e.clientY-rect.top)/ZOOM+camera.y,33,WORLD.h-26);
+      route=routeTo(x,y);
+      target=route.length?route[route.length-1]:null;
+      targetAnimation=0;
+    });
+    async function toggleFull(){
+      try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}
+      catch(e){console.warn('Vollbild nicht verfügbar',e);}
+    }
+    document.getElementById('full').addEventListener('click',toggleFull);
+    drawGround();generateForest();buildNav();resize();
+    requestAnimationFrame(frame);
+    const loading=document.getElementById('loading');loading.classList.add('hide');
+    setTimeout(()=>loading.remove(),850);
+  })();
+  </script>
+</body>
+</html>
