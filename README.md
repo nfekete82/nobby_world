@@ -9,8 +9,11 @@ You already have the repository in `~/Projects/nobby_world`. Pull the changes:
 ```bash
 cd ~/Projects/nobby_world
 git pull --ff-only origin main
+# Required only once, or after replacing the Tiny Swords ZIP:
 python3 scripts/import_tiny_swords.py
-docker compose up -d
+docker compose up -d --build --force-recreate
+docker compose ps
+curl --retry 5 --retry-delay 1 --retry-connrefused -I http://127.0.0.1:8088/
 ```
 
 Open **http://localhost:8088/**. If the old graphics remain cached, reload with **Cmd+Shift+R**.
@@ -27,7 +30,7 @@ docker compose logs -f game
 docker compose down
 ```
 
-The files in `assets/` are bind-mounted into Nginx, so no image rebuild is needed after importing.
+The Nginx image **contains** the game and the locally imported Tiny Swords assets. This intentionally avoids OrbStack/macOS bind-mount 403/permission issues. After modifying `index.html` or files in `assets/`, run `docker compose up -d --build` to update the running game. To troubleshoot, run `docker compose logs --tail=80 game` and `docker compose exec -T game wget -S -O /dev/null http://127.0.0.1/`.
 
 ## Controls
 
@@ -54,7 +57,8 @@ The supplied current **Free Pack** is cartoon fantasy pixel art, not Diablo's gr
 ## Project structure
 
 - `index.html`: game and canvas renderer, no build step
-- `compose.yaml`: OrbStack / Docker Compose Nginx, localhost port 8088
+- `Dockerfile` and `.dockerignore`: build a local Nginx image with only the game and assets
+- `compose.yaml`: OrbStack / Docker Compose Nginx, localhost port 8088, no bind mounts
 - `scripts/import_tiny_swords.py`: local ZIP extraction; no Python dependencies
 - `assets/tiny-swords/`: imported user-owned assets, intentionally gitignored
 - `CREDITS.md`: credit, license and link
