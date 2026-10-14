@@ -1,8 +1,10 @@
 {
   "name": "nobby_world",
   "private": true,
-  "version": "0.1.0",
-  "description": "Nobby World – forest exploration prototype",
-  "scripts": { "start": "python3 -m http.server 8080" },
+  "version": "0.2.0",
+  "description": "Nobby World – Tiny Swords forest exploration",
+  "scripts": {
+    "start": "python3 -m http.server 8088"
+  },
   "license": "UNLICENSED"
 }
