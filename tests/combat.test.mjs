@@ -284,3 +284,70 @@ test('B opens the shop from spawn, Escape closes, and navigation remains usable'
   click(g.hero.x-80,g.hero.y);
   assert.ok(g.route().length>0);
 });
+
+test('Frostlanze costs mana, hits and slows the monster', () => {
+  const {g,click}=boot();const m=g.enemies[0];
+  assert.equal(g.selectSpell('ice'),true);click(m.x,m.y-26);
+  assert.equal(g.resources.mana,86);
+  assert.equal(g.fireballs[0].spell,'ice');
+  for(let i=0;i<30;i++)g.update(.05);
+  assert.equal(m.hp,46);assert.ok(m.slowUntil>0);
+});
+
+test('Arkanstoß damages another monster in its splash radius', () => {
+  const {g,click}=boot();const a=g.enemies[0],b=g.enemies[1];
+  b.x=a.x+28;b.y=a.y;g.selectSpell('nova');click(a.x,a.y-26);
+  assert.equal(g.resources.mana,78);
+  for(let i=0;i<30;i++)g.update(.05);
+  assert.equal(a.hp,47);assert.ok(b.hp<66,'splash damage not applied');
+});
+
+test('equipped charm can be removed and re-equipped in inventory', () => {
+  const {g}=boot();g.hero.x=g.merchant.x;g.hero.y=g.merchant.y+80;
+  g.progress.gold=50;g.openShop();g.buyItem('charm');g.closeShop();
+  assert.equal(g.resources.maxHealth,125);
+  assert.equal(g.openInventory(),true);
+  g.toggleEquipment('charm');
+  assert.equal(g.equipped.charm,false);assert.equal(g.resources.maxHealth,100);
+  g.toggleEquipment('charm');
+  assert.equal(g.equipped.charm,true);assert.equal(g.resources.maxHealth,125);
+  g.closeInventory();
+});
+
+test('every fourth defeated monster drops a usable healing potion', () => {
+  const {g}=boot();
+  for(let i=0;i<4;i++)for(let j=0;j<3;j++)g.hurtMonster(g.enemies[i]);
+  const potion=g.loot.find(item=>item.kind==='potion');assert.ok(potion);
+  potion.x=g.hero.x;potion.y=g.hero.y-12;g.update(.05);
+  assert.equal(g.bag.potions,1);g.resources.health=50;
+  assert.equal(g.drinkPotion(),true);
+  assert.equal(g.resources.health,90);assert.equal(g.bag.potions,0);
+});
+
+test('old v0.5 save migrates purchased gear to equipped slots', () => {
+  const {g}=boot({version:1,progress:{level:3,xp:14,gold:26,kills:9},
+    equipment:{focus:true,boots:true,charm:true},
+    resources:{health:95,mana:72},hero:{x:1600,y:1200}});
+  assert.equal(g.equipped.focus,true);
+  assert.equal(g.equipped.boots,true);
+  assert.equal(g.equipped.charm,true);
+  assert.equal(g.resources.maxHealth,145);
+});
+
+test('inventory gear, potion count and spell remain in saved game', () => {
+  const {g,stored}=boot();g.equipment.focus=true;g.equipment.charm=true;
+  g.equipped.focus=false;g.equipped.charm=true;
+  g.resources.maxHealth=125;g.bag.potions=3;g.selectSpell('ice');
+  g.saveGame();
+  const next=boot(JSON.parse(stored.get('nobby_world_save_v1'))).g;
+  assert.equal(next.equipped.focus,false);assert.equal(next.equipped.charm,true);
+  assert.equal(next.bag.potions,3);assert.equal(next.resources.maxHealth,125);
+  assert.equal(next.spellSpecs.ice.cost,14);
+});
+
+test('I, Escape and M keys work without browser AudioContext', () => {
+  const {g,keydown}=boot();
+  keydown('i');assert.equal(g.openShop(),false);
+  keydown('escape');keydown('m');keydown('2');
+  assert.equal(g.selectSpell('no-such-spell'),false);
+});
