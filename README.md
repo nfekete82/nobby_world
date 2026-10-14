@@ -1,6 +1,6 @@
 # Nobby World 🌲
 
-**v0.4 – Tiny Swords Forest Adventure** · Private browser game with a controllable, animated magic hero.
+**v0.5 – Tiny Swords Forest Merchant & Savegame** · Private browser game with a controllable, animated magic hero.
 
 ## Start in OrbStack (port 8088)
 
@@ -18,7 +18,7 @@ curl --retry 5 --retry-delay 1 --retry-connrefused -I http://127.0.0.1:8088/
 
 Open **http://localhost:8088/**. If the old graphics remain cached, reload with **Cmd+Shift+R**.
 
-**Important:** the importer requires your original, personally obtained `Tiny Swords (Free Pack).zip` in `~/Downloads/` (or specify the full path as an argument). It imports **all 428 usable PNG/Aseprite files**, ignoring macOS metadata. Only the required sprites are rendered in v0.2; the others are available for future levels. The pack is intentionally not committed to Git because its license prohibits redistributing standalone assets.
+**Important:** the importer requires your original, personally obtained `Tiny Swords (Free Pack).zip` in `~/Downloads/` (or specify the full path as an argument). It imports **all 428 usable PNG/Aseprite files**, ignoring macOS metadata. Only the needed sprites are rendered; the others are available for future levels. The pack is intentionally not committed to Git because its license prohibits redistributing standalone assets.
 
 If you don't yet have the ZIP on your Mac: [download the original from Pixel Frog](https://pixelfrog-assets.itch.io/tiny-swords).
 
@@ -41,11 +41,13 @@ The Nginx image **contains** the game and the locally imported Tiny Swords asset
 | Fire blue magic at slime | Left-click / tap a monster |
 | Sprint | Shift |
 | Heal spell (25 mana; restores up to 35 HP) | E |
+| Open Galdor's shop nearby | B or click the merchant |
+| Close the shop | Escape / B / × |
 | Fullscreen | F |
 
 ## Health & mana HUD
 
-A compact, centered HUD above the controls displays **Health (red)** and **Mana (blue)**, both starting at **100 / 100**. Mana regenerates at **8 points per second** while playing, and healing with **E** spends **25 mana** to restore up to **35 health**. Healing does not activate without enough mana. The red health bar stays full until damage mechanics are implemented. The interface updates live and works at desktop and mobile widths.
+A compact, centered HUD above the controls displays **Health (red)** and **Mana (blue)**, both starting at **100 / 100**. Mana regenerates at **8 points per second** while playing, and healing with **E** spends **25 mana** to restore up to **35 health**. Healing does not activate without enough mana. The red health bar responds to incoming monster damage. The interface updates live and works at desktop and mobile widths.
 
 ## First combat prototype
 
@@ -66,19 +68,34 @@ Run regression tests (Node.js 22+): `npm test` or `node --test tests/combat.test
 - Level-up adds **+10 maximum HP** and **+5 maximum mana** and refills both resources.
 - Enemies scatter **gold coins** on defeat; every third kill also drops a blue mana orb (+18 mana).
 - Loot is animated, lasts 40 seconds, and automatically flies to the hero at close range.
-- Gold total is shown at the upper right. Progress and gold are per-session only (not persisted yet).
+- Gold total is shown at the upper right. **Gold, XP and levels are now stored locally in the browser.**
 - A blue casting ring and sparks appear around the wizard's hand at the start of each fireball.
 - Slimes patrol their territory, chase within a bounded radius, return if they wander too far,
   stagger on impact and telegraph incoming melee strikes with a red ring.
 
-**Note:** The game is still a small single-player prototype. Gold has no shop function yet;
-items and XP are not saved between page reloads. The Slimes are drawn in Canvas.
+**Note:** The game is still a small single-player prototype; the slimes are drawn in Canvas.
 
 Run regression tests using Node.js 22+:
 
 ```sh
 npm test
 ```
+
+## Galdor the merchant and browser savegame (v0.5)
+
+The merchant stands in the starting clearing and uses Pixel Frog's real animated `Pawn_Idle Gold.png` sprite (with a fallback drawing). Press **B** next to him, or click/tap him to interact. If he is farther away, clicking him routes the hero toward his position first. Combat and movement pause during trading.
+
+| Permanent equipment | Price | Effect |
+| --- | ---: | --- |
+| Arcane Focus | 12 gold | +10 damage per blue fireball (26 → 36) |
+| Windrunner Boots | 10 gold | +20% walking and sprinting speed |
+| Guardian Charm | 15 gold | +25 maximum HP |
+
+Purchases are one-time, with disabled controls if an item is already owned or the player cannot afford it. All upgrades apply to gameplay immediately.
+
+**Savegame:** Versioned `localStorage` key `nobby_world_save_v1`; persists level, XP, kills, gold, owned equipment, HP, mana and world position. Autosaves after significant changes, periodically while the game is active, immediately on a purchase and during page unload. Corrupt or old-format records are ignored; invalid values are bounded. No cloud synchronization or account login: browser storage is specific to `http://localhost:8088` and the browser profile. Deleting browser site data removes the save. Requires an environment where localStorage works.
+
+The merchant has no player-versus-monster collision damage while the shop is open. Visit the trader to convert gold drops into meaningful equipment.
 
 ## Graphics implemented
 
@@ -103,6 +120,6 @@ The supplied current **Free Pack** is cartoon fantasy pixel art, not Diablo's gr
 
 ## Next
 
-Add a small persistent savegame (level, XP, gold), a first merchant and proper Tiny Swords creature sprites when available. Directional animated wizard sprites and more strategic enemy attacks will follow.
+Next: item inventory, sound effects, elemental spell variety, a richer world and genuine Tiny Swords enemy art. Save import/export is a potential follow-up.
 
 **Authoring project:** [nfekete82/nobby_world](https://github.com/nfekete82/nobby_world) (private).
