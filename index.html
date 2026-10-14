@@ -1817,19 +1817,61 @@
     function roadAtlasReady(){return roadAtlas.complete&&roadAtlas.naturalWidth===828;}
     function paintRoadTiles(c){
       if(!roadAtlasReady())return false;
-      const ratio=828/1254;
-      // The actual road-centre tiles, rotated along the original winding main road.
-      // Source coordinates correspond to horizontal dirt lanes in row 3 of the set.
-      c.save();c.imageSmoothingEnabled=true;
-      for(let x=-45;x<WORLD.w+90;x+=128){
-        const y=pathAt(x),a=Math.atan2(pathAt(x+16)-pathAt(x-16),32);
-        const desert=x>BIOMES.transitionEnd;
-        const sx=desert?357:43,sy=desert?932:322,sw=desert?143:171,sh=desert?135:148;
-        c.save();c.translate(x,y);c.rotate(a);
-        c.drawImage(roadAtlas,sx*ratio,sy*ratio,sw*ratio,sh*ratio,
-          -77,-76,154,152);
-        c.restore();
+      // Crop one genuine dirt interior from the uploaded road sheet as a
+      // repeatable *texture*, not disconnected, rotated square stickers.
+      const texture=document.createElement('canvas');
+      texture.width=96;texture.height=96;
+      const tc=texture.getContext('2d');
+      tc.drawImage(roadAtlas,177,250,48,48,0,0,96,96);
+      const pattern=c.createPattern(texture,'repeat');
+      const center=[];
+      for(let x=-45;x<=WORLD.w+45;x+=12)center.push([x,pathAt(x)]);
+      const traceCenter=()=>{
+        c.beginPath();
+        center.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));
+      };
+      c.save();c.lineCap='round';c.lineJoin='round';
+      // Organic grassy verge with uninterrupted continuous silhouette.
+      traceCenter();c.strokeStyle='#52683e9b';c.lineWidth=153;c.stroke();
+      traceCenter();c.strokeStyle='#806b42c9';c.lineWidth=139;c.stroke();
+      // Construct a curving clipping ribbon so tile edges cannot be seen.
+      const shoulder=[];
+      for(let x=-45;x<=WORLD.w+45;x+=12){
+        const slope=(pathAt(x+6)-pathAt(x-6))/12;
+        const inv=1/Math.sqrt(1+slope*slope);
+        const radius=63+4*Math.sin(x/137)+3*Math.sin(x/61);
+        shoulder.push({x,y:pathAt(x),nx:-slope*inv,ny:inv,radius});
       }
+      c.beginPath();
+      shoulder.forEach((pt,i)=>{
+        const x=pt.x+pt.nx*pt.radius,y=pt.y+pt.ny*pt.radius;
+        if(!i)c.moveTo(x,y);else c.lineTo(x,y);
+      });
+      for(let i=shoulder.length-1;i>=0;i--){
+        const pt=shoulder[i];c.lineTo(pt.x-pt.nx*pt.radius,pt.y-pt.ny*pt.radius);
+      }
+      c.closePath();
+      c.save();c.clip();
+      c.fillStyle=pattern||'#a18a65';c.fillRect(0,750,WORLD.w,WORLD.h-600);
+      const desertTint=c.createLinearGradient(BIOMES.forestEnd,0,BIOMES.transitionEnd,0);
+      desertTint.addColorStop(0,'#e4bf7900');
+      desertTint.addColorStop(.5,'#dcbb8b27');
+      desertTint.addColorStop(1,'#e8cf9e89');
+      c.fillStyle=desertTint;c.fillRect(BIOMES.forestEnd,700,WORLD.w,WORLD.h);
+      c.restore();
+      // Natural, slightly broken edge ink echoes the grass on the native
+      // road tile without leaving right-angle seams at every 128 units.
+      c.lineWidth=3;c.strokeStyle='#334e3580';
+      c.beginPath();
+      shoulder.forEach((pt,i)=>{
+        const xx=pt.x+pt.nx*(pt.radius+2),yy=pt.y+pt.ny*(pt.radius+2);
+        if(!i)c.moveTo(xx,yy);else c.lineTo(xx,yy);
+      });c.stroke();
+      c.beginPath();
+      shoulder.forEach((pt,i)=>{
+        const xx=pt.x-pt.nx*(pt.radius+2),yy=pt.y-pt.ny*(pt.radius+2);
+        if(!i)c.moveTo(xx,yy);else c.lineTo(xx,yy);
+      });c.stroke();
       c.restore();return true;
     }
     function paintBiomes(){
