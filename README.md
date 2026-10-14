@@ -1,6 +1,6 @@
 # Nobby World 🌲
 
-**v0.3 – Tiny Swords Forest Combat** · Private browser game with a controllable, animated magic hero.
+**v0.4 – Tiny Swords Forest Adventure** · Private browser game with a controllable, animated magic hero.
 
 ## Start in OrbStack (port 8088)
 
@@ -59,6 +59,27 @@ A compact, centered HUD above the controls displays **Health (red)** and **Mana 
 
 Run regression tests (Node.js 22+): `npm test` or `node --test tests/combat.test.mjs`.
 
+## RPG progression and loot (v0.4)
+
+- A golden **level counter** and **XP progress bar** are built into the bottom-center HP/Mana HUD.
+- Kills grant **15 XP**. Level thresholds start at 40 XP and grow by 25 XP per level.
+- Level-up adds **+10 maximum HP** and **+5 maximum mana** and refills both resources.
+- Enemies scatter **gold coins** on defeat; every third kill also drops a blue mana orb (+18 mana).
+- Loot is animated, lasts 40 seconds, and automatically flies to the hero at close range.
+- Gold total is shown at the upper right. Progress and gold are per-session only (not persisted yet).
+- A blue casting ring and sparks appear around the wizard's hand at the start of each fireball.
+- Slimes patrol their territory, chase within a bounded radius, return if they wander too far,
+  stagger on impact and telegraph incoming melee strikes with a red ring.
+
+**Note:** The game is still a small single-player prototype. Gold has no shop function yet;
+items and XP are not saved between page reloads. The Slimes are drawn in Canvas.
+
+Run regression tests using Node.js 22+:
+
+```sh
+npm test
+```
+
 ## Graphics implemented
 
 - Pixel Frog Tiny Swords 64px grass tiles cut from the original terrain tileset, with a natural winding path
@@ -82,6 +103,6 @@ The supplied current **Free Pack** is cartoon fantasy pixel art, not Diablo's gr
 
 ## Next
 
-Choose a genuine player-wizard character sheet with directional animations, then develop richer monster AI, loot, quests and progression after animation and collision polish.
+Add a small persistent savegame (level, XP, gold), a first merchant and proper Tiny Swords creature sprites when available. Directional animated wizard sprites and more strategic enemy attacks will follow.
 
 **Authoring project:** [nfekete82/nobby_world](https://github.com/nfekete82/nobby_world) (private).
