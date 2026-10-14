@@ -1,8 +1,8 @@
 {
   "name": "nobby_world",
   "private": true,
-  "version": "0.8.0",
-  "description": "Nobby World – expanded forest, badlands, desert, tiered monsters, elite and forest boss",
+  "version": "0.8.1",
+  "description": "Nobby World – forest, desert, bosses and animated user-supplied forest goblin",
   "scripts": {
     "start": "python3 -m http.server 8088",
     "test": "node --test tests/*.test.mjs"
