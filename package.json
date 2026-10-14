@@ -1,10 +1,11 @@
 {
   "name": "nobby_world",
   "private": true,
-  "version": "0.2.0",
-  "description": "Nobby World – Tiny Swords forest exploration",
+  "version": "0.3.0",
+  "description": "Nobby World – Tiny Swords forest action RPG prototype with click-to-cast combat",
   "scripts": {
-    "start": "python3 -m http.server 8088"
+    "start": "python3 -m http.server 8088",
+    "test": "node --test tests/*.test.mjs"
   },
   "license": "UNLICENSED"
 }
