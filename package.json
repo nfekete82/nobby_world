@@ -1,8 +1,8 @@
 {
   "name": "nobby_world",
   "private": true,
-  "version": "0.9.1",
-  "description": "Nobby World – directional mage, grounded woodland boss, organic cliff stairs and continuous atlas-textured roads",
+  "version": "0.9.2",
+  "description": "Nobby World – corrected transparent 8x7 mage atlas with anchored directional walk and spell animations",
   "scripts": {
     "start": "python3 -m http.server 8088",
     "test": "node --test tests/*.test.mjs"
