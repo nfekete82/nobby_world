@@ -1,6 +1,6 @@
 # Nobby World 🌲
 
-**v0.5 – Tiny Swords Forest Merchant & Savegame** · Private browser game with a controllable, animated magic hero.
+**v0.6 – Tiny Swords Spells, Inventory & Sound** · Private browser game with a controllable, animated magic hero.
 
 ## Start in OrbStack (port 8088)
 
@@ -43,6 +43,10 @@ The Nginx image **contains** the game and the locally imported Tiny Swords asset
 | Heal spell (25 mana; restores up to 35 HP) | E |
 | Open Galdor's shop nearby | B or click the merchant |
 | Close the shop | Escape / B / × |
+| Open/close inventory | I / Escape |
+| Select arcane fireball, frost lance or arcane burst | 1 / 2 / 3 |
+| Drink health potion | 4 (when injured) |
+| Toggle sound | M (or sound button, top right) |
 | Fullscreen | F |
 
 ## Health & mana HUD
@@ -97,6 +101,28 @@ Purchases are one-time, with disabled controls if an item is already owned or th
 
 The merchant has no player-versus-monster collision damage while the shop is open. Visit the trader to convert gold drops into meaningful equipment.
 
+## Three magic spells, inventory and sound (v0.6)
+
+**Magic bar:** Select a spell using the three clickable buttons above the bottom HP/Mana HUD or keys `1`, `2`, `3`. Left-clicking a slime casts the selected spell; left-clicking empty ground still moves.
+
+| Spell | Mana | Effect |
+| --- | ---: | --- |
+| `1` Blue Arcane Orb | 9 | 26 direct damage (36 with Arcane Focus); fast cooldown |
+| `2` Frost Lance | 14 | 20 damage and slows the monster to 48% speed for 2.6 seconds |
+| `3` Arcane Burst | 22 | 19 direct damage and 60%-damage splash to nearby slimes within 110 world units |
+
+The Arcane Focus adds 10 direct damage to any of these spells, while splash damage remains proportional to the primary impact. Spell projectiles use different glow colors and cooldowns.
+
+**Inventory:** Press `I` or the top-right Inventory button. The panel contains three equipment slots and a backpack slot for healing potions. Gear bought from Galdor is automatically equipped but can now be removed and equipped again. Bonuses apply only when equipped: focus damage, boots movement speed, charm maximum HP.
+
+Every fourth slime kill drops one green **healing potion** in addition to normal loot. It is auto-collected when close. Drink it from the inventory or press `4` to heal 40 HP, up to your maximum.
+
+**Sound:** Lightweight Web Audio synthesis adds distinct effects for casting, ice, Arcane Burst, hits, taking damage, loot pickups, merchant purchases, drinking potions and leveling up. The top-right controls provide on/off and adjustable volume; `M` toggles mute. Audio is initialized only after user interaction and gracefully disabled if Web Audio is not supported.
+
+**Persistence:** v0.6 retains the same browser key `nobby_world_save_v1` and loads old v0.5 saves. New fields contain equipped states, healing potions, selected spell and sound preferences. Existing purchases from v0.5 are treated as equipped by default, so their bonuses survive upgrading. No external backend or database is needed.
+
+Use `npm test` to run all **24 headless logic tests**. Full visual and audio checks still require opening the game in a real browser.
+
 ## Graphics implemented
 
 - Pixel Frog Tiny Swords 64px grass tiles cut from the original terrain tileset, with a natural winding path
@@ -107,7 +133,7 @@ The merchant has no player-versus-monster collision damage while the shop is ope
 
 ### Visual constraints
 
-The supplied current **Free Pack** is cartoon fantasy pixel art, not Diablo's grim realistic style. The Monk animations face one primary direction; horizontal mirroring is a stopgap, not true 8-direction animation. Do not claim directional sprites exist when they don't. Full RPG progression, loot and inventory are not yet implemented. Basic slime combat is playable.
+The supplied current **Free Pack** is cartoon fantasy pixel art, not Diablo's grim realistic style. The Monk animations face one primary direction; horizontal mirroring is a stopgap, not true 8-direction animation. Do not claim directional sprites exist when they don't. The game is still a small RPG prototype; inventory slots and consumables exist, but a full item-generator and quest system are not yet implemented. Basic slime combat is playable.
 
 ## Project structure
 
@@ -120,6 +146,6 @@ The supplied current **Free Pack** is cartoon fantasy pixel art, not Diablo's gr
 
 ## Next
 
-Next: item inventory, sound effects, elemental spell variety, a richer world and genuine Tiny Swords enemy art. Save import/export is a potential follow-up.
+Expand to quests, a small boss encounter, upgraded monster sprite sheets and world locations. A savegame export/import and optional music track may be added later.
 
 **Authoring project:** [nfekete82/nobby_world](https://github.com/nfekete82/nobby_world) (private).
