@@ -1,6 +1,6 @@
 # Nobby World 🌲
 
-**v0.8.2 – Animated Root Guardian & Goblin Red Magic** · Private browser game with a controllable, animated magic hero.
+**v0.9.0 – Grounded Monsters, Giant Forest Boss, Real Roads, Lakes & Mountains** · Private browser game with a controllable, animated magic hero.
 
 ## Start in OrbStack (port 8088)
 
@@ -39,6 +39,8 @@ The Nginx image **contains** the game and the locally imported Tiny Swords asset
 | Walk | WASD / arrow keys |
 | Walk to destination | Left-click / tap on ground |
 | Follow the eastward road into the badlands/desert | Move right along the main path |
+| Climb mountain plateaus | Approach their southern staircase (WASD or click on plateau) |
+| Avoid lakes | Water is solid and click-to-move routes around it |
 | Cast selected spell at slime and immediately alert it | Left-click / tap a monster |
 | Sprint | Shift |
 | Heal spell (25 mana; restores up to 35 HP) | E |
@@ -135,6 +137,21 @@ Use `npm test` to run all **32 headless logic tests**. Full visual and audio che
 - Frozen monsters still deal no spell damage and move at 34% speed for three seconds, even while provoked.
 - Ranged-aggro state does not change saved progression and resets on monster respawn.
 
+## Environment and art pass (v0.9.0)
+
+All four **user-supplied spritesheets** are now committed as web-optimized transparent PNG assets, with the original art preserved in style:
+
+- `assets/custom/road_tiles.png` – **828×828** atlas from the supplied road set. The winding main road now uses repeated road pieces rotated to follow the local path tangent. The old vector dirt-road layers remain a fallback only if sprites fail to load.
+- `assets/custom/lake_tiles.png` – **828×828** shore/water atlas. **Four 3×3/4×3 forest lakes** use corners, bank edges and water-center tiles. Water is impassable to both WASD movement and A* navigation.
+- `assets/custom/cliff_tiles.png` – **828×828** mountain and staircase atlas. **Two elevated plateaus** appear in the forest/badlands, with rock ledges, staircase sprites, and real `heightAt()` + `canTraverse()` navigation rules. Walking directly across a cliff wall is rejected; crossing elevation levels is allowed **only in each plateau's southern stair corridor**. Click-to-move automatically plans via the stair; goblin/monster route movement respects elevation too.
+- `assets/custom/forest_boss.png` – **1280×426** sprite strip from the supplied woodland boss sheet. The Moorkönig is now a **560px-high animated treant**, substantially taller than the **340px Wurzelhüter**. Wind-up, charge, impact and recovery use distinct frames, with foot-aligned shadows, a higher HP label and a larger click target.
+
+**Sprite grounding fixed:** the uploaded goblin contains a large transparent strip under its feet (its last opaque pixel is at source y≈444, **not** 682), so its world-space pivot has been corrected. Root Guardian foot positions vary per frame and are likewise anchored per-frame. The 340px elite and 560px boss cast corresponding floor shadows instead of appearing to float.
+
+Existing saved levels, XP, equipment and map positions remain compatible. The game still uses `localStorage` and does not require a backend. All terrain art includes a Canvas fallback if image loading fails.
+
+**Test status:** `npm test` runs **52 logic/regression cases** in a headless Canvas/DOM harness covering sprite grounding, road/water/cliff sheet drawing, solid lakes, both manual and pathfinding stair-only elevation crossing, plus the previous gameplay and save regression tests. The tests do not replace an actual GPU/browser visual check.
+
 ## The larger adventure world (v0.8.0)
 
 The map is now **5,200 × 2,800 world units**, up from **3,200 × 2,400** (almost twice the playable area). The original start remains at **x=1600** to preserve existing saves. The eastern road guides the player seamlessly through three areas:
@@ -160,11 +177,11 @@ Trees are **roughly 25% sparser per forest area** than before, with a broad main
 
 The **Moorkönig** has its own top-center health bar when approached. His area attack draws an expanding warning circle before it can hit. Move out of the circle to dodge. Below 50% health he becomes faster and his attack becomes more dangerous. Defeating him grants **200 XP**, a large gold shower and a healing potion. The elite and boss have longer respawn intervals.
 
-**Graphics:** The forest goblin uses the **user-supplied eight-frame transparent PNG sheet** at `assets/custom/forest_goblin.png`, committed with this project. Its idle, pursuit and spear-strike animations are frame-selected in-game and automatically face the hero. **The elite Wurzelhüter now also uses a user-provided eight-frame animated sprite sheet** at `assets/custom/root_guardian.png` (web-optimized 1280 × 426 PNG, eight 160 × 426 frames with transparency preserved). If the custom PNG is unavailable, the existing Tiny Swords red Warrior (or Canvas art) remains the fallback. The desert raider still uses the red Archer unit from the locally imported Tiny Swords Free Pack when available. The forest goblin now has ranged AI (up to 345 units), firing crimson magic orbs for 10 damage with a 1.55s attack cooldown. The red projectile triggers the goblin's attack animation, and the existing desert raider shots stay orange. At point-blank range the goblin can still use its spear. Scarabs, the root guardian and the crowned forest boss currently have custom, stylized Canvas visuals; the paid Tiny Swords Enemy Pack is **not included or redistributed**. <https://pixelfrog-assets.itch.io/tiny-swords>
+**Graphics:** The forest goblin uses the **user-supplied eight-frame transparent PNG sheet** at `assets/custom/forest_goblin.png`, committed with this project. Its idle, pursuit and spear-strike animations are frame-selected in-game and automatically face the hero. **The elite Wurzelhüter now also uses a user-provided eight-frame animated sprite sheet** at `assets/custom/root_guardian.png` (web-optimized 1280 × 426 PNG, eight 160 × 426 frames with transparency preserved). If the custom PNG is unavailable, the existing Tiny Swords red Warrior (or Canvas art) remains the fallback. The desert raider still uses the red Archer unit from the locally imported Tiny Swords Free Pack when available. The forest goblin now has ranged AI (up to 345 units), firing crimson magic orbs for 10 damage with a 1.55s attack cooldown. The red projectile triggers the goblin's attack animation, and the existing desert raider shots stay orange. At point-blank range the goblin can still use its spear. Scarabs still have custom Canvas visuals. The root guardian and forest boss now use the uploaded character sprite sheets with fallback Canvas art; the paid Tiny Swords Enemy Pack is **not included or redistributed**. <https://pixelfrog-assets.itch.io/tiny-swords>
 
 **Preserved systems:** two-spell combat (Arkane Kugel damages, Verlangsamen deals exactly zero damage), aggressive ranged-hit pursuit, trader, inventory, XP, loot, savegames, OrbStack/Docker, and `localhost:8088`.
 
-Run `npm test` for **45 logic and regression tests**, including forest-goblin and root-guardian sprite loading, root-guardian attack frames, goblin red projectiles, retained raider projectile colors and collision damage. A visual/frame-rate check in the actual browser is still recommended for the larger map.
+Run `npm test` for **52 logic and regression tests**, covering existing systems plus the new terrain/elevation rendering and grounded enemies. A visual/frame-rate check in the actual browser is still recommended for the larger map.
 
 ## Graphics implemented
 
@@ -187,10 +204,14 @@ The supplied current **Free Pack** is cartoon fantasy pixel art, not Diablo's gr
 - `assets/tiny-swords/`: imported user-owned assets, intentionally gitignored
 - `assets/custom/forest_goblin.png`: user-provided forest-goblin eight-frame artwork, committed to the repository; optimized PNG retains the original 2048 × 682 frame layout
 - `assets/custom/root_guardian.png`: user-provided eight-frame Wurzelhüter artwork, committed and resampled to 1280 × 426 for smaller browser downloads while preserving transparent alpha
+- `assets/custom/forest_boss.png`: user-provided, animated giant treant / forest boss
+- `assets/custom/road_tiles.png`: winding route texture from the user road sprite set
+- `assets/custom/cliff_tiles.png`: plateau rock walls, grass-topped elevations and stairs
+- `assets/custom/lake_tiles.png`: water surfaces, shores, corners and pond edges
 - `CREDITS.md`: credit, license and link
 
 ## Next
 
-With forest goblins and elite root guardians animated, extend the same sprite treatment to desert enemies and the boss, then add quests, item drops and boss polish. A savegame export/import and optional music track may be added later.
+Visual polish the transitions and terrain collisions in a real browser; then build quests, elevation-specific encounters, and additional biome monsters. A savegame export/import and optional music track may be added later.
 
 **Authoring project:** [nfekete82/nobby_world](https://github.com/nfekete82/nobby_world) (private).
