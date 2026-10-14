@@ -726,7 +726,7 @@
       x=clamp(x,55,WORLD.w-55);y=clamp(y,65,WORLD.h-55);
       if(collides(x,y))y=pathAt(x);
       const m={id,kind,name:spec.name,x,y,homeX:x,homeY:y,
-        hp:spec.hp,maxHp:spec.hp,speed:spec.speed,damage:spec.damage,
+        hp:spec.hp,maxHp:spec.hp,speed:spec.speed,baseSpeed:spec.speed,damage:spec.damage,
         reach:spec.reach,radius:spec.radius,xp:spec.xp,
         attackDelay:spec.attackDelay,respawn:spec.respawn,ranged:!!spec.ranged,
         phase:id*1.76,attackAt:time+2.5,
@@ -824,6 +824,7 @@
       playSfx('hurt');
       updateResourceHUD();markSaveDirty();
       if(resources.health<=0){
+        bossZones.length=0;enemyShots.length=0;
         // Clear the old hero's threat so alerted enemies can go home after death.
         for(const m of enemies){
           m.provoked=false;m.chasePath=[];m.nextRepathAt=0;
@@ -964,6 +965,11 @@
       impactBursts.push({x:m.x,y:m.y-34,age:0,life:.4,kind:'fire'});
       playSfx('hit');
       if(m.hp<=0){
+        if(m.kind==='boss'){
+          // An interrupted boss spell must not explode after the boss is defeated.
+          for(let i=bossZones.length-1;i>=0;i--)
+            if(bossZones[i].owner===m.id)bossZones.splice(i,1);
+        }
         m.deadAt=time;m.respawnAt=time+m.respawn;
         m.state='dead';
         defeatedMonsters++;progress.kills++;
@@ -987,7 +993,8 @@
       for(const m of enemies){
         if(m.hp<=0){
           if(time>=m.respawnAt){
-            m.x=m.homeX;m.y=m.homeY;m.hp=m.maxHp;m.attackAt=time+1.3;
+            m.x=m.homeX;m.y=m.homeY;m.hp=m.maxHp;
+            m.speed=m.baseSpeed;m.attackAt=time+1.3;
             m.aggroUntil=0;m.staggerUntil=0;m.slowUntil=0;m.state='idle';
           m.bossPhase=1;
             m.provoked=false;m.chasePath=[];m.nextRepathAt=0;
@@ -1954,7 +1961,7 @@
       hero.walking=len>.2;
       if(hero.walking){
         dx/=len;dy/=len;
-        const speed=hero.speed*(equipment.boots?1.2:1)*(keyboard.has('shift')?1.64:1);
+        const speed=hero.speed*(equipped.boots?1.2:1)*(keyboard.has('shift')?1.64:1);
         const oldx=hero.x,oldy=hero.y;
         moveHero(dx*speed*dt,dy*speed*dt);
         if(Math.abs(hero.x-oldx)+Math.abs(hero.y-oldy)<.005){hero.walking=false;}
