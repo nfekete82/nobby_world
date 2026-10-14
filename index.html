@@ -355,7 +355,8 @@
     const audioToggle=document.getElementById('audio-toggle');
     const audioSlider=document.getElementById('audio-volume');
     function updateAudioUI(){
-      audioToggle.textContent=audioEnabled&&audioVolume>0?'♫':'♪';
+      audioToggle.textContent=audioEnabled&&audioVolume>0?'🔊':'🔇';
+      audioToggle.setAttribute('aria-label',audioEnabled?'Sound ausschalten':'Sound einschalten');
       audioToggle.setAttribute('aria-pressed',String(audioEnabled));
       audioToggle.title=audioEnabled?'Ton ausschalten (M)':'Ton einschalten (M)';
       audioSlider.value=Math.round(audioVolume*100);
@@ -394,6 +395,7 @@
       selectedSpell=key;
       for(const [name,button] of Object.entries(spellUI))
         button.setAttribute('aria-pressed',String(name===key));
+      markSaveDirty();
       return true;
     }
     function updateInventoryUI(){
@@ -535,6 +537,7 @@
         const y=finiteNumber(state.hero?.y,start.y,32,WORLD.h-25);
         if(!collides(x,y)){hero.x=x;hero.y=y;}
         updateProgressHUD();updateResourceHUD();updateShopUI();updateInventoryUI();
+        saveDirty=false;
         shopUI.status.textContent='Spielstand geladen';
         return true;
       }catch(error){
