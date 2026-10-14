@@ -1646,6 +1646,70 @@
       zoneBanner.textContent=zone==='forest'?'🌲 Smaragdwald':
         zone==='badlands'?'🪨 Trockene Grenzlande':'☀️ Goldene Wüste';
     }
+    // The user's road/lake sprite sheets are committed with the game.
+    const roadAtlas=new Image(),lakeAtlas=new Image();
+    roadAtlas.onload=()=>drawGround();
+    roadAtlas.src='assets/custom/road_tiles.png';
+    lakeAtlas.src='assets/custom/lake_tiles.png';
+    const LAKE_TILE=115;
+    const lakes=[
+      {x:760,y:1890,cols:4,rows:3},
+      {x:1880,y:2100,cols:3,rows:3},
+      {x:2650,y:2060,cols:4,rows:3},
+      {x:4220,y:1910,cols:3,rows:3}
+    ];
+    function lakeContains(x,y,margin=0){
+      return lakes.some(l=>{
+        const cx=l.x+l.cols*LAKE_TILE/2,cy=l.y+l.rows*LAKE_TILE/2;
+        const rx=l.cols*LAKE_TILE/2-24+margin,ry=l.rows*LAKE_TILE/2-24+margin;
+        return ((x-cx)/rx)**2+((y-cy)/ry)**2<1;
+      });
+    }
+    function drawLakeTiles(){
+      const ready=lakeAtlas.complete&&lakeAtlas.naturalWidth===828;
+      const ratio=828/1254;
+      for(const lake of lakes){
+        if(lake.x>camera.x+viewport.w/ZOOM+70||lake.y>camera.y+viewport.h/ZOOM+70
+          ||lake.x+lake.cols*LAKE_TILE<camera.x-70
+          ||lake.y+lake.rows*LAKE_TILE<camera.y-70)continue;
+        if(!ready){
+          const cx=lake.x+lake.cols*LAKE_TILE/2,cy=lake.y+lake.rows*LAKE_TILE/2;
+          ctx.save();ctx.fillStyle='#b49e68';ctx.beginPath();
+          ctx.ellipse(cx,cy,lake.cols*LAKE_TILE/2,lake.rows*LAKE_TILE/2,0,0,TAU);ctx.fill();
+          ctx.fillStyle='#48b8bc';ctx.beginPath();
+          ctx.ellipse(cx,cy,lake.cols*LAKE_TILE/2-18,lake.rows*LAKE_TILE/2-18,0,0,TAU);ctx.fill();
+          ctx.restore();continue;
+        }
+        // 3x3 seamless shoreline vocabulary from the supplied water spritesheet.
+        for(let row=0;row<lake.rows;row++)for(let col=0;col<lake.cols;col++){
+          const ci=col===0?0:col===lake.cols-1?2:1;
+          const ri=row===0?0:row===lake.rows-1?2:1;
+          const sourceX=[79,530,982][ci];
+          const sourceY=[17,233,452][ri];
+          const sourceH=[196,202,195][ri];
+          ctx.drawImage(lakeAtlas,sourceX*ratio,sourceY*ratio,194*ratio,sourceH*ratio,
+            lake.x+col*LAKE_TILE,lake.y+row*LAKE_TILE,LAKE_TILE+1,LAKE_TILE+1);
+        }
+      }
+    }
+    function roadAtlasReady(){return roadAtlas.complete&&roadAtlas.naturalWidth===828;}
+    function paintRoadTiles(c){
+      if(!roadAtlasReady())return false;
+      const ratio=828/1254;
+      // The actual road-centre tiles, rotated along the original winding main road.
+      // Source coordinates correspond to horizontal dirt lanes in row 3 of the set.
+      c.save();c.imageSmoothingEnabled=true;
+      for(let x=-45;x<WORLD.w+90;x+=128){
+        const y=pathAt(x),a=Math.atan2(pathAt(x+16)-pathAt(x-16),32);
+        const desert=x>BIOMES.transitionEnd;
+        const sx=desert?357:43,sy=desert?932:322,sw=desert?143:171,sh=desert?135:148;
+        c.save();c.translate(x,y);c.rotate(a);
+        c.drawImage(roadAtlas,sx*ratio,sy*ratio,sw*ratio,sh*ratio,
+          -77,-76,154,152);
+        c.restore();
+      }
+      c.restore();return true;
+    }
     function paintBiomes(){
       // All colors and dunes are generated: no unlicensed desert assets required.
       // 16px bands with a soft alpha transition avoid an abrupt biome seam.
@@ -1667,9 +1731,11 @@
       // Restore a continuous, readable pale dirt track through all biomes.
       const trail=[];for(let x=BIOMES.forestEnd-25;x<=WORLD.w+25;x+=15)trail.push([x,pathAt(x)]);
       g.lineCap='round';g.lineJoin='round';
-      for(const [width,color] of [[200,'#8d794125'],[152,'#98794970'],[118,'#d1a16dcb'],[89,'#ebcb91bd']]){
-        g.beginPath();trail.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));
-        g.lineWidth=width;g.strokeStyle=color;g.stroke();
+      if(!roadAtlasReady()){
+        for(const [width,color] of [[200,'#8d794125'],[152,'#98794970'],[118,'#d1a16dcb'],[89,'#ebcb91bd']]){
+          g.beginPath();trail.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));
+          g.lineWidth=width;g.strokeStyle=color;g.stroke();
+        }
       }
       // Orientation: understated hand-painted wayfinding signs on the main road.
       function mark(x,label){
@@ -1684,6 +1750,7 @@
       mark(3690,'ZUR WÜSTE →');
       mark(4490,'SANDPFAD →');
       g.restore();
+      paintRoadTiles(g);
     }
 
     function gradientCircle(c,x,y,r,colors) {
@@ -1692,7 +1759,7 @@
       c.fillStyle=gr;c.beginPath();c.arc(x,y,r,0,TAU);c.fill();
     }
     function drawGround(){
-
+      g.clearRect(0,0,WORLD.w,WORLD.h);
       if(tinyReady){
         // Tile the genuine 64x64 Tiny Swords grass interior over the entire map.
         g.imageSmoothingEnabled=false;
@@ -1701,9 +1768,11 @@
         const path=[];
         for(let x=-32;x<=WORLD.w+32;x+=12)path.push([x,pathAt(x)]);
         g.lineCap='round';g.lineJoin='round';
-        for(const [width,color] of [[180,'#354632b4'],[151,'#49533eb7'],[133,'#6c6147ed'],[113,'#867350ec'],[91,'#a0885be8']]){
-          g.beginPath();path.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));
-          g.lineWidth=width;g.strokeStyle=color;g.stroke();
+        if(!roadAtlasReady()){
+          for(const [width,color] of [[180,'#354632b4'],[151,'#49533eb7'],[133,'#6c6147ed'],[113,'#867350ec'],[91,'#a0885be8']]){
+            g.beginPath();path.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));
+            g.lineWidth=width;g.strokeStyle=color;g.stroke();
+          }
         }
         // Fine gravel keeps the broad path consistent with the 64px terrain scale.
         for(let i=0;i<3500;i++){
@@ -1726,8 +1795,10 @@
       // Old forest trail: soft grass fringe, compact earth, center highlights.
       const trail=[];for(let x=-30;x<=WORLD.w+30;x+=16)trail.push([x,pathAt(x)]);
       g.lineCap='round';g.lineJoin='round';
-      for(const [width,color] of [[186,'#84937023'],[164,'#a2a87c35'],[142,'#9478548f'],[125,'#947958ad'],[98,'#a28b68ad'],[74,'#b39a77a2']]){
-        g.beginPath();trail.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));g.lineWidth=width;g.strokeStyle=color;g.stroke();
+      if(!roadAtlasReady()){
+        for(const [width,color] of [[186,'#84937023'],[164,'#a2a87c35'],[142,'#9478548f'],[125,'#947958ad'],[98,'#a28b68ad'],[74,'#b39a77a2']]){
+          g.beginPath();trail.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));g.lineWidth=width;g.strokeStyle=color;g.stroke();
+        }
       }
       gradientCircle(g,start.x,start.y,205,[[0,'#b4a17f77'],[.45,'#ab967477'],[1,'#9b8d6800']]);
       // Grass, fallen leaves, small flowers, trail pebbles.
@@ -1797,6 +1868,7 @@
         const x=rnd(65,BIOMES.forestEnd-30),y=rnd(75,WORLD.h-60);
         if(Math.abs(y-pathAt(x))<rnd(125,185)||dist(x,y,start.x,start.y)<260)continue;
         if(dist(x,y,2860,pathAt(2860)-190)<270)continue; // boss clearing
+        if(lakeContains(x,y,85))continue;
         const rad=rnd(22,35);
         if(trees.some(t=>dist(t.x,t.y,x,y)<t.r+rad+rnd(12,34)))continue;
         const kind=rand()<.48?'pine':'oak';
@@ -2016,6 +2088,7 @@
     function collides(x,y){
       if(x<25||y<32||x>WORLD.w-25||y>WORLD.h-25)return true;
       if(dist(x,y,merchant.x,merchant.y)<24)return true;
+      if(lakeContains(x,y,12))return true;
       for(const t of trees)if(Math.abs(t.x-x)<62 && Math.abs(t.y-y)<62 && dist(x,y,t.x,t.y)<t.r+12)return true;
       return false;
     }
@@ -2139,6 +2212,8 @@
         Math.min(viewW,WORLD.w-Math.max(0,camera.x)),Math.min(viewH,WORLD.h-Math.max(0,camera.y)),
         Math.max(0,camera.x),Math.max(0,camera.y),
         Math.min(viewW,WORLD.w-Math.max(0,camera.x)),Math.min(viewH,WORLD.h-Math.max(0,camera.y)));
+      // Forest lakes use the supplied shore, water and corner tiles.
+      drawLakeTiles();
       // Forest-boss rune circle and desert oasis landmark.
       const bx=2860,by=pathAt(2860)-190;
       if(bx>camera.x-250&&bx<camera.x+viewW+250){
