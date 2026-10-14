@@ -63,6 +63,40 @@
       font-weight:600; font-size:13px; text-shadow:0 2px 6px #09100f;
       pointer-events:none; display:flex; gap:7px; align-items:center; }
     .treasure-counter strong { color:#f3df93; font-variant-numeric:tabular-nums; }
+    /* Merchant interaction and readable, compact RPG shop. */
+    .shop-overlay[hidden] { display:none; }
+    .shop-overlay { position:fixed; inset:0; z-index:12; display:flex; align-items:center;
+      justify-content:center; padding:16px; background:#06100dc7; backdrop-filter:blur(8px); }
+    .shop-dialog { width:min(520px,100%); max-height:min(700px,90vh); overflow-y:auto;
+      padding:25px; border:1px solid #c1a87599; border-radius:17px;
+      background:linear-gradient(145deg,#25332bf7,#121c1bef);
+      box-shadow:0 22px 90px #000b,inset 0 1px #fff2; color:#f1ead8; }
+    .shop-heading { display:flex; align-items:start; justify-content:space-between; gap:16px; }
+    .shop-eyebrow { color:#d3b780; font-size:11px; letter-spacing:.18em; text-transform:uppercase; }
+    .shop-title { font:normal 32px Georgia,serif; color:#f5e7bf; margin:5px 0 7px; }
+    .shop-description { margin:0 0 20px; font-size:13px; line-height:1.5; color:#aebeb4; }
+    .shop-close { flex-shrink:0; width:33px; height:33px; border-radius:7px; font-size:22px; }
+    .shop-wallet { padding:10px 13px; margin-bottom:13px; border:1px solid #937b4c77;
+      border-radius:9px; background:#131c19c9; font-size:13px; color:#f1d990; }
+    .shop-item { display:flex; gap:12px; align-items:center; padding:13px 0;
+      border-top:1px solid #d8c59b20; }
+    .shop-symbol { flex-shrink:0; display:grid; place-items:center; width:42px; height:42px;
+      border:1px solid #9f8a6288; border-radius:10px; background:#101c20; font-size:23px; }
+    .shop-item-detail { min-width:0; flex:1; }
+    .shop-item-name { font-size:14px; font-weight:700; color:#f1e6ca; }
+    .shop-item-effect { font-size:12px; line-height:1.4; color:#acbeb9; margin-top:3px; }
+    .shop-buy { width:auto; min-width:96px; height:37px; border-radius:9px;
+      padding:0 11px; color:#192319; background:#ddc18c; font-size:12px; font-weight:800; }
+    .shop-buy:hover:not(:disabled) { background:#f1d9a4; }
+    .shop-buy:disabled { background:#303d33; color:#9ba99e; opacity:.8; cursor:default; }
+    .shop-tip { margin:15px 0 0; color:#9caea6; font-size:11px; line-height:1.5; }
+    .shop-save { margin-top:12px; color:#c4d2c7; font-size:11px; min-height:15px; }
+    @media (max-width:680px) {
+      .shop-dialog { padding:18px; }
+      .shop-title { font-size:26px; }
+      .shop-symbol { width:34px; height:34px; font-size:18px; }
+      .shop-buy { min-width:75px; padding:0 7px; }
+    }
     .mobile-hint { display:none; }
     @media (max-width:680px) { .mobile-hint {display:inline;} }
     .footer { position:fixed; bottom:max(24px,env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:15px; padding:10px 17px; border:1px solid #d9eac522; background:#0c211bc4; backdrop-filter:blur(12px); border-radius:100px; color:#d1decf; white-space:nowrap; font-size:12px; line-height:1; box-shadow:0 12px 34px #09130d50; pointer-events:none; }
@@ -105,15 +139,46 @@
     </div>
   </section>
   <div class="treasure-counter" aria-label="Gesammelte Münzen">◈ <strong id="gold-count">0</strong></div>
+  <div class="shop-overlay" id="shop-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="shop-title">
+    <section class="shop-dialog">
+      <div class="shop-heading">
+        <div><div class="shop-eyebrow">Waldhändler · Ausrüstung</div>
+          <h2 class="shop-title" id="shop-title">Galdors Waren</h2></div>
+        <button type="button" class="shop-close" id="shop-close" aria-label="Händler schließen">×</button>
+      </div>
+      <p class="shop-description">Bezahle mit dem Gold, das du bei besiegten Waldmonstern findest. Jedes Upgrade wirkt dauerhaft.</p>
+      <div class="shop-wallet">◈ Dein Gold: <strong id="shop-gold">0</strong></div>
+      <div class="shop-item">
+        <div class="shop-symbol" aria-hidden="true">✦</div>
+        <div class="shop-item-detail"><div class="shop-item-name">Arkaner Fokus</div>
+          <div class="shop-item-effect">+10 Schaden pro blauer Feuerkugel</div></div>
+        <button type="button" class="shop-buy" id="shop-buy-focus">12 Gold</button>
+      </div>
+      <div class="shop-item">
+        <div class="shop-symbol" aria-hidden="true">➟</div>
+        <div class="shop-item-detail"><div class="shop-item-name">Windläuferstiefel</div>
+          <div class="shop-item-effect">+20 % Bewegungsgeschwindigkeit</div></div>
+        <button type="button" class="shop-buy" id="shop-buy-boots">10 Gold</button>
+      </div>
+      <div class="shop-item">
+        <div class="shop-symbol" aria-hidden="true">♥</div>
+        <div class="shop-item-detail"><div class="shop-item-name">Hüteramulett</div>
+          <div class="shop-item-effect">+25 maximale Lebenspunkte</div></div>
+        <button type="button" class="shop-buy" id="shop-buy-charm">15 Gold</button>
+      </div>
+      <p class="shop-tip">Klicke den Händler an oder drücke B in seiner Nähe. Mit Esc schließen. Gekaufte Upgrades werden im Browser gespeichert.</p>
+      <div class="shop-save" id="shop-save-status" role="status"></div>
+    </section>
+  </div>
   <div class="footer">
     <span class="desktop"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / <kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></span>
     <span class="desktop">Bewegen</span>
     <span class="sep desktop"></span>
     <span class="desktop">Boden: Laufen · Monster: Feuerkugel</span><span class="mobile-hint">Tippen: Laufen / Angreifen</span>
     <span class="sep desktop"></span>
-    <span class="desktop"><kbd>Shift</kbd> Sprinten</span><span class="sep desktop"></span><span class="desktop"><kbd>E</kbd> Heilmagie</span>
+    <span class="desktop"><kbd>Shift</kbd> Sprinten</span><span class="sep desktop"></span><span class="desktop"><kbd>E</kbd> Heilen</span><span class="sep desktop"></span><span class="desktop"><kbd>B</kbd> Händler</span>
   </div>
-  <div class="hint">NOBBY WORLD · FOREST COMBAT 0.4</div>
+  <div class="hint">NOBBY WORLD · MERCHANT & SAVE 0.5</div>
   <script>
   (() => {
     'use strict';
