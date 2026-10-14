@@ -2204,48 +2204,70 @@
       ctx.fillText(text,merchant.x,merchant.y-113+bob);
       ctx.restore();
     }
-    // Newly generated mage: separately cropped and foot-aligned sprites.
-    // Idle uses ONE frozen frame to prevent visible foot sliding.
-    const MAGE_FRAME=192,MAGE_FOOT=173,MAGE_RENDER=150;
-    const playerMageSheet=new Image();
-    playerMageSheet.src='assets/custom/player_mage_v2.png';
-    function mageAnimationFrame(){
-      const casting=time<castUntil||time<shotCastUntil;
-      const side=hero.dir===1||hero.dir===3;
-      const back=hero.dir===2;
-      const row=back?(casting?6:5):side?(casting?4:hero.walking?3:2):(casting?1:0);
-      if(casting){
-        const isHealing=time<castUntil;
-        const began=isHealing?castStart:shotCastStart;
-        const duration=isHealing?Math.max(.35,castUntil-castStart):
-          Math.max(.12,shotCastUntil-shotCastStart);
-        const t=clamp((time-began)/duration,0,.9999);
-        // Prefer intact spell poses: large energy FX can touch atlas edges.
-        const sequence=row===4||row===6?[0,4,7]:[0,1,3,4,7];
-        return {row,frame:sequence[Math.floor(t*sequence.length)]};
-      }
-      // Old idle cycling was responsible for the standing twitch.
-      const frame=hero.walking?Math.floor(hero.walkCycle*.85)%8:0;
-      return {row,frame};
+    // Same approach as the original Monk: independent horizontal image strips,
+    // not a combined atlas whose idle/run/cast frames can overlap.
+    const NOBBY_FRAME=256,NOBBY_RENDER=194,NOBBY_FOOT=230,NOBBY_FX_FOOT=222;
+    const nobbySprites={};
+    for(const [key,filename] of Object.entries({
+      idle:'nobby_idle.png',run:'nobby_run.png',
+      cast:'nobby_cast.png',spellFx:'nobby_spell_fx.png'
+    })){
+      const img=new Image();img.src='assets/custom/'+filename;
+      nobbySprites[key]=img;
     }
-    function drawPlayerMageSprite(){
-      if(!playerMageSheet.complete||playerMageSheet.naturalWidth!==1536
-        ||playerMageSheet.naturalHeight!==1344)return false;
-      const {row,frame}=mageAnimationFrame();
-      const size=MAGE_RENDER;
+    const NOBBY_FRAMES={idle:6,run:4,cast:10,spellFx:10};
+    function nobbyAnimationFrame(){
+      const isHealing=time<castUntil;
+      const isShooting=time<shotCastUntil;
+      if(isHealing||isShooting){
+        const begin=isHealing?castStart:shotCastStart;
+        const finish=isHealing?castUntil:shotCastUntil;
+        const progress=clamp((time-begin)/Math.max(.01,finish-begin),0,.9999);
+        return {key:'cast',frame:Math.floor(progress*NOBBY_FRAMES.cast),casting:true};
+      }
+      if(hero.walking){
+        // Advance only when actually moving, never from elapsed world time.
+        return {key:'run',frame:Math.floor(hero.walkCycle*.72)%NOBBY_FRAMES.run,casting:false};
+      }
+      return {key:'idle',frame:0,casting:false};
+    }
+    function nobbySpriteLoaded(key){
+      const img=nobbySprites[key],frames=NOBBY_FRAMES[key];
+      return !!img&&img.complete&&img.naturalWidth===NOBBY_FRAME*frames
+        &&img.naturalHeight===NOBBY_FRAME;
+    }
+    function drawNobbySprite(){
+      const animation=nobbyAnimationFrame();
+      const key=animation.key;
+      if(!nobbySpriteLoaded(key))return false;
+      const main=nobbySprites[key],size=NOBBY_RENDER;
       ctx.save();
-      ctx.fillStyle='#061a1a44';ctx.beginPath();
-      ctx.ellipse(hero.x,hero.y+1,20,6,0,0,TAU);ctx.fill();
+      ctx.fillStyle='#071b1c55';ctx.beginPath();
+      ctx.ellipse(hero.x,hero.y+1,20,7,0,0,TAU);ctx.fill();
       ctx.imageSmoothingEnabled=false;
+      // The supplied running strip faces right. Reflect it for leftward travel.
+      // Up/back sprites are not supplied yet, so use the side running strip
+      // rather than cutting imaginary directions from a mismatched atlas.
       if(hero.dir===3){ctx.translate(hero.x*2,0);ctx.scale(-1,1);}
-      // One fixed sole anchor for every frame, including all spell rows.
-      ctx.drawImage(playerMageSheet,frame*MAGE_FRAME,row*MAGE_FRAME,
-        MAGE_FRAME,MAGE_FRAME,hero.x-size/2,
-        hero.y-size*MAGE_FOOT/MAGE_FRAME,size,size);
-      ctx.restore();return true;
+      ctx.drawImage(main,animation.frame*NOBBY_FRAME,0,
+        NOBBY_FRAME,NOBBY_FRAME,
+        hero.x-size/2,hero.y-size*NOBBY_FOOT/NOBBY_FRAME,size,size);
+      ctx.restore();
+      // A separate effect strip like Tiny Swords Monk Heal_Effect.
+      if(animation.casting&&nobbySpriteLoaded('spellFx')){
+        const fx=nobbySprites.spellFx;
+        const fxSize=206;
+        ctx.save();ctx.imageSmoothingEnabled=false;ctx.globalAlpha=.88;
+        ctx.drawImage(fx,animation.frame*NOBBY_FRAME,0,
+          NOBBY_FRAME,NOBBY_FRAME,
+          hero.x-fxSize/2,hero.y-fxSize*NOBBY_FX_FOOT/NOBBY_FRAME,
+          fxSize,fxSize);
+        ctx.restore();
+      }
+      return true;
     }
     function drawHero(){
-      if(drawPlayerMageSprite())return;
+      if(drawNobbySprite())return;
       if(tinyReady&&tiny.monkIdle){
         const casting=time<castUntil||time<shotCastUntil;
         const key=casting?'monkHeal':hero.walking?'monkRun':'monkIdle';
