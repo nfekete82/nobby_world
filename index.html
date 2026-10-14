@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#171c19">
-  <title>Nobby World – Forest Prototype</title>
+  <title>Nobby World – Tiny Swords Prototype</title>
   <style>
     :root { color-scheme: dark; font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
     * { box-sizing: border-box; }
@@ -32,9 +32,9 @@
   <canvas id="world" aria-label="Spielwelt Nobby World"></canvas>
   <div class="loading" id="loading"><span>Nobby World</span><small>Dein Abenteuer beginnt …</small></div>
   <div class="hud">
-    <div class="kicker">Dunkle Wälder · Erste Reise</div>
+    <div class="kicker">Tiny Swords · Waldabenteuer</div>
     <h1>Nobby World</h1>
-    <div class="subtitle">Ein Held. Ein Wald. Deine Welt.</div>
+    <div class="subtitle">Erkunde den Wald · Magier: E für Heilmagie</div>
   </div>
   <div class="topright"><button id="full" aria-label="Vollbild umschalten" title="Vollbild (F)">⛶</button></div>
   <div class="footer">
@@ -43,9 +43,9 @@
     <span class="sep desktop"></span>
     <span>Klicken / Tippen zum Laufen</span>
     <span class="sep desktop"></span>
-    <span class="desktop"><kbd>Shift</kbd> Sprinten</span>
+    <span class="desktop"><kbd>Shift</kbd> Sprinten</span><span class="sep desktop"></span><span class="desktop"><kbd>E</kbd> Heilmagie</span>
   </div>
-  <div class="hint">NOBBY WORLD · FOREST 0.1</div>
+  <div class="hint">NOBBY WORLD · TINY SWORDS 0.2</div>
   <script>
   (() => {
     'use strict';
@@ -91,6 +91,52 @@
       ctx.restore();return true;
     }
     const ground=document.createElement('canvas'); ground.width=WORLD.w; ground.height=WORLD.h;
+
+    // Pixel Frog Tiny Swords: images are imported locally from the user's ZIP.
+    // Frame layout: 192px human units, 192px trees, 128px bushes, 64px rocks.
+    const tiny={};
+    const tinyFiles={
+      grass:"Terrain/grass.png",
+      tree1:"Terrain/Resources/Wood/Trees/Tree1.png",
+      tree2:"Terrain/Resources/Wood/Trees/Tree2.png",
+      tree3:"Terrain/Resources/Wood/Trees/Tree3.png",
+      tree4:"Terrain/Resources/Wood/Trees/Tree4.png",
+      bush1:"Terrain/Decorations/Bushes/Bushe1.png",
+      bush2:"Terrain/Decorations/Bushes/Bushe2.png",
+      bush3:"Terrain/Decorations/Bushes/Bushe3.png",
+      bush4:"Terrain/Decorations/Bushes/Bushe4.png",
+      rock1:"Terrain/Decorations/Rocks/Rock1.png",
+      rock2:"Terrain/Decorations/Rocks/Rock2.png",
+      rock3:"Terrain/Decorations/Rocks/Rock3.png",
+      rock4:"Terrain/Decorations/Rocks/Rock4.png",
+      monkIdle:"Units/Blue Units/Monk/Idle.png",
+      monkRun:"Units/Blue Units/Monk/Run.png",
+      monkHeal:"Units/Blue Units/Monk/Heal.png",
+      monkEffect:"Units/Blue Units/Monk/Heal_Effect.png",
+      house:"Buildings/Blue Buildings/House1.png",
+      fire:"Particle FX/Fire_01.png",
+      stump:"Terrain/Resources/Wood/Trees/Stump 1.png",
+      gold:"Terrain/Resources/Gold/Gold Stones/Gold Stone 4.png"
+    };
+    let tinyReady=false,castUntil=0,castStart=0;
+    for(const [key,path] of Object.entries(tinyFiles)){
+      const img=new Image();
+      img.onload=()=>{tiny[key]=img;if(key==='grass'){tinyReady=true;drawGround();}};
+      img.onerror=()=>{if(key==='grass')console.info('Tiny Swords noch nicht importiert: python3 scripts/import_tiny_swords.py ~/Downloads/Tiny\\ Swords\\ \\(Free\\ Pack\\).zip');};
+      img.src='assets/tiny-swords/'+path.split('/').map(encodeURIComponent).join('/');
+    }
+    function sprite(key,frame,fw,fh,x,y,w,h,alpha=1){
+      const img=tiny[key];if(!img)return false;
+      const columns=Math.floor(img.width/fw);if(!columns)return false;
+      ctx.save();ctx.globalAlpha*=alpha;ctx.imageSmoothingEnabled=false;
+      ctx.drawImage(img,(frame%columns)*fw,0,fw,fh,x,y,w,h);
+      ctx.restore();return true;
+    }
+    const campfires=[
+      {x:start.x-400,y:pathAt(start.x-400)-115},
+      {x:start.x+720,y:pathAt(start.x+720)+160}
+    ];
+
     const g=ground.getContext('2d',{alpha:false});
 
     function gradientCircle(c,x,y,r,colors) {
@@ -99,6 +145,30 @@
       c.fillStyle=gr;c.beginPath();c.arc(x,y,r,0,TAU);c.fill();
     }
     function drawGround(){
+
+      if(tinyReady){
+        // Tile the genuine 64x64 Tiny Swords grass interior over the entire map.
+        g.imageSmoothingEnabled=false;
+        g.fillStyle=g.createPattern(tiny.grass,'repeat');
+        g.fillRect(0,0,WORLD.w,WORLD.h);
+        const path=[];
+        for(let x=-32;x<=WORLD.w+32;x+=12)path.push([x,pathAt(x)]);
+        g.lineCap='round';g.lineJoin='round';
+        for(const [width,color] of [[180,'#354632b4'],[151,'#49533eb7'],[133,'#6c6147ed'],[113,'#867350ec'],[91,'#a0885be8']]){
+          g.beginPath();path.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));
+          g.lineWidth=width;g.strokeStyle=color;g.stroke();
+        }
+        // Fine gravel keeps the broad path consistent with the 64px terrain scale.
+        for(let i=0;i<3500;i++){
+          const x=rnd(0,WORLD.w),y=rnd(0,WORLD.h);
+          if(Math.abs(y-pathAt(x))>48)continue;
+          g.fillStyle=choose(['#514d3f','#b4a076','#c5b78c','#817452']);
+          g.globalAlpha=rnd(.15,.45);g.fillRect(Math.round(x/3)*3,Math.round(y/3)*3,rnd(2,6),rnd(1,3));
+        }
+        g.globalAlpha=1;
+        return;
+      }
+
       g.fillStyle='#344f3b';g.fillRect(0,0,WORLD.w,WORLD.h);
       // Broad painterly bands give the woods a natural, less tiled appearance.
       for(let i=0;i<1700;i++) {
@@ -196,6 +266,15 @@
       for(let i=0;i<95;i++)fireflies.push({x:rnd(0,WORLD.w),y:rnd(0,WORLD.h),z:rnd(0,TAU),phase:rnd(0,TAU),speed:rnd(.5,1.5)});
     }
     function drawRock(o){
+
+      if(tinyReady){
+        if(o.type==='mushroom'){
+          if(sprite('stump',0,192,256,o.x-26,o.y-39,52,51))return;
+        }
+        const type='rock'+(1+(Math.floor(o.x*3+o.y*7)%4));
+        if(sprite(type,0,64,64,o.x-o.s*1.3,o.y-o.s*2,o.s*2.6,o.s*2.6))return;
+      }
+
       if(o.type==='rock' && drawForestSprite('boulder',o.x-o.s,o.y-o.s*1.4,o.s*2.2,o.s*2.1))return;
       ctx.save();ctx.translate(o.x,o.y);
       if(o.type==='mushroom'){
@@ -210,6 +289,13 @@
       ctx.restore();
     }
     function drawDetails(o){
+
+      if(tinyReady){
+        const variant=1+(Math.floor(o.phase*10)%4);
+        const key='bush'+variant;
+        if(sprite(key,Math.floor((time*1.5+o.phase*4)%8),128,128,o.x-o.s*2.2,o.y-o.s*3,o.s*4.4,o.s*4.4,.98))return;
+      }
+
       if(o.type==='fern' && drawForestSprite('bush',o.x-o.s,o.y-o.s*1.15,o.s*2,o.s*1.85,.78))return;
       if(o.type==='flowers' && drawForestSprite('flower',o.x-o.s,o.y-o.s,o.s*2,o.s*1.5,.85))return;
       ctx.save();ctx.translate(o.x,o.y);
@@ -228,6 +314,17 @@
       ctx.restore();
     }
     function drawTree(t){
+
+      if(tinyReady){
+        const key=t.kind==='pine'?(t.variant%2?'tree1':'tree2'):(t.variant%2?'tree3':'tree4');
+        const fw=192,fh=t.kind==='pine'?256:192;
+        const scale=t.scale*(t.kind==='pine'?.75:.85);
+        const d=dist(t.x,t.y,hero.x,hero.y);
+        const alpha=t.y>=hero.y-15&&d<105*scale?clamp((d-22)/(95*scale),.26,1):1;
+        // Genuine animated 8-frame tree atlas: subtle wind motion, foot anchored to collision point.
+        if(sprite(key,Math.floor(time*1.2+t.wind)%8,fw,fh,t.x-fw*scale*.5,t.y-fh*scale+8*scale,fw*scale,fh*scale,alpha))return;
+      }
+
       // The woods pack provides actual canopy/trunk assets, with depth and fade preserved.
       const spriteName=t.kind==='pine'?'pine':(t.variant%4===0?'smallOak':'oak');
       const spriteW=spriteName==='pine'?109:(spriteName==='smallOak'?89:153);
@@ -251,6 +348,30 @@
       if(obscuresHero)ctx.restore();
     }
     function drawHero(){
+
+      if(tinyReady&&tiny.monkIdle){
+        const casting=time<castUntil;
+        const key=casting?'monkHeal':hero.walking?'monkRun':'monkIdle';
+        const img=tiny[key]||tiny.monkIdle;
+        const frames=Math.floor(img.width/192);
+        const frame=casting?Math.min(frames-1,Math.floor((time-castStart)*10)):Math.floor((hero.walking?hero.walkCycle*.85:time*8))%frames;
+        const size=175;
+        ctx.save();
+        ctx.fillStyle='#0a1d185b';ctx.beginPath();ctx.ellipse(hero.x,hero.y,21,7,0,0,TAU);ctx.fill();
+        ctx.translate(hero.x,hero.y);
+        if(hero.dir===3)ctx.scale(-1,1);
+        ctx.imageSmoothingEnabled=false;
+        // Frame transparency trims the monk naturally. Foot pivot is y=135/192.
+        ctx.drawImage(img,frame*192,0,192,192,-size/2,-size*(135/192),size,size);
+        ctx.restore();
+        if(casting){
+          const effect=tiny.monkEffect;
+          if(effect) sprite('monkEffect',Math.min(10,Math.floor((time-castStart)*10)),192,192,
+            hero.x-95,hero.y-130,190,190,.86);
+        }
+        return;
+      }
+
       const a=hero.walking?Math.sin(hero.walkCycle)*1:0;
       const bob=hero.walking?Math.abs(a)*1.7:Math.sin(time*2)*.55;
       const isBack=hero.dir===2;
@@ -408,9 +529,20 @@
       for(const o of rocks)if(o.x>camera.x-30&&o.x<camera.x+viewW+30&&o.y>camera.y-30&&o.y<camera.y+viewH+30)drawRock(o);
       // Depth sorting: the hero passes behind tree crowns while visible before trunks below them.
       const renderables=[];
+
+
       for(const t of trees)if(t.x>camera.x-175&&t.x<camera.x+viewW+175&&t.y>camera.y-115&&t.y<camera.y+viewH+320)
         renderables.push({y:t.y,draw:()=>drawTree(t)});
       renderables.push({y:hero.y,draw:drawHero});
+
+      if(tinyReady&&tiny.house){
+        const hx=start.x-520,hy=pathAt(start.x-520)-270;
+        renderables.push({y:hy,draw:()=>sprite('house',0,tiny.house.width,tiny.house.height,hx-89,hy-165,178,165)});
+      }
+      if(tinyReady&&tiny.fire){
+        for(const p of campfires)renderables.push({y:p.y,draw:()=>sprite('fire',Math.floor(time*10)%8,64,64,p.x-22,p.y-41,44,44)});
+      }
+
       renderables.sort((a,b)=>a.y-b.y);
       for(const item of renderables)item.draw();
       if(target){
@@ -452,6 +584,7 @@
       const key=e.key.toLowerCase();
       if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(key))e.preventDefault();
       if(key==='f'&&!e.repeat)toggleFull();
+      if(key==='e'&&!e.repeat&&time>=castUntil){castStart=time;castUntil=time+1.1;route=[];target=null;}
       keyboard.add(key);
     });
     window.addEventListener('keyup',e=>keyboard.delete(e.key.toLowerCase()));
