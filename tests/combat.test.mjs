@@ -13,7 +13,7 @@ const bootAnchor = 'drawGround();generateForest();buildNav();spawnMonsters();res
 assert.ok(script.includes(bootAnchor), 'game initialization changed; adjust test hook');
 const instrumented = script.replace(
   bootAnchor,
-  bootAnchor + '\nwindow.__test={enemies,fireballs,resources,progress,loot,hero,merchant,equipment,equipped,bag,selectSpell,openInventory,closeInventory,toggleEquipment,drinkPotion,spellSpecs,camera,update,hurtMonster,grantXP,damageHero,drawCombatEffects,drawMerchant,openShop,closeShop,buyItem,saveGame,route:()=>route,target:()=>target,shopState:()=>shopOpen};'
+  bootAnchor + '\nwindow.__test={enemies,fireballs,resources,progress,loot,hero,merchant,equipment,equipped,bag,selectSpell,openInventory,closeInventory,toggleEquipment,drinkPotion,spellSpecs,camera,update,castFireball,provokeMonster,routeTo,hurtMonster,grantXP,damageHero,drawCombatEffects,drawMerchant,openShop,closeShop,buyItem,saveGame,route:()=>route,target:()=>target,shopState:()=>shopOpen};'
 );
 
 function boot(initialSave = null) {
@@ -388,4 +388,72 @@ test('I, Escape and M keys work without browser AudioContext', () => {
   keydown('i');assert.equal(g.openShop(),false);
   keydown('escape');keydown('m');keydown('2');
   assert.equal(g.selectSpell('no-such-spell'),false);
+});
+
+test('ranged spell immediately provokes a slime before the projectile hits', () => {
+  const {g}=boot();const m=g.enemies[g.enemies.length-1];
+  const distance=Math.hypot(m.x-g.hero.x,m.y-g.hero.y);
+  assert.ok(distance>690,'test monster must be outside the old spell range');
+  assert.equal(m.state,'idle');
+  g.castFireball(m);
+  assert.equal(g.fireballs.length,1);
+  assert.equal(g.resources.mana,91);
+  assert.equal(m.provoked,true);
+  assert.equal(m.state,'chase');
+  assert.equal(m.hp,m.maxHp,'aggro must trigger before projectile impact');
+  assert.ok(g.fireballs[0].life>2.3,'long-range fireballs require extended lifetime');
+  const before=Math.hypot(m.x-g.hero.x,m.y-g.hero.y);
+  for(let i=0;i<10;i++)g.update(.05);
+  assert.equal(m.state,'chase');
+  assert.ok(m.chasePath.length>0,'monster should plan a path around trees');
+  assert.ok(Math.hypot(m.x-g.hero.x,m.y-g.hero.y)<before+60);
+});
+
+test('provoked slime never resets at the old home-radius boundary', () => {
+  const {g}=boot();const m=g.enemies[0];
+  g.provokeMonster(m);
+  m.x=m.homeX+410;
+  m.y=m.homeY;
+  g.update(.05);
+  assert.equal(m.provoked,true);
+  assert.equal(m.state,'chase','the former 390-unit home leash must not override provocation');
+});
+
+test('zero-damage frost also alerts distant enemies immediately', () => {
+  const {g}=boot();const m=g.enemies[g.enemies.length-1];
+  g.selectSpell('ice');
+  const before=m.hp;
+  g.castFireball(m);
+  assert.equal(g.resources.mana,86);
+  assert.equal(m.provoked,true);
+  assert.equal(m.state,'chase');
+  for(let i=0;i<70;i++)g.update(.05);
+  assert.equal(m.hp,before,'frost still cannot harm monsters');
+  assert.equal(g.progress.xp,0);
+});
+
+test('failed spell cast does not alert monsters', () => {
+  const {g}=boot();const m=g.enemies[g.enemies.length-1];
+  g.resources.mana=0;g.castFireball(m);
+  assert.equal(m.provoked,false);
+  assert.equal(g.fireballs.length,0);
+});
+
+test('defeating a provoked slime and respawning clears the chase', () => {
+  const {g}=boot();const m=g.enemies[0];
+  g.provokeMonster(m);
+  for(let i=0;i<3;i++)g.hurtMonster(m);
+  assert.equal(m.hp,0);
+  g.hero.x+=560;
+  for(let i=0;i<210;i++)g.update(.05);
+  assert.equal(m.hp,m.maxHp);
+  assert.equal(m.provoked,false);
+});
+
+test('an unprovoked far-away slime still returns to its own territory', () => {
+  const {g}=boot();const m=g.enemies[0];
+  m.x=m.homeX+420;
+  g.update(.05);
+  assert.equal(m.provoked,false);
+  assert.equal(m.state,'return');
 });
