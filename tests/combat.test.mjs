@@ -13,7 +13,7 @@ const bootAnchor = 'drawGround();generateForest();buildNav();spawnMonsters();res
 assert.ok(script.includes(bootAnchor), 'game initialization changed; adjust test hook');
 const instrumented = script.replace(
   bootAnchor,
-  bootAnchor + '\nwindow.__test={enemies,fireballs,resources,progress,loot,hero,merchant,WORLD,BIOMES,trees,details,biomeAt,pathAt,drawAdventureEnemy,drawForestGoblinSprite,forestGoblinSheet,drawRootGuardianSprite,rootGuardianSheet,drawForestBossSprite,forestBossSheet,drawPlayerMageSprite,mageAnimationFrame,playerMageSheet,plateaus,heightAt,stairCrossing,canTraverse,moveHero,collides,lakes,lakeContains,drawLakeTiles,drawMountainTiles,organicPlateauImage,plateauBand,paintRoadTiles,roadAtlas,lakeAtlas,cliffAtlas,groundCtx:g,bossZones,enemyShots,equipment,equipped,bag,selectSpell,openInventory,closeInventory,toggleEquipment,drinkPotion,spellSpecs,camera,update,castFireball,provokeMonster,routeTo,hurtMonster,grantXP,damageHero,drawCombatEffects,drawMerchant,openShop,closeShop,buyItem,saveGame,route:()=>route,target:()=>target,shopState:()=>shopOpen};'
+  bootAnchor + '\nwindow.__test={enemies,fireballs,resources,progress,loot,hero,merchant,WORLD,BIOMES,trees,details,biomeAt,pathAt,drawAdventureEnemy,drawForestGoblinSprite,forestGoblinSheet,drawRootGuardianSprite,rootGuardianSheet,drawForestBossSprite,forestBossSheet,drawNobbySprite,nobbyAnimationFrame,nobbySprites,nobbySpriteLoaded,plateaus,heightAt,stairCrossing,canTraverse,moveHero,collides,lakes,lakeContains,drawLakeTiles,drawMountainTiles,organicPlateauImage,plateauBand,paintRoadTiles,roadAtlas,lakeAtlas,cliffAtlas,groundCtx:g,bossZones,enemyShots,equipment,equipped,bag,selectSpell,openInventory,closeInventory,toggleEquipment,drinkPotion,spellSpecs,camera,update,castFireball,provokeMonster,routeTo,hurtMonster,grantXP,damageHero,drawCombatEffects,drawMerchant,openShop,closeShop,buyItem,saveGame,route:()=>route,target:()=>target,shopState:()=>shopOpen};'
 );
 
 function boot(initialSave = null) {
@@ -718,67 +718,80 @@ test('the uploaded cliff sprites are used when a mountain becomes visible', () =
 });
 
 
-test('repacked mage atlas has exact 192px cells and consistent foot anchors',()=>{
-  const {g,drawCalls}=boot();
-  const img=g.playerMageSheet;
-  assert.equal(img.url,'assets/custom/player_mage_v2.png');
-  assert.equal(g.drawPlayerMageSprite(),false,'fallback while asset is loading');
-  img.complete=true;img.naturalWidth=1536;img.naturalHeight=1344;
-  for(const [direction,walking,expectedRow] of
-    [[0,false,0],[0,true,0],[1,false,2],[1,true,3],[2,false,5],[2,true,5],[3,false,2]]){
-    g.hero.dir=direction;g.hero.walking=walking;
-    drawCalls.length=0;
-    assert.equal(g.drawPlayerMageSprite(),true);
-    const call=drawCalls.find(x=>x[0]===img);
-    assert.ok(call,'repacked atlas must render');
-    assert.equal(call[3],192);assert.equal(call[4],192);
-    assert.equal(call[2],expectedRow*192);
-    assert.ok(call[1]>=0&&call[1]<1536);
-    assert.equal(call[7],150);assert.equal(call[8],150);
-    assert.ok(Math.abs(call[6]+call[8]*173/192-g.hero.y)<.2,
-      'every view has exactly the same real-world ground pivot');
+test('Nobby uses four independent Monk-style sprite strips and exact frame counts',()=>{
+  const {g}=boot();
+  const expected={idle:[6,'nobby_idle.png'],run:[4,'nobby_run.png'],
+    cast:[10,'nobby_cast.png'],spellFx:[10,'nobby_spell_fx.png']};
+  for(const [key,[frames,file]] of Object.entries(expected)){
+    const image=g.nobbySprites[key];
+    assert.equal(image.url,'assets/custom/'+file);
+    assert.equal(g.nobbySpriteLoaded(key),false);
+    image.complete=true;image.naturalWidth=256*frames;image.naturalHeight=256;
+    assert.equal(g.nobbySpriteLoaded(key),true);
   }
 });
 
-test('mage casting uses isolated front side back rows without cropped-out heads',()=>{
-  const {g,drawCalls}=boot();const img=g.playerMageSheet;
-  img.complete=true;img.naturalWidth=1536;img.naturalHeight=1344;
-  g.castFireball(g.enemies[0]);
-  for(const [direction,expectedRow] of [[0,1],[1,4],[2,6],[3,4]]){
-    g.hero.dir=direction;drawCalls.length=0;
-    assert.equal(g.drawPlayerMageSprite(),true);
-    const call=drawCalls.find(x=>x[0]===img);
-    assert.ok(call);
-    assert.equal(call[2],expectedRow*192);
-    assert.ok(call[1]>=0&&call[1]<=7*192);
-    assert.ok(Math.abs(call[6]+call[8]*173/192-g.hero.y)<.2);
+test('Nobby idle stays on frame zero and maintains the ground anchor',()=>{
+  const {g,drawCalls}=boot(),img=g.nobbySprites.idle;
+  img.complete=true;img.naturalWidth=6*256;img.naturalHeight=256;
+  for(const dir of [0,1,2,3]){
+    g.hero.dir=dir;g.hero.walking=false;
+    assert.equal(g.nobbyAnimationFrame().key,'idle');
+    assert.equal(g.nobbyAnimationFrame().frame,0);
+    drawCalls.length=0;assert.equal(g.drawNobbySprite(),true);
+    const c=drawCalls.find(x=>x[0]===img);
+    assert.ok(c);
+    assert.equal(c[1],0);assert.equal(c[2],0);
+    assert.equal(c[3],256);assert.equal(c[4],256);
+    assert.ok(Math.abs(c[6]+c[8]*230/256-g.hero.y)<.2);
   }
-  g.hero.dir=2;
-  assert.ok([0,4,7].includes(g.mageAnimationFrame().frame),
-    'back-facing casts choose poses from the new sprite sheet');
 });
 
-test('mage cast animation advances within its own row and keeps the foot pivot',()=>{
-  const {g,drawCalls}=boot(),img=g.playerMageSheet;
-  img.complete=true;img.naturalWidth=1536;img.naturalHeight=1344;
-  g.castFireball(g.enemies[0]);
-  g.hero.dir=2;
-  const first=g.mageAnimationFrame();
-  g.update(.13);
-  const second=g.mageAnimationFrame();
-  assert.equal(first.row,6);
-  assert.equal(second.row,6);
-  assert.ok(second.frame>=first.frame,'animation should advance through safe cast poses');
-  drawCalls.length=0;g.drawPlayerMageSprite();
+test('Nobby run strip advances exactly four frames only while walking',()=>{
+  const {g,drawCalls}=boot(),img=g.nobbySprites.run;
+  img.complete=true;img.naturalWidth=4*256;img.naturalHeight=256;
+  g.hero.walking=true;g.hero.dir=1;
+  g.hero.walkCycle=0;
+  const first=g.nobbyAnimationFrame();
+  assert.equal(first.key,'run');
+  assert.equal(first.frame,0);
+  g.hero.walkCycle=2.1;
+  const second=g.nobbyAnimationFrame();
+  assert.equal(second.frame,1);
+  drawCalls.length=0;assert.equal(g.drawNobbySprite(),true);
   const draw=drawCalls.find(x=>x[0]===img);
-  assert.equal(draw[2],6*192);
-  assert.equal(draw[1],second.frame*192);
+  assert.ok(draw);assert.equal(draw[1],256);
+  assert.ok(Math.abs(draw[6]+draw[8]*230/256-g.hero.y)<.2);
+  g.hero.dir=3;
+  assert.equal(g.drawNobbySprite(),true,'left movement can mirror the right-facing strip');
 });
 
-test('wrong-sized or absent mage atlas renders the original safe fallback',()=>{
-  const {g}=boot(),img=g.playerMageSheet;
-  img.complete=true;img.naturalWidth=1000;img.naturalHeight=1001;
-  assert.equal(g.drawPlayerMageSprite(),false);
+test('Nobby casting draws the dedicated cast and blue spell effect strips',()=>{
+  const {g,drawCalls}=boot();
+  const cast=g.nobbySprites.cast,fx=g.nobbySprites.spellFx;
+  for(const image of [cast,fx]){
+    image.complete=true;image.naturalWidth=10*256;image.naturalHeight=256;
+  }
+  g.castFireball(g.enemies[0]);
+  assert.equal(g.nobbyAnimationFrame().key,'cast');
+  drawCalls.length=0;assert.equal(g.drawNobbySprite(),true);
+  const character=drawCalls.find(x=>x[0]===cast);
+  const energy=drawCalls.find(x=>x[0]===fx);
+  assert.ok(character,'casting must use the user supplied casting strip');
+  assert.ok(energy,'the special effect is a separate overlay like Monk Heal_Effect');
+  assert.equal(character[3],256);assert.equal(character[4],256);
+  assert.equal(energy[3],256);assert.equal(energy[4],256);
+  g.update(.13);
+  const later=g.nobbyAnimationFrame();
+  assert.equal(later.key,'cast');assert.ok(later.frame>=3);
+});
+
+test('Nobby animation falls back to original Monk when required PNG is missing',()=>{
+  const {g}=boot();
+  assert.equal(g.drawNobbySprite(),false);
+  const image=g.nobbySprites.idle;
+  image.complete=true;image.naturalWidth=1000;image.naturalHeight=1000;
+  assert.equal(g.drawNobbySprite(),false);
 });
 
 test('irregular mountain contours are not rectangular and still allow the southern stairs',()=>{
@@ -790,24 +803,19 @@ test('irregular mountain contours are not rectangular and still allow the southe
   assert.equal(g.canTraverse(p.stairsX,mid.lip+3,p.stairsX,mid.lip-3),true);
 });
 
-test('standing still displays the exact same mage frame at any game time', () => {
-  const {g,drawCalls}=boot();
-  const img=g.playerMageSheet;
-  img.complete=true;img.naturalWidth=1536;img.naturalHeight=1344;
-  for(const direction of [0,1,2,3]){
-    g.hero.dir=direction;g.hero.walking=false;
-    const before=g.mageAnimationFrame();
-    for(let i=0;i<90;i++)g.update(.04);
+test('Nobby never animates in idle while world time passes',()=>{
+  const {g,drawCalls}=boot(),img=g.nobbySprites.idle;
+  img.complete=true;img.naturalWidth=6*256;img.naturalHeight=256;
+  for(const dir of [0,1,2,3]){
+    g.hero.dir=dir;g.hero.walking=false;
+    const before=g.nobbyAnimationFrame();
+    for(let i=0;i<60;i++)g.update(.05);
     g.hero.walking=false;
-    const after=g.mageAnimationFrame();
-    assert.equal(after.row,before.row);
-    assert.equal(after.frame,0,'idle frame cannot cycle with elapsed time');
-    assert.equal(before.frame,0);
-    drawCalls.length=0;
-    g.drawPlayerMageSprite();
-    const call=drawCalls.find(c=>c[0]===img);
-    assert.ok(call);
-    assert.equal(call[1],0);
+    const after=g.nobbyAnimationFrame();
+    assert.equal(before.key,'idle');assert.equal(after.key,'idle');
+    assert.equal(before.frame,0);assert.equal(after.frame,0);
+    drawCalls.length=0;g.drawNobbySprite();
+    assert.equal(drawCalls.find(x=>x[0]===img)[1],0);
   }
 });
 
