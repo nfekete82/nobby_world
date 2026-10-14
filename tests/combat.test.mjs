@@ -13,7 +13,7 @@ const bootAnchor = 'drawGround();generateForest();buildNav();spawnMonsters();res
 assert.ok(script.includes(bootAnchor), 'game initialization changed; adjust test hook');
 const instrumented = script.replace(
   bootAnchor,
-  bootAnchor + '\nwindow.__test={enemies,fireballs,resources,progress,loot,hero,merchant,WORLD,BIOMES,trees,details,biomeAt,pathAt,drawAdventureEnemy,drawForestGoblinSprite,forestGoblinSheet,bossZones,enemyShots,equipment,equipped,bag,selectSpell,openInventory,closeInventory,toggleEquipment,drinkPotion,spellSpecs,camera,update,castFireball,provokeMonster,routeTo,hurtMonster,grantXP,damageHero,drawCombatEffects,drawMerchant,openShop,closeShop,buyItem,saveGame,route:()=>route,target:()=>target,shopState:()=>shopOpen};'
+  bootAnchor + '\nwindow.__test={enemies,fireballs,resources,progress,loot,hero,merchant,WORLD,BIOMES,trees,details,biomeAt,pathAt,drawAdventureEnemy,drawForestGoblinSprite,forestGoblinSheet,drawRootGuardianSprite,rootGuardianSheet,bossZones,enemyShots,equipment,equipped,bag,selectSpell,openInventory,closeInventory,toggleEquipment,drinkPotion,spellSpecs,camera,update,castFireball,provokeMonster,routeTo,hurtMonster,grantXP,damageHero,drawCombatEffects,drawMerchant,openShop,closeShop,buyItem,saveGame,route:()=>route,target:()=>target,shopState:()=>shopOpen};'
 );
 
 function boot(initialSave = null) {
@@ -570,4 +570,66 @@ test('forest goblin uses 8 transparent frames with ground-aligned sprite dimensi
   assert.ok(call);
   assert.ok(call[1]>=256 && call[1]<=6*256,
     'active melee attack must use spear slash and thrust frames');
+});
+
+test('custom root guardian PNG is loaded, with safe fallback before sprites finish loading', () => {
+  const {g}=boot();
+  assert.equal(g.rootGuardianSheet.url,'assets/custom/root_guardian.png');
+  const elite=g.enemies.find(m=>m.kind==='elite');
+  assert.ok(elite);
+  assert.equal(g.drawRootGuardianSprite(elite),false);
+  assert.doesNotThrow(()=>g.drawAdventureEnemy(elite));
+});
+
+test('root guardian draws the correct eight-frame sheet, including melee attack frames', () => {
+  const {g,drawCalls}=boot(),elite=g.enemies.find(m=>m.kind==='elite');
+  const img=g.rootGuardianSheet;
+  img.complete=true;img.naturalWidth=1280;img.naturalHeight=426;
+  assert.equal(g.drawRootGuardianSprite(elite),true);
+  let drawn=drawCalls.find(x=>x[0]===img);
+  assert.ok(drawn);
+  assert.equal(drawn[3],160);
+  assert.equal(drawn[4],426);
+  assert.ok(drawn[8]>230&&drawn[8]<270);
+  drawCalls.length=0;
+  elite.attackAnimStart=0;elite.attackAnimUntil=.55;
+  g.update(.2);
+  assert.equal(g.drawRootGuardianSprite(elite),true);
+  drawn=drawCalls.find(x=>x[0]===img);
+  assert.ok(drawn);
+  assert.ok(drawn[1]>=2*160&&drawn[1]<=6*160,
+    'root guardian must show windup/slam/recovery frames during the melee animation');
+});
+
+test('goblin now fires crimson magic shots at range with casting animation', () => {
+  const {g}=boot(),kobold=g.enemies.find(m=>m.kind==='goblin');
+  assert.equal(kobold.ranged,true);
+  g.hero.x=kobold.x+190;g.hero.y=kobold.y;
+  g.provokeMonster(kobold);
+  kobold.attackAt=0;
+  g.update(.05);
+  const shot=g.enemyShots.find(s=>s.kind==='goblin');
+  assert.ok(shot,'a distant goblin should launch a spell');
+  assert.equal(shot.color,'red');
+  assert.equal(shot.damage,10);
+  assert.ok(Math.hypot(shot.vx,shot.vy)>250);
+  assert.ok(kobold.attackAnimUntil>0,'the spell should trigger a sprite strike animation');
+});
+
+test('goblin projectiles damage the hero, while dune raider magic stays orange', () => {
+  const {g}=boot(),raider=g.enemies.find(m=>m.kind==='raider');
+  g.hero.x=raider.x+185;g.hero.y=raider.y;
+  g.provokeMonster(raider);raider.attackAt=0;
+  g.update(.05);
+  const raiderShot=g.enemyShots.find(s=>s.kind==='raider');
+  assert.ok(raiderShot);
+  assert.equal(raiderShot.color,'orange');
+  // Check the projectile damage collision independently of the AI.
+  g.hero.x+=700;g.hero.y=g.pathAt(g.hero.x);
+  g.enemyShots.length=0;
+  const before=g.resources.health;
+  g.enemyShots.push({x:g.hero.x-6,y:g.hero.y-20,vx:0,vy:0,
+    color:'red',damage:10,age:0,life:1.5,kind:'goblin'});
+  g.update(.05);
+  assert.equal(g.resources.health,before-10);
 });
