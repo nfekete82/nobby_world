@@ -597,7 +597,7 @@
         enemies.push({
           id:i,x,y,homeX:x,homeY:y,hp:66,maxHp:66,
           phase:i*1.76,speed:43+i%3*7,attackAt:time+2.5,
-          hitUntil:0,respawnAt:0,deadAt:0,selectedUntil:0,
+          hitUntil:0,respawnAt:0,deadAt:0,selectedUntil:0,slowUntil:0,
           aggroUntil:0,staggerUntil:0,state:'idle'
         });
       }
@@ -626,22 +626,26 @@
       if(floatingNumbers.length>25)floatingNumbers.shift();
     }
     function castFireball(m){
-      if(m.hp<=0||resources.health<=0||time<nextFireballAt||resources.mana<FIREBALL_COST)return;
+      const spec=spellSpecs[selectedSpell];
+      if(inventoryOpen||shopOpen||m.hp<=0||resources.health<=0
+        ||time<nextFireballAt||resources.mana<spec.cost)return;
       if(dist(hero.x,hero.y,m.x,m.y)>FIREBALL_RANGE){
         floatNumber(hero.x,hero.y-85,'Zu weit entfernt','#cbd9d5');
         return;
       }
-      resources.mana=Math.max(0,resources.mana-FIREBALL_COST);
+      resources.mana=Math.max(0,resources.mana-spec.cost);
       updateResourceHUD();markSaveDirty();
-      nextFireballAt=time+FIREBALL_COOLDOWN;
+      nextFireballAt=time+spec.cooldown;
       shotCastStart=time;shotCastUntil=time+.27;
       // Face the target, keep the character stationary only during this initial cast.
       const dx=m.x-hero.x,dy=m.y-hero.y;
       hero.dir=Math.abs(dx)>Math.abs(dy)?(dx>=0?1:3):(dy>=0?0:2);
       route=[];target=null;hero.walking=false;
       m.selectedUntil=time+.55;
-      fireballs.push({x:hero.x,y:hero.y-53,targetId:m.id,age:0,trail:[]});
-      burst(hero.x,hero.y-53,'#66deff',5);
+      fireballs.push({x:hero.x,y:hero.y-53,targetId:m.id,age:0,trail:[],
+        spell:spec.id,damage:spec.damage+(equipped.focus?10:0)});
+      burst(hero.x,hero.y-53,spec.color,spec.id==='nova'?13:7);
+      playSfx(spec.id==='fire'?'cast':spec.id);
     }
     function damageHero(amount){
       if(time<heroInvulnerableUntil||resources.health<=0)return;
@@ -649,6 +653,7 @@
       heroInvulnerableUntil=time+.7;
       floatNumber(hero.x,hero.y-95,'-'+amount,'#ff8a7c');
       burst(hero.x,hero.y-44,'#fa777e',9);
+      playSfx('hurt');
       updateResourceHUD();markSaveDirty();
       if(resources.health<=0){
         route=[];target=null;heroRespawnAt=time+2.2;
@@ -670,6 +675,7 @@
       if(leveled){
         floatNumber(hero.x,hero.y-120,'STUFENAUFSTIEG '+progress.level,'#f9df96');
         burst(hero.x,hero.y-60,'#b8f6ff',25);
+        playSfx('level');
       }
       updateProgressHUD();
       updateResourceHUD();markSaveDirty();
@@ -689,6 +695,10 @@
       if(progress.kills%3===0){
         loot.push({id:++nextLootId,kind:'mana',value:18,x:m.x,y:m.y-10,
           vx:32,vy:-50,age:0,life:40});
+      }
+      if(progress.kills%4===0){
+        loot.push({id:++nextLootId,kind:'potion',value:1,x:m.x,y:m.y-10,
+          vx:-38,vy:-42,age:0,life:40});
       }
       if(loot.length>80)loot.splice(0,loot.length-80);
     }
@@ -713,12 +723,18 @@
             floatNumber(hero.x,hero.y-80,'+'+item.value+' Gold','#fce38d');
             burst(item.x,item.y,'#ffda72',5);
             updateProgressHUD();markSaveDirty();
+          }else if(item.kind==='potion'){
+            bag.potions=Math.min(99,bag.potions+item.value);
+            floatNumber(hero.x,hero.y-76,'+1 Heiltrank','#b0f8a2');
+            burst(item.x,item.y,'#a8f7a0',8);
+            updateInventoryUI();markSaveDirty();
           }else{
             resources.mana=Math.min(resources.maxMana,resources.mana+item.value);
             floatNumber(hero.x,hero.y-75,'+'+item.value+' Mana','#7edfff');
             burst(item.x,item.y,'#79e7ff',8);
-            updateResourceHUD();
+            updateResourceHUD();markSaveDirty();
           }
+          playSfx('loot');
           loot.splice(i,1);
         }
       }
@@ -726,27 +742,27 @@
     function drawLoot(){
       for(const item of loot){
         const wobble=Math.sin(time*3+item.id)*2.8;
-        const size=item.kind==='mana'?9:6.5;
+        const size=item.kind==='potion'?10:item.kind==='mana'?9:6.5;
         ctx.save();
         ctx.globalAlpha=item.age>item.life-5?Math.max(0,(item.life-item.age)/5):1;
         ctx.translate(item.x,item.y-10+wobble);
         ctx.fillStyle='#081c2269';ctx.beginPath();ctx.ellipse(0,12,11,4,0,0,TAU);ctx.fill();
         const aura=ctx.createRadialGradient(0,0,0,0,0,20);
-        aura.addColorStop(0,item.kind==='mana'?'#79d9fa77':'#f2c66388');
+        aura.addColorStop(0,item.kind==='potion'?'#a9fc9077':item.kind==='mana'?'#79d9fa77':'#f2c66388');
         aura.addColorStop(1,'#ffffff00');
         ctx.fillStyle=aura;ctx.beginPath();ctx.arc(0,0,20,0,TAU);ctx.fill();
         ctx.rotate(time*1.6+item.id);
-        ctx.fillStyle=item.kind==='mana'?'#a5f3ff':'#fbd470';
-        ctx.strokeStyle=item.kind==='mana'?'#269ac6':'#b97527';ctx.lineWidth=2.2;
+        ctx.fillStyle=item.kind==='potion'?'#b7fda9':item.kind==='mana'?'#a5f3ff':'#fbd470';
+        ctx.strokeStyle=item.kind==='potion'?'#418953':item.kind==='mana'?'#269ac6':'#b97527';ctx.lineWidth=2.2;
         ctx.beginPath();
         ctx.moveTo(0,-size);ctx.lineTo(size*.7,0);ctx.lineTo(0,size);
         ctx.lineTo(-size*.7,0);ctx.closePath();ctx.fill();ctx.stroke();
         ctx.restore();
       }
     }
-    function hurtMonster(m){
+    function hurtMonster(m,damage=FIREBALL_DAMAGE+(equipped.focus?10:0),kind='fire'){
       if(m.hp<=0)return;
-      const damage=FIREBALL_DAMAGE+(equipment.focus?10:0);
+      if(kind==='ice')m.slowUntil=Math.max(m.slowUntil||0,time+2.6);
       m.hp=Math.max(0,m.hp-damage);
       m.hitUntil=time+.17;
       m.selectedUntil=time+.45;
@@ -758,8 +774,9 @@
         const nx=m.x+(m.x-hero.x)/push*11,ny=m.y+(m.y-hero.y)/push*11;
         if(!collides(nx,ny)){m.x=nx;m.y=ny;}
       }
-      floatNumber(m.x,m.y-78,'-'+damage,'#a1eaff');
-      burst(m.x,m.y-34,'#51bffb',16);
+      floatNumber(m.x,m.y-78,'-'+damage,kind==='ice'?'#b1fbff':kind==='nova'?'#d3b7ff':'#a1eaff');
+      burst(m.x,m.y-34,kind==='ice'?'#a7f5fc':kind==='nova'?'#b89bff':'#51bffb',16);
+      playSfx('hit');
       if(m.hp<=0){
         m.deadAt=time;m.respawnAt=time+10;
         m.state='dead';
@@ -781,7 +798,7 @@
         if(m.hp<=0){
           if(time>=m.respawnAt){
             m.x=m.homeX;m.y=m.homeY;m.hp=m.maxHp;m.attackAt=time+1.3;
-            m.aggroUntil=0;m.staggerUntil=0;m.state='idle';
+            m.aggroUntil=0;m.staggerUntil=0;m.slowUntil=0;m.state='idle';
           }
           continue;
         }
@@ -803,7 +820,8 @@
           const length=dist(m.x,m.y,destination.x,destination.y);
           if(length>.001){
             const dx=(destination.x-m.x)/length,dy=(destination.y-m.y)/length;
-            const step=m.speed*(retreating?1.3:1)*dt;
+            const chilled=time<(m.slowUntil||0);
+          const step=m.speed*(retreating?1.3:1)*(chilled?.48:1)*dt;
             if(!collides(m.x+dx*step,m.y))m.x+=dx*step;
             if(!collides(m.x,m.y+dy*step))m.y+=dy*step;
           }
@@ -830,7 +848,15 @@
         const dx=m.x-p.x,dy=m.y-32-p.y,d=Math.hypot(dx,dy);
         const step=FIREBALL_SPEED*dt;
         if(d<=step+16){
-          hurtMonster(m);fireballs.splice(i,1);
+          hurtMonster(m,p.damage||FIREBALL_DAMAGE+(equipped.focus?10:0),p.spell||'fire');
+          if(p.spell==='nova'){
+            for(const other of enemies){
+              if(other!==m&&other.hp>0&&dist(other.x,other.y,m.x,m.y)<110)
+                hurtMonster(other,Math.round((p.damage||19)*.6),'novaSplash');
+            }
+            burst(m.x,m.y-32,'#b88aff',30);
+          }
+          fireballs.splice(i,1);
         }else{
           p.trail.push({x:p.x,y:p.y});if(p.trail.length>8)p.trail.shift();
           p.x+=dx/d*step;p.y+=dy/d*step;
@@ -924,11 +950,16 @@
           ctx.fillStyle='rgba(38,143,255,'+(a*.30)+')';
           ctx.beginPath();ctx.arc(t.x,t.y,2+a*5,0,TAU);ctx.fill();
         }
-        const glow=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,24);
-        glow.addColorStop(0,'#e6fbff');glow.addColorStop(.2,'#8fe9ff');
-        glow.addColorStop(.48,'#168effb5');glow.addColorStop(1,'#168eff00');
-        ctx.fillStyle=glow;ctx.beginPath();ctx.arc(p.x,p.y,24,0,TAU);ctx.fill();
-        ctx.fillStyle='#e2fbff';ctx.beginPath();ctx.arc(p.x,p.y,5.2,0,TAU);ctx.fill();
+        const ice=p.spell==='ice',nova=p.spell==='nova';
+        const radius=nova?32:ice?20:24;
+        const glow=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,radius);
+        glow.addColorStop(0,nova?'#f9edff':ice?'#e6ffff':'#e6fbff');
+        glow.addColorStop(.2,nova?'#d4a2ff':ice?'#acf9ff':'#8fe9ff');
+        glow.addColorStop(.48,nova?'#8543ecb5':ice?'#45e1f2b5':'#168effb5');
+        glow.addColorStop(1,'#168eff00');
+        ctx.fillStyle=glow;ctx.beginPath();ctx.arc(p.x,p.y,radius,0,TAU);ctx.fill();
+        ctx.fillStyle=nova?'#efe0ff':ice?'#e1ffff':'#e2fbff';
+        ctx.beginPath();ctx.arc(p.x,p.y,nova?7:ice?4:5.2,0,TAU);ctx.fill();
       }
       for(const p of combatParticles){
         ctx.globalAlpha=Math.max(0,1-p.age/p.life);
@@ -1393,7 +1424,7 @@
       return simplified;
     }
     function update(dt){
-      if(shopOpen)return; // Stop combat and movement while trading.
+      if(shopOpen||inventoryOpen)return; // Stop combat and movement while in menus.
       time+=dt;hero.breath+=dt;
       if(resources.mana<resources.maxMana){
         resources.mana=Math.min(resources.maxMana,resources.mana+MANA_REGEN_PER_SECOND*dt);
@@ -1420,7 +1451,10 @@
         const oldx=hero.x,oldy=hero.y;
         moveHero(dx*speed*dt,dy*speed*dt);
         if(Math.abs(hero.x-oldx)+Math.abs(hero.y-oldy)<.005){hero.walking=false;}
-        else hero.walkCycle+=dt*12*(keyboard.has('shift')?1.35:1);
+        else {
+          hero.walkCycle+=dt*12*(keyboard.has('shift')?1.35:1);
+          markSaveDirty();
+        }
         if(Math.abs(dx)>Math.abs(dy))hero.dir=dx>0?1:3;
         else hero.dir=dy>0?0:2;
       }
@@ -1519,7 +1553,14 @@
       const key=e.key.toLowerCase();
       if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(key))e.preventDefault();
       if(shopOpen){if(key==='escape'||key==='b')closeShop();return;}
+      if(inventoryOpen){if(key==='escape'||key==='i')closeInventory();return;}
+      if(key==='i'&&!e.repeat){openInventory();return;}
       if(key==='b'&&!e.repeat){openShop();return;}
+      if(key==='m'&&!e.repeat){audioToggle.click();return;}
+      if((key==='1'||key==='2'||key==='3')&&!e.repeat){
+        selectSpell({1:'fire',2:'ice',3:'nova'}[key]);return;
+      }
+      if(key==='4'&&!e.repeat){drinkPotion();return;}
       if(key==='f'&&!e.repeat)toggleFull();
       if(key==='e'&&!e.repeat&&time>=castUntil&&resources.mana>=HEAL_MANA_COST){
         resources.mana-=HEAL_MANA_COST;
@@ -1538,7 +1579,7 @@
     });
     window.addEventListener('pagehide',()=>saveGame());
     canvas.addEventListener('pointerdown',e=>{
-      if(shopOpen)return;
+      if(shopOpen||inventoryOpen)return;
       if(e.pointerType==='mouse'&&e.button!==0)return;
       e.preventDefault();
       const rect=canvas.getBoundingClientRect();
