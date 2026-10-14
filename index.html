@@ -324,7 +324,132 @@
     updateResourceHUD();
     // Vendor and permanent gear; no extra runtime or backend needed.
     const merchant={x:start.x+105,y:pathAt(start.x+105)-55};
-    const equipment={focus:false,boots:false,charm:false};
+    const equipment={focus:false,boots:false,charm:false}; // Owned gear: backwards-compatible v0.5 save.
+    const equipped={focus:false,boots:false,charm:false};  // Currently worn gear.
+    const bag={potions:0};
+    const invUI={
+      overlay:document.getElementById('inventory-overlay'),
+      close:document.getElementById('inventory-close'),
+      open:document.getElementById('inventory-open'),
+      potions:document.getElementById('inventory-potions'),
+      drink:document.getElementById('inventory-drink'),
+      slots:{
+        focus:{status:document.getElementById('gear-focus'),btn:document.getElementById('inventory-focus')},
+        boots:{status:document.getElementById('gear-boots'),btn:document.getElementById('inventory-boots')},
+        charm:{status:document.getElementById('gear-charm'),btn:document.getElementById('inventory-charm')}
+      }
+    };
+    const spellSpecs={
+      fire:{id:'fire',name:'Arkane Kugel',cost:9,damage:26,cooldown:.29,color:'#63ceff'},
+      ice:{id:'ice',name:'Frostlanze',cost:14,damage:20,cooldown:.44,color:'#a9f6ff'},
+      nova:{id:'nova',name:'Arkanstoß',cost:22,damage:19,cooldown:.75,color:'#bfabff'}
+    };
+    let selectedSpell='fire',inventoryOpen=false;
+    const spellUI={
+      fire:document.getElementById('spell-fire'),
+      ice:document.getElementById('spell-ice'),
+      nova:document.getElementById('spell-nova')
+    };
+    let audioEnabled=true,audioVolume=.38,audioContext=null;
+    const audioToggle=document.getElementById('audio-toggle');
+    const audioSlider=document.getElementById('audio-volume');
+    function updateAudioUI(){
+      audioToggle.textContent=audioEnabled&&audioVolume>0?'♫':'♪';
+      audioToggle.setAttribute('aria-pressed',String(audioEnabled));
+      audioToggle.title=audioEnabled?'Ton ausschalten (M)':'Ton einschalten (M)';
+      audioSlider.value=Math.round(audioVolume*100);
+      audioSlider.disabled=!audioEnabled;
+    }
+    function playSfx(kind){
+      if(!audioEnabled||audioVolume<=0)return;
+      // No external samples or auto-play. The first click/key gesture unlocks Web Audio.
+      try{
+        const Ctor=typeof AudioContext!=='undefined'?AudioContext:
+          typeof window.webkitAudioContext!=='undefined'?window.webkitAudioContext:null;
+        if(!Ctor)return;
+        if(!audioContext)audioContext=new Ctor();
+        if(audioContext.state==='suspended')audioContext.resume?.().catch(()=>{});
+        const now=audioContext.currentTime,osc=audioContext.createOscillator();
+        const gain=audioContext.createGain();
+        const config={
+          cast:[650,1100,.13,'sine',.11],ice:[1040,370,.24,'triangle',.10],
+          nova:[230,670,.3,'sawtooth',.085],hit:[220,78,.13,'triangle',.11],
+          loot:[620,970,.11,'sine',.075],hurt:[175,68,.18,'sawtooth',.07],
+          level:[550,1040,.45,'sine',.09],buy:[430,870,.22,'triangle',.10]
+        }[kind]||[500,700,.12,'sine',.08];
+        const [from,to,duration,wave,volume]=config;
+        osc.type=wave;osc.frequency.setValueAtTime(from,now);
+        osc.frequency.exponentialRampToValueAtTime(Math.max(25,to),now+duration);
+        gain.gain.setValueAtTime(.0001,now);
+        gain.gain.exponentialRampToValueAtTime(Math.max(.0001,audioVolume*volume),now+.008);
+        gain.gain.exponentialRampToValueAtTime(.0001,now+duration);
+        osc.connect(gain);gain.connect(audioContext.destination);
+        osc.start(now);osc.stop(now+duration+.01);
+        osc.onended=()=>{osc.disconnect();gain.disconnect()};
+      }catch(error){ /* Audio unsupported: gameplay remains fully functional. */ }
+    }
+    function selectSpell(key){
+      if(!Object.hasOwn(spellSpecs,key))return false;
+      selectedSpell=key;
+      for(const [name,button] of Object.entries(spellUI))
+        button.setAttribute('aria-pressed',String(name===key));
+      return true;
+    }
+    function updateInventoryUI(){
+      for(const [key,slot] of Object.entries(invUI.slots)){
+        slot.status.textContent=!equipment[key]?'Nicht im Besitz':equipped[key]?'Ausgerüstet':'Im Rucksack';
+        slot.btn.textContent=!equipment[key]?'Gesperrt':equipped[key]?'Ablegen':'Anlegen';
+        slot.btn.disabled=!equipment[key];
+      }
+      invUI.potions.textContent=bag.potions+' Stück · Stellt 40 Leben wieder her';
+      invUI.drink.disabled=bag.potions<=0||resources.health>=resources.maxHealth||resources.health<=0;
+    }
+    function openInventory(){
+      if(shopOpen||resources.health<=0)return false;
+      inventoryOpen=true;invUI.overlay.hidden=false;keyboard.clear();route=[];target=null;
+      updateInventoryUI();invUI.close.focus?.();
+      return true;
+    }
+    function closeInventory(){
+      inventoryOpen=false;invUI.overlay.hidden=true;
+      if(saveDirty)saveGame();
+    }
+    function toggleEquipment(key){
+      if(!inventoryOpen||!Object.hasOwn(equipment,key)||!equipment[key])return false;
+      equipped[key]=!equipped[key];
+      if(key==='charm'){
+        resources.maxHealth+=equipped.charm?25:-25;
+        resources.health=Math.min(resources.health,resources.maxHealth);
+        updateResourceHUD();
+      }
+      updateInventoryUI();markSaveDirty();saveGame();
+      return true;
+    }
+    function drinkPotion(){
+      if(bag.potions<=0||resources.health<=0||resources.health>=resources.maxHealth)return false;
+      bag.potions--;
+      resources.health=Math.min(resources.maxHealth,resources.health+40);
+      floatNumber(hero.x,hero.y-100,'+40 Leben','#b4fa8b');
+      burst(hero.x,hero.y-50,'#8bdc99',12);
+      updateResourceHUD();updateInventoryUI();
+      playSfx('loot');markSaveDirty();saveGame();return true;
+    }
+    for(const [key,slot] of Object.entries(invUI.slots))
+      slot.btn.addEventListener('click',()=>toggleEquipment(key));
+    invUI.drink.addEventListener('click',drinkPotion);
+    invUI.close.addEventListener('click',closeInventory);
+    invUI.open.addEventListener('click',openInventory);
+    invUI.overlay.addEventListener('click',e=>{if(e.target===invUI.overlay)closeInventory()});
+    for(const [key,button] of Object.entries(spellUI))
+      button.addEventListener('click',()=>selectSpell(key));
+    audioToggle.addEventListener('click',()=>{
+      audioEnabled=!audioEnabled;updateAudioUI();markSaveDirty();
+    });
+    audioSlider.addEventListener('input',()=>{
+      audioVolume=clamp(Number(audioSlider.value)/100,0,1);updateAudioUI();markSaveDirty();
+    });
+    updateAudioUI();
+    updateInventoryUI();
     const shopItems={
       focus:{price:12,label:'Arkaner Fokus'},
       boots:{price:10,label:'Windläuferstiefel'},
@@ -359,6 +484,8 @@
         version:1,
         progress:{level:progress.level,xp:progress.xp,gold:progress.gold,kills:progress.kills},
         equipment:{...equipment},
+        equipped:{...equipped},bag:{potions:bag.potions},
+        selectedSpell,audio:{enabled:audioEnabled,volume:audioVolume},
         resources:{health:resources.health,mana:resources.mana},
         hero:{x:hero.x,y:hero.y}
       };
@@ -388,8 +515,17 @@
         progress.xp=Math.trunc(finiteNumber(savedProgress.xp,0,0,xpForLevel(progress.level)-1));
         progress.gold=Math.trunc(finiteNumber(savedProgress.gold,0,0,10000000));
         progress.kills=Math.trunc(finiteNumber(savedProgress.kills,0,0,10000000));
-        for(const key of Object.keys(shopItems))equipment[key]=state.equipment?.[key]===true;
-        resources.maxHealth=100+(progress.level-1)*10+(equipment.charm?25:0);
+        for(const key of Object.keys(shopItems)){
+          equipment[key]=state.equipment?.[key]===true;
+          // Existing v0.5 purchases were automatically worn. Preserve their bonuses.
+          equipped[key]=equipment[key]&&(state.equipped?.[key]!==false);
+        }
+        bag.potions=Math.trunc(finiteNumber(state.bag?.potions,0,0,99));
+        selectSpell(Object.hasOwn(spellSpecs,state.selectedSpell)?state.selectedSpell:'fire');
+        audioEnabled=state.audio?.enabled!==false;
+        audioVolume=finiteNumber(state.audio?.volume,.38,0,1);
+        updateAudioUI();
+        resources.maxHealth=100+(progress.level-1)*10+(equipped.charm?25:0);
         resources.maxMana=100+(progress.level-1)*5;
         resources.health=finiteNumber(state.resources?.health,resources.maxHealth,0,resources.maxHealth);
         resources.mana=finiteNumber(state.resources?.mana,resources.maxMana,0,resources.maxMana);
@@ -397,7 +533,7 @@
         const x=finiteNumber(state.hero?.x,start.x,25,WORLD.w-25);
         const y=finiteNumber(state.hero?.y,start.y,32,WORLD.h-25);
         if(!collides(x,y)){hero.x=x;hero.y=y;}
-        updateProgressHUD();updateResourceHUD();updateShopUI();
+        updateProgressHUD();updateResourceHUD();updateShopUI();updateInventoryUI();
         shopUI.status.textContent='Spielstand geladen';
         return true;
       }catch(error){
@@ -406,7 +542,7 @@
       }
     }
     function openShop(){
-      if(resources.health<=0||dist(hero.x,hero.y,merchant.x,merchant.y)>145)return false;
+      if(inventoryOpen||resources.health<=0||dist(hero.x,hero.y,merchant.x,merchant.y)>145)return false;
       pendingMerchant=false;route=[];target=null;keyboard.clear();hero.walking=false;
       shopOpen=true;shopUI.overlay.hidden=false;updateShopUI();
       shopUI.close.focus?.();
@@ -419,13 +555,14 @@
     function buyItem(key){
       const item=shopItems[key];
       if(!shopOpen||!item||equipment[key]||progress.gold<item.price)return false;
-      progress.gold-=item.price;equipment[key]=true;
+      progress.gold-=item.price;equipment[key]=true;equipped[key]=true;
       if(key==='charm'){
         resources.maxHealth+=25;
         resources.health=Math.min(resources.maxHealth,resources.health+25);
         updateResourceHUD();
       }
-      updateProgressHUD();updateShopUI();
+      updateProgressHUD();updateShopUI();updateInventoryUI();
+      playSfx('buy');
       floatNumber(hero.x,hero.y-90,item.label,'#ffdc9d');
       burst(hero.x,hero.y-45,'#ffe9aa',16);
       markSaveDirty();saveGame();
