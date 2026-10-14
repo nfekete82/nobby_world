@@ -13,7 +13,7 @@ const bootAnchor = 'drawGround();generateForest();buildNav();spawnMonsters();res
 assert.ok(script.includes(bootAnchor), 'game initialization changed; adjust test hook');
 const instrumented = script.replace(
   bootAnchor,
-  bootAnchor + '\nwindow.__test={enemies,fireballs,resources,hero,camera,update,hurtMonster,damageHero,route:()=>route,target:()=>target};'
+  bootAnchor + '\nwindow.__test={enemies,fireballs,resources,progress,loot,hero,camera,update,hurtMonster,grantXP,damageHero,drawCombatEffects,route:()=>route,target:()=>target};'
 );
 
 function boot() {
@@ -131,4 +131,59 @@ test('monsters damage the hero; defeated monsters respawn', () => {
   g.hero.x=g.hero.x+600;
   for(let i=0;i<204;i++)g.update(.05);
   assert.equal(m.hp,m.maxHp);
+});
+
+test('monsters grant experience and scatter collectible treasure', () => {
+  const {g}=boot();
+  const m=g.enemies[0];
+  for(let i=0;i<3;i++)g.hurtMonster(m);
+  assert.equal(m.hp,0);
+  assert.equal(g.progress.xp,15);
+  assert.equal(g.progress.kills,1);
+  assert.ok(g.loot.some(item=>item.kind==='gold'));
+  const coin=g.loot.find(item=>item.kind==='gold');
+  coin.x=g.hero.x;coin.y=g.hero.y-12;
+  g.update(.05);
+  assert.ok(g.progress.gold>=1);
+});
+
+test('third kill spawns a blue mana orb', () => {
+  const {g}=boot();
+  for(let i=0;i<3;i++){
+    const m=g.enemies[i];
+    for(let j=0;j<3;j++)g.hurtMonster(m);
+  }
+  assert.ok(g.loot.some(item=>item.kind==='mana'));
+  const orb=g.loot.find(item=>item.kind==='mana');
+  g.resources.mana=30;
+  orb.x=g.hero.x;orb.y=g.hero.y-12;
+  g.update(.05);
+  assert.ok(g.resources.mana>=48);
+});
+
+test('level up increases max HP/mana and restores resources', () => {
+  const {g}=boot();
+  g.resources.health=20;g.resources.mana=5;
+  g.grantXP(100);
+  assert.equal(g.progress.level,2);
+  assert.equal(g.progress.xp,60);
+  assert.equal(g.resources.maxHealth,110);
+  assert.equal(g.resources.maxMana,105);
+  assert.equal(g.resources.health,110);
+  assert.equal(g.resources.mana,105);
+});
+
+test('leash returns slimes far from their territory', () => {
+  const {g}=boot();
+  const m=g.enemies[0];
+  m.x=m.homeX+420;m.y=m.homeY;
+  g.update(.05);
+  assert.equal(m.state,'return');
+});
+
+test('spell cast visual effects can be drawn without sprite assets', () => {
+  const {g,click}=boot();
+  const m=g.enemies[0];
+  click(m.x,m.y-26);
+  assert.doesNotThrow(()=>g.drawCombatEffects());
 });
