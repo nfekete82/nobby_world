@@ -1,6 +1,6 @@
 # Nobby World 🌲
 
-**v0.7.1 – Faster Slimes & Immediate Ranged Aggro** · Private browser game with a controllable, animated magic hero.
+**v0.8.0 – Expanded World, Desert, New Enemies & Forest Boss** · Private browser game with a controllable, animated magic hero.
 
 ## Start in OrbStack (port 8088)
 
@@ -38,6 +38,7 @@ The Nginx image **contains** the game and the locally imported Tiny Swords asset
 | --- | --- |
 | Walk | WASD / arrow keys |
 | Walk to destination | Left-click / tap on ground |
+| Follow the eastward road into the badlands/desert | Move right along the main path |
 | Cast selected spell at slime and immediately alert it | Left-click / tap a monster |
 | Sprint | Shift |
 | Heal spell (25 mana; restores up to 35 HP) | E |
@@ -55,7 +56,7 @@ A larger comic-fantasy HUD with thick dark outlines, golden accents and vivid **
 
 ## First combat prototype
 
-- Nine animated **violet forest slimes** with overhead HP bars, approaching the hero when nearby
+- Nine animated **violet forest slimes** plus new goblins, ranged raiders, desert scarabs, elite guardian and a real forest boss.
 - Click/tap a slime to cast a **small blue homing fireball**, with glowing trail, burst and floating damage
 - 26 damage per hit, 9 mana per orb, 290ms firing cooldown; ranged targeting is no longer artificially limited to 690 world units
 - Slimes deal 8 contact damage (with a short player invulnerability period); hero respawns after defeat
@@ -133,6 +134,37 @@ Use `npm test` to run all **32 headless logic tests**. Full visual and audio che
 - Projectile range checks were removed for clicked visible monsters; projectiles get enough flight lifetime to cross a distant part of the level.
 - Frozen monsters still deal no spell damage and move at 34% speed for three seconds, even while provoked.
 - Ranged-aggro state does not change saved progression and resets on monster respawn.
+
+## The larger adventure world (v0.8.0)
+
+The map is now **5,200 × 2,800 world units**, up from **3,200 × 2,400** (almost twice the playable area). The original start remains at **x=1600** to preserve existing saves. The eastern road guides the player seamlessly through three areas:
+
+| Region | Approx. X range | Features |
+| --- | --- | --- |
+| 🌲 Smaragdwald | 0–3,100 | Original village/merchant, larger clearings, fewer trees, ordinary slimes and goblins |
+| 🪨 Trockene Grenzlande | 3,100–4,050 | A soft grassy-to-sandy transition, stones and highway signs; stronger raiders |
+| ☀️ Goldene Wüste | 4,050–5,200 | Procedural sand dunes, cactus clusters, dry bushes, oasis and desert creatures |
+
+Trees are **roughly 25% sparser per forest area** than before, with a broad main path and reserved forest-boss clearing. The generated sand, cacti and oasis require **no new downloaded art pack**. The biome indicator near the top of the screen shows the player's current zone.
+
+### New enemy classes and elite
+
+| Enemy | Region | Health | Behavior |
+| --- | --- | ---: | --- |
+| Waldschleim | Forest | 66 | Classic melee chaser |
+| Waldkobold | Forest | 112 | Faster, stronger close-range opponent |
+| Dünenräuber | Badlands/desert | 135 | Shoots ranged orange projectiles that can be dodged |
+| Sandkäfer | Desert | 118 | Particularly fast melee attacker |
+| Wurzelhüter (elite) | Forest | 255 | Heavy guardian, high damage, larger gold/potion drops |
+| **Moorkönig (boss)** | Forest clearing near x=2860 | **560** | Slow but very strong, charged red ground slams and a second phase below 50% HP |
+
+The **Moorkönig** has its own top-center health bar when approached. His area attack draws an expanding warning circle before it can hit. Move out of the circle to dodge. Below 50% health he becomes faster and his attack becomes more dangerous. Defeating him grants **200 XP**, a large gold shower and a healing potion. The elite and boss have longer respawn intervals.
+
+**Graphics:** Goblins and raiders try to use animated **red Warrior and Archer** units from the locally imported Tiny Swords Free Pack. If those specific sprites cannot load, dedicated hand-drawn Canvas alternatives appear automatically. Scarabs, the root guardian and the crowned forest boss currently have custom, stylized Canvas visuals; the paid Tiny Swords Enemy Pack is **not included or redistributed**. <https://pixelfrog-assets.itch.io/tiny-swords>
+
+**Preserved systems:** two-spell combat (Arkane Kugel damages, Verlangsamen deals exactly zero damage), aggressive ranged-hit pursuit, trader, inventory, XP, loot, savegames, OrbStack/Docker, and `localhost:8088`.
+
+Run `npm test` for **39 logic and regression tests**. A visual/frame-rate check in the actual browser is still recommended for the larger map.
 
 ## Graphics implemented
 
