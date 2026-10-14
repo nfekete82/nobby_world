@@ -1,0 +1,6 @@
+# Only copy the game into the container (never .git, scripts or the original ZIP).
+**
+!Dockerfile
+!index.html
+!assets/
+!assets/**
