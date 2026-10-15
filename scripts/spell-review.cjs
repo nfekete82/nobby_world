@@ -28,48 +28,81 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
   const world=worlds.find(w=>w.id==='simplemap'),nav=unpackNavigation(world.navigation);
   const foe=world.objects.find(o=>o.kind==='monster');
   assert.ok(foe,'no authored enemy available');
-  let start=null;
-  for(const r of [180,210,240,270,300])for(const [dx,dy] of [[-1,0],[1,0],[0,-1],[0,1],[-.7,-.7],[.7,.7]]){
-   const p={x:Math.round((foe.x+r*dx)/16)*16,y:Math.round((foe.y+r*dy)/16)*16};
-   if(isBlocked(nav,p.x/16,p.y/16)||Math.hypot(p.x-foe.x,p.y-foe.y)>ARCANE_RANGE-20)continue;
-   if(!clearShot(nav,p,foe))continue;
-   if(!start)start=p;
-  }
-  assert.ok(start,'no clear mage casting site near enemy');
-  await page.evaluate(()=>{window.__spellCast=[];window.__spellFX=[];
-    window.addEventListener('nobby:spell-cast',e=>window.__spellCast.push(e.detail));
-    window.addEventListener('nobby:spell-visual',e=>window.__spellFX.push(e.detail));
+  await page.evaluate(()=>{
+   window.__spellCast=[];window.__spellFX=[];window.__spellRejected=[];
+   window.addEventListener('nobby:spell-cast',e=>window.__spellCast.push(e.detail));
+   window.addEventListener('nobby:spell-visual',e=>window.__spellFX.push(e.detail));
+   window.addEventListener('nobby:spell-rejected',e=>window.__spellRejected.push(e.detail));
   });
-  await page.evaluate(async({x,y})=>{
-   const e=window.__spellReview.engine;
-   const p=Object.values(window.__spellReview.server.subRoom.players())[0];
-   e.interruptCurrentPlayerMovement(e.getCurrentPlayer());
-   await p.teleport({x,y});
-   e.applyAuthoritativeState({x,y});
-   p.sp=100;
-  },start);
-  await page.waitForFunction((expected)=>{
+  // Never teleport the player away from the camera. Instead stage the real,
+  // server-controlled monster within the ORIGINAL player's visible viewport.
+  // This tests a genuine browser left click on the rendered canvas.
+  const origin=await page.evaluate(()=>{
    const p=window.__spellReview.engine.getCurrentPlayer();
-   return p&&Math.abs(p.x()-expected.x)<8&&Math.abs(p.y()-expected.y)<8&&p.spSignal()===100
-  },start,{timeout:12000});
-  // Wait for the authoritative server map to finish spawning its events.
-  // Player/HUD readiness may precede server event initialization on first load.
+   return {x:p.x(),y:p.y()};
+  });
+  const candidateSites=[];
+  for(const radius of [210,240,180,270,300]){
+   for(const [dx,dy] of [[1,0],[-1,0],[0,-1],[0,1],[.7,-.7],[-.7,-.7],[.7,.7],[-.7,.7]]){
+    const candidate={
+     x:Math.round((origin.x+radius*dx)/16)*16,
+     y:Math.round((origin.y+radius*dy)/16)*16
+    };
+    if(isBlocked(nav,Math.round(candidate.x/16),Math.round(candidate.y/16)))continue;
+    if(Math.hypot(candidate.x-origin.x,candidate.y-origin.y)>ARCANE_RANGE-45)continue;
+    if(!clearShot(nav,origin,candidate))continue;
+    candidateSites.push(candidate);
+   }
+  }
+  assert.ok(candidateSites.length,'no clean shot near the player start');
+
   await page.waitForFunction(targetId=>{
-   const player=Object.values(window.__spellReview.server.subRoom.players())[0];
-   const map=player?.getCurrentMap?.();
+   const p=Object.values(window.__spellReview.server.subRoom.players())[0];
+   const map=p?.getCurrentMap?.();
    const foe=map?.getEvent?.(targetId) ??
      Object.values(map?.events?.()??{}).find(e=>e.nobbyWorldObjectId===targetId);
    const client=window.__spellReview.engine.sceneMap.events()?.[targetId];
    return !!(foe?.battleAi&&foe.hp>0&&client);
-  },foe.id,{timeout:12000}).catch(async()=>{
-   const data=await page.evaluate(targetId=>{
-    const player=Object.values(window.__spellReview.server.subRoom.players())[0];
-    const map=player?.getCurrentMap?.();
-    return {targetId,mapId:map?.id,serverEvents:Object.keys(map?.events?.()??{}).slice(0,8),
-      clientEvents:Object.keys(window.__spellReview.engine.sceneMap.events?.()??{}).slice(0,8)};
+  },foe.id,{timeout:12000});
+
+  let staged=null;
+  for(const candidate of candidateSites){
+   await page.evaluate(async({targetId,site})=>{
+    const p=Object.values(window.__spellReview.server.subRoom.players())[0];
+    const map=p.getCurrentMap();
+    const target=map?.getEvent(targetId) ??
+      Object.values(map?.events?.()??{}).find(e=>e.nobbyWorldObjectId===targetId);
+    if(!target)throw Error('authoritative monster missing while staging');
+    target.stopMoveTo?.();
+    await target.teleport(site);
+    p.sp=100;
+   },{targetId:foe.id,site:candidate});
+   // Wait for position replication before projecting it through the REAL camera.
+   try {
+    await page.waitForFunction(({targetId,site})=>{
+     const e=window.__spellReview.engine.sceneMap.events()?.[targetId];
+     return !!e&&Math.abs(e.x()-site.x)<8&&Math.abs(e.y()-site.y)<8;
+    },{targetId:foe.id,site:candidate},{timeout:1200});
+   }catch{continue}
+   const projected=await page.evaluate(targetId=>{
+    const e=window.__spellReview.engine,enemy=e.sceneMap.events()?.[targetId],canvas=e.renderer.canvas;
+    const viewportOf=node=>{
+     if(node?.toWorld&&node?.toScreen)return node;
+     for(const child of node?.children??[]){const v=viewportOf(child);if(v)return v}
+    };
+    const viewport=viewportOf(e.canvasApp?.stage),rect=canvas.getBoundingClientRect();
+    if(!enemy||!viewport)return null;
+    const screen=viewport.toScreen(enemy.x()+16,enemy.y()-19);
+    const x=rect.left+screen.x,y=rect.top+screen.y;
+    const inside=x>=rect.left+15&&x<rect.right-15&&y>=rect.top+15&&y<rect.bottom-15;
+    return {x,y,inside,onCanvas:inside&&document.elementFromPoint(x,y)===canvas,
+     rectangle:{x:rect.x,y:rect.y,width:rect.width,height:rect.height}};
    },foe.id);
-   throw new Error('RPG-JS did not spawn or synchronize the selected monster: '+JSON.stringify(data));
-  });
+   if(projected?.onCanvas){staged={site:candidate,click:projected};break}
+  }
+  assert.ok(staged,'no enemy test position projected onto an unobscured canvas; possible camera/viewport bug: '+
+    JSON.stringify({origin,sites:candidateSites.length}));
+  const click={x:staged.click.x,y:staged.click.y};
   // The authoritative map is the one the attacking player belongs to,
   // not necessarily server.subRoom (which may be a transfer wrapper).
   const before=await page.evaluate(targetId=>{
@@ -84,18 +117,6 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
      actualId:enemy.id,from:{x:p.x(),y:p.y()},to:{x:enemy.x(),y:enemy.y()}};
   },foe.id);
   assert.equal(before.mana,100);
-  const click=await page.evaluate(targetId=>{
-   const e=window.__spellReview.engine;
-   const enemy=e.sceneMap.events()[targetId],canvas=e.renderer.canvas;
-   const lookup=node=>{if(node?.toWorld&&node?.toScreen)return node;
-    for(const child of node?.children??[]){const v=lookup(child);if(v)return v}};
-   if(!enemy)throw Error('target event not visible in client room');
-   const viewport=lookup(e.canvasApp.stage),rect=canvas.getBoundingClientRect();
-   const screen=viewport.toScreen(enemy.x()+16,enemy.y()-19);
-   return {x:rect.left+screen.x,y:rect.top+screen.y};
-  },foe.id);
-  const hit=await page.evaluate(({x,y})=>document.elementFromPoint(x,y)?.tagName==='CANVAS',click);
-  assert.ok(hit,'monster not visible on canvas');
   await page.mouse.click(click.x,click.y);
   await page.waitForFunction(()=>window.__spellCast.length>0,{},{timeout:5000});
   assert.equal(await page.evaluate(()=>document.querySelectorAll('.nobby-arcane-orb').length),1,
