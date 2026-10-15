@@ -5,19 +5,30 @@
 const { spawn, spawnSync } = require('node:child_process');
 const { setTimeout: sleep } = require('node:timers/promises');
 const { join } = require('node:path');
+const http = require('node:http');
 
 const ADDRESS = 'http://127.0.0.1:5173/';
 
+// Node 25 on macOS can crash inside undici's socket.setTypeOfService()
+// even when a fetch rejection is caught. Use Node's HTTP client here.
 async function isReady() {
-  let response;
-  try {
-    response = await fetch(ADDRESS, { signal: AbortSignal.timeout(1500) });
-  } catch {
-    return false;
-  }
-  if (!response.ok) return false;
-  const html = await response.text();
-  if (!html.includes('Nobby World')) {
+  const response = await new Promise(resolve => {
+    let settled = false;
+    const finish = value => { if (!settled) { settled = true; resolve(value); } };
+    const request = http.get(ADDRESS, { timeout: 1500, agent: false }, res => {
+      let html = '';
+      res.on('data', chunk => {
+        html += chunk.toString();
+        if (html.length > 50000) request.destroy();
+      });
+      res.on('end', () => finish({ ok: res.statusCode === 200, html }));
+      res.on('error', () => finish(null));
+    });
+    request.on('error', () => finish(null));
+    request.on('timeout', () => { request.destroy(); finish(null); });
+  });
+  if (!response || !response.ok) return false;
+  if (!response.html.includes('Nobby World')) {
     throw new Error('Port 5173 is occupied by another application, not Nobby World.');
   }
   return true;
