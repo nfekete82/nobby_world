@@ -80,9 +80,15 @@ export function findRoute(nav,from,target) {
       const nx=x+dx,ny=y+dy;
       if(isBlocked(nav,nx,ny))continue;
       const next=ny*cols+nx;
-      if(visited[next]||g+1>=dist[next])continue;
-      dist[next]=g+1;previous[next]=at;
-      push({at:next,g:g+1,f:g+1+h(nx,ny)});
+      // Equal-distance routes can zigzag tile-by-tile. Prefer long straight
+      // stretches so the character does not snap direction every 16 pixels.
+      const earlier=previous[at]
+      const turn=earlier<0?0:
+        ((x-(earlier%cols))!==dx||(y-Math.floor(earlier/cols))!==dy?0.12:0)
+      const cost=g+1+turn
+      if(visited[next]||cost>=dist[next])continue;
+      dist[next]=cost;previous[next]=at;
+      push({at:next,g:cost,f:cost+h(nx,ny)});
     }
   }
   if(nearest===start)return [];
