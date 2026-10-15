@@ -1,7 +1,7 @@
 import art from '../art/registry.json'
 import './web-editor.css'
 import {expandLayerGrid,expansionFill,validateMapExpansion} from './map-resize.mjs'
-import {OBJECT_CATEGORIES,TILE_CATEGORIES,layerLabel,layerHelp,objectCategory,tilesetCategory,layerForTileCategory} from './editor-taxonomy.mjs'
+import {OBJECT_CATEGORIES,TILE_CATEGORIES,layerLabel,layerHelp,objectCategory,tilesetCategory,layerForTileCategory,layerForTileset} from './editor-taxonomy.mjs'
 
 type Sheet={first:number,count:number,cols:number,img:HTMLImageElement,source:string,title:string}
 type PaintLayer={node:Element,name:string,gids:number[]}
@@ -117,7 +117,7 @@ class MapEditor {
   const pane=elt('main','we-body')
   this.stage.append(this.canvas);this.viewport.append(this.stage)
   const sidebar=elt('aside','we-sidebar')
-  const toolHelp=elt('p','we-help','Bäume, Gebäude und Figuren platzierst du unabhängig von Kachelebenen. Beim Malen wählst du die Ebene und Kacheln. Für begehbares Land im neuen Wasser die rote Sperrfläche entfernen.')
+  const toolHelp=elt('p','we-help','Gelände, Wüste, Felsboden und Schnee besitzen eigene Kachelebenen. Wege und Brücken können darüber liegen. ⌫ Löschen entfernt nur die gewählte Ebene. Für neues Land rote Sperrflächen separat entfernen.')
   this.picker.addEventListener('change',()=>{
    this.chosenAsset=this.picker.value;this.refreshGallerySelection()
   })
@@ -428,6 +428,10 @@ class MapEditor {
  }
  private showSheet(idx:number){
   const sheet=this.sheet[Math.max(0,idx)]||this.sheet[0];if(!sheet)return
+  // Keep layers independent: painting sand never removes grass, roads or bridges.
+  const preferred=layerForTileset(sheet.source)
+  const target=this.layer.findIndex(l=>l.name===preferred)
+  if(target>=0){this.layerIndex=target;this.layerPicker.value=String(target);this.updateLayerHelp()}
   this.palette.replaceChildren()
   this.paletteTabs.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('we-active',this.sheet[i]===sheet))
   if(!sheet.img.naturalWidth){this.palette.textContent='Kachelgrafik konnte nicht geladen werden';return}

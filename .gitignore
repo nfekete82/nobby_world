@@ -15,3 +15,8 @@ src/tiled/tiny-swords/forest-darker.png
 # Derived earthy path sprites (base path.png remains unchanged)
 src/tiled/tiny-swords/path-earthy.png
 src/tiled/tiny-swords/path-details.png
+
+# Generated Tiny Swords biome variations
+src/tiled/tiny-swords/desert.png
+src/tiled/tiny-swords/rocky.png
+src/tiled/tiny-swords/snow.png

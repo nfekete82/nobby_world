@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 import xml from 'xml-js'
 import { ensureDarkerGrass } from './darken-grass.mjs'
 import { preparePathArt } from './path-art.mjs'
+import { ensureBiomeTerrain } from './biome-art.mjs'
 
 export const projectRoot=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..')
 const art=JSON.parse(fs.readFileSync(path.join(projectRoot,'src/art/registry.json'),'utf8'))
@@ -117,6 +118,7 @@ export function compileWorlds({writeOutput=true}={}){
   // Generate derived Tiled images before Vite and validation resolve their TSX paths.
   ensureDarkerGrass()
   preparePathArt()
+  ensureBiomeTerrain()
   const directory=path.join(projectRoot,'src/tiled')
   const worlds=fs.readdirSync(directory).filter(f=>f.endsWith('.tmx')).sort().map(f=>readWorld(path.join(directory,f))).filter(Boolean)
   for(const w of worlds){

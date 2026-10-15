@@ -304,3 +304,21 @@ damit vorhandene Karten kompatibel bleiben.
 TypeScript/JavaScript werden über Vite automatisch übernommen. Bei
 Konfigurationsänderungen mit Vite-Neustart kann einmalig
 `docker compose --profile editor restart editor` erforderlich sein.
+
+### Zusätzliche Landschafts-Ebenen: Wüste, Felsboden und Schnee
+
+Unter **Esc → Karteneditor → Kacheln** findest du **Wüste**, **Felsboden**
+und **Schnee**. Jede Kategorie hat ein eigenes Tiny-Swords-Tileset mit 54
+64×64-Kacheln und eine eigene Tiled-Ebene (sowohl in simplemap als auch in wald).
+Das Anklicken eines Tilesets wählt die passende Ebene automatisch aus.
+
+Neue Landschaften liegen **über Gras, aber unter Wegen und Brücken**. Das
+gewünschte Übereinanderlegen bleibt erhalten: Beim Malen löscht der Editor
+**keine fremden Ebenen**. Mit ⌫ Löschen entfernst du nur die aktuell gewählte
+Ebene. Neue Landflächen müssen zusätzlich auf der Kollisions-Ebene entsperrt
+werden, damit Nobby dort laufen kann.
+
+Die drei PNG-Varianten werden aus der Original-Tiny-Swords-Wiese beim
+Start bzw. World-Compile mit `scripts/biome-art.mjs` erzeugt, ohne die
+Originalgrafiken zu verändern. Beide Karten haben leere neue Ebenen;
+bestehende Weltinhalte und Objekte bleiben unverändert.
