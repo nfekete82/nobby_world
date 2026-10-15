@@ -28,7 +28,7 @@ function fixture(options={}){
  return {owner,nav,adapter,control,entities,moves,hits,removed,leave(){map={id:'other'}}}
 }
 test('first selection is validated, immutable and legacy migration preserves progression',()=>{
- const p={nobbyClass:signal(''),level:12,exp:5000,sp:73,setGraphic(g){this.graphic=g}}
+ const p={nobbyClass:signal(''),hp:100,level:12,exp:5000,sp:73,setGraphic(g){this.graphic=g}}
  assert.equal(selectClass(p,'admin'),false)
  assert.equal(selectClass(p,['shaman']),false)
  assert.equal(selectClass(p,{toString:()=> 'shaman'}),false)
@@ -38,6 +38,11 @@ test('first selection is validated, immutable and legacy migration preserves pro
  restoreClass(p,{level:12,exp:5000})
  assert.equal(p.nobbyClass(),'mage');assert.equal(p.level,12);assert.equal(p.exp,5000);assert.equal(p.sp,73)
  restoreClass(p,{nobbyClass:'shaman'});assert.equal(p.graphic,'shaman')
+})
+test('class restoration never unlocks movement for a defeated saved character',()=>{
+ const p={nobbyClass:signal(''),hp:0,canMove:false,setGraphic(){}}
+ restoreClass(p,{nobbyClass:'shaman'})
+ assert.equal(p.canMove,false);assert.equal(p.hp,0)
 })
 test('successful summon costs exactly 10 and observes cooldown and three-skeleton limit',async()=>{
  const {control,owner}=fixture()
