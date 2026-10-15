@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import xml from 'xml-js'
+import { ensureDarkerGrass } from './darken-grass.mjs'
 
 export const projectRoot=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..')
 const art=JSON.parse(fs.readFileSync(path.join(projectRoot,'src/art/registry.json'),'utf8'))
@@ -112,6 +113,8 @@ function buildNavigation(world,map,directory){
 }
 
 export function compileWorlds(){
+  // Generate derived Tiled images before Vite and validation resolve their TSX paths.
+  ensureDarkerGrass()
   const directory=path.join(projectRoot,'src/tiled')
   const worlds=fs.readdirSync(directory).filter(f=>f.endsWith('.tmx')).sort().map(f=>readWorld(path.join(directory,f))).filter(Boolean)
   for(const w of worlds){

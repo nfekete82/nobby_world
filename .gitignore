@@ -7,3 +7,7 @@ dist/
 .tools/
 *.tiled-session
 art/map-backups/
+
+# Generated darker grass tilesets (original pack art remains intact)
+src/tiled/tiny-swords/grass-darker.png
+src/tiled/tiny-swords/forest-darker.png

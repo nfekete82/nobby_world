@@ -22,7 +22,8 @@
     "test:art": "node scripts/art-review.cjs",
     "art:check": "node scripts/preflight-art.mjs",
     "test:click": "node scripts/click-move-review.cjs",
-    "test:spell": "node scripts/spell-review.cjs"
+    "test:spell": "node scripts/spell-review.cjs",
+    "pretest": "node scripts/world-data.mjs"
   },
   "keywords": [],
   "author": "",
