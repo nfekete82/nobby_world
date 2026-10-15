@@ -40,10 +40,15 @@ function provokeAfterHit(victim:any,player:any):void{
  * NEVER accepted from the browser. No arbitrary props/NPCs/player PvP. */
 export function castArcaneBolt(player:any,data:any):boolean{
  const targetId=typeof data?.targetId==='string'?data.targetId:''
+ const requestId=typeof data?.requestId==='string'&&data.requestId.length<=40?data.requestId:''
  const trace=(stage:string,reason:string,extra:Record<string,unknown>={})=>{
-   // Exposed only to server-side diagnostics / standalone acceptance test.
-   // No untrusted target positions or secrets are stored.
+   // Authoritative result is sent to the caster, so the client never draws
+   // fake spell hits when the server rejected mana/range/target checks.
    player.nobbyLastSpell={stage,reason,targetId,...extra}
+   if(requestId)player.emit('nobby:arcane-status',{
+     requestId,targetId,stage,reason,
+     ...(stage==='impact'?{damage:extra.damage??0,hpAfter:extra.hpAfter}:{}),
+   })
  }
  const map=player.getCurrentMap?.()
  const id=String(map?.id??'').replace(/^map-/,'')
