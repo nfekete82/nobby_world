@@ -11,8 +11,11 @@ let currentEngine:RpgClientEngine|null=null
 let installed=false
 const mapIdOf=(engine:RpgClientEngine)=>String(engine.sceneMap.data()?.id??'').replace(/^map-/,'')
 function nativeControls(engine:RpgClientEngine):any{
-  const controls=(engine as any).activeKeyboardControls?.()
-  return typeof controls?.applyControl==='function'?controls:null
+  const directive=(engine as any).activeKeyboardControls?.()
+  // ControlsDirective.applyControl broadcasts to keyboard + gamepad + joystick;
+  // use only the live keyboard channel to avoid duplicate movement packets.
+  const keyboard=directive?.keyboard
+  return typeof keyboard?.applyControl==='function'?keyboard:null
 }
 function release(state:State){
   const key=state.held,controls=state.controls
