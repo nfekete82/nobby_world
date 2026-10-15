@@ -113,7 +113,7 @@ function buildNavigation(world,map,directory){
   return {cell,cols,rows,blocked:Buffer.from(bits).toString('hex')}
 }
 
-export function compileWorlds(){
+export function compileWorlds({writeOutput=true}={}){
   // Generate derived Tiled images before Vite and validation resolve their TSX paths.
   ensureDarkerGrass()
   preparePathArt()
@@ -136,7 +136,7 @@ export function compileWorlds(){
   for(const w of worlds)for(const o of w.objects)if(o.kind==='portal'&&!worlds.some(t=>t.id===o.target))throw Error(`${w.id}/${o.id}: Zielkarte ${o.target} existiert nicht`)
   const output=path.join(projectRoot,'src/generated/worlds.json'),content=JSON.stringify(worlds,null,2)+'\n'
   fs.mkdirSync(path.dirname(output),{recursive:true})
-  if(!fs.existsSync(output)||fs.readFileSync(output,'utf8')!==content)fs.writeFileSync(output,content)
+  if(writeOutput&&(!fs.existsSync(output)||fs.readFileSync(output,'utf8')!==content))fs.writeFileSync(output,content)
   return worlds
 }
 
