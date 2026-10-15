@@ -3,6 +3,8 @@
   "browser": "Google Chrome / Playwright",
   "checks": [
     "2D map and sprites load",
+    "fullscreen button enters and exits browser fullscreen",
+    "canvas fills 1937×1789 window and resizes to 1920×1080",
     "default menu shows Nobby and initialized HP",
     "save slot writes new storage namespace",
     "keyboard movement reaches NPC",

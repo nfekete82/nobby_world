@@ -1,6 +1,8 @@
 import { provideClientGlobalConfig, provideClientModules, Presets } from "@rpgjs/client";
 import { provideMain } from "../modules/main";
 import { provideTiledMap } from "@rpgjs/tiledmap/client";
+import { display } from "../modules/main/display";
+import "../fullscreen";
 
 export default {
   providers: [
@@ -11,6 +13,7 @@ export default {
     provideMain(),
     provideClientModules([
       {
+        engine: display,
         spritesheets: [
           {
             id: 'hero',

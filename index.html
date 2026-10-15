@@ -12,16 +12,26 @@
     <link rel="stylesheet" href="./node_modules/@rpgjs/ui-css/src/index.css">
     <link rel="stylesheet" href="./node_modules/@rpgjs/ui-css/theme-default/theme.css">
     <style>
-      body, #rpg {
+      html, body, #rpg {
         margin: 0;
         padding: 0;
         height: 100vh;
         width: 100vw;
         overflow: hidden;
       }
+      #rpg { position: fixed; inset: 0; height: 100dvh; }
+      #fullscreen-toggle {
+        position: fixed; top: max(12px, env(safe-area-inset-top));
+        right: max(12px, env(safe-area-inset-right)); z-index: 10000;
+        width: 42px; height: 42px; border: 1px solid #e1c480;
+        border-radius: 8px; background: #12231ee6; color: #f8e8be;
+        font-size: 24px; cursor: pointer;
+      }
+      #fullscreen-toggle:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
     </style>
   </head>
   <body>
     <div id="rpg"></div>
+    <button id="fullscreen-toggle" type="button" aria-label="Vollbild einschalten" title="Vollbild einschalten">⛶</button>
   </body>
 </html>

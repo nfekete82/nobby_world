@@ -27,6 +27,8 @@ single-player build with nginx. No external game server is needed in this mode.
 - Official sample Tiled map and matching Pipoya character/tile assets.
 - Player named Nobby; movement with arrow keys and the engine's default inputs.
 - NPC interaction and the engine's standard menus.
+- The map fills the window with proportional camera zoom and follows Nobby;
+  the top-right button toggles browser fullscreen. Escape also exits fullscreen.
 - New storage namespace `nobby_world_rpgjs_v1`; old game saves are not migrated.
 - Engine packages pinned together at 5.0.0 to avoid the upstream starter's mixed
   5.0/5.1 peer dependency conflict. No `--force` or `--legacy-peer-deps` is required.
