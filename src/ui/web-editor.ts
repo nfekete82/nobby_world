@@ -660,7 +660,9 @@ class MapEditor {
  private async save(){
   if(!this.document)return
   if(!this.dirty){this.status('Keine Änderungen vorhanden');return}
-  this.status('Karte wird sicher gespeichert …')
+  if(this.saving)return
+  this.saving=true
+  this.status('Karte wird geprüft und sicher gespeichert …')
   try{
    const edited=this.xml()
    const reply=await fetch(base+'__nobby-editor/save',{
@@ -670,13 +672,32 @@ class MapEditor {
    const result=await reply.json()
    if(!reply.ok)throw Error(result.error||'Speichern fehlgeschlagen')
    this.source=edited;this.dirty=false;this.history=[]
-   this.status('Gespeichert! Die Vorschau übernimmt die Änderungen.')
+   this.pendingRefresh=Boolean(result.needsRefresh)||this.pendingRefresh
+   this.status('Gespeichert: '+(result.width??this.w/64)+' × '+(result.height??this.h/64)+' Kacheln. Zum Aktualisieren des Spiels Editor schließen.')
   }catch(error){
-   this.status('Speichern nicht möglich: '+String(error)+' · bitte TMX exportieren oder Port 5173 verwenden.')
+   this.status('Speichern fehlgeschlagen – Änderungen im Editor bleiben erhalten: '+String(error))
+  }finally{this.saving=false}
+ }
+ private async refreshAfterClose(){
+  this.status('Karte gespeichert. Spielwelt wird aktualisiert …')
+  try{
+   const reply=await fetch(base+'__nobby-editor/refresh',{
+    method:'POST',headers:{'X-Nobby-Editor':'local-authoring'}
+   })
+   const result=await reply.json()
+   if(!reply.ok)throw Error(result.error||'Neuaufbau fehlgeschlagen')
+   this.pendingRefresh=false
+   window.removeEventListener('keydown',this.globalKey,true)
+   this.root.remove()
+   window.location.reload()
+  }catch(error){
+   this.status('Karte ist gespeichert, aber das Aktualisieren schlug fehl: '+String(error)+' · erneut Schließen klicken.')
   }
  }
  private close(){
+  if(this.saving){this.status('Speichern läuft. Danach erneut schließen.');return}
   if(this.dirty&&!window.confirm('Ungespeicherte Kartenänderungen verwerfen?'))return
+  if(this.pendingRefresh){void this.refreshAfterClose();return}
   window.removeEventListener('keydown',this.globalKey,true)
   this.root.remove()
  }
