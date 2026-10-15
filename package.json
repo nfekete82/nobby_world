@@ -28,7 +28,9 @@
     "test:web-editor": "node scripts/web-editor-review.cjs",
     "test:sheep": "node scripts/sheep-review.cjs",
     "test:expansion": "node scripts/expansion-review.cjs",
-    "test:aggro": "node scripts/nearest-hostile-review.cjs"
+    "test:aggro": "node scripts/nearest-hostile-review.cjs",
+    "art:style:check": "node scripts/preflight-art.mjs && node scripts/check-art-direction.mjs",
+    "art:references": "node scripts/art-reference-sheet.mjs"
   },
   "keywords": [],
   "author": "",
