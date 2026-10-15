@@ -5,7 +5,7 @@ import {PNG} from 'pngjs'
 
 // Original 9x6 Tiny Swords grass tile shapes; separate palette, shared alpha.
 export const BIOME_PALETTES={
- desert:[211,174,110],
+ desert:[131,164,101],
  rocky:[131,139,133],
  snow:[209,224,230]
 }
@@ -17,15 +17,15 @@ export function recolorBiomePixels(source,color){
   const r=source.data[i],g=source.data[i+1],b=source.data[i+2],a=source.data[i+3]
   if(!a){out.data.set(source.data.subarray(i,i+4),i);continue}
   const luminance=.2126*r+.7152*g+.0722*b
-  // Preserve the original Tiny Swords boundary shapes but make sand feel
-  // like warm dunes instead of simply painting grass beige.
+  // Preserve Tiny Swords boundary shapes, but recolor the formerly sandy
+  // ground into muted green woodland meadow; no vector-looking land patches.
   const offset=Math.max(-92,Math.min(68,(luminance-119)*.84))
   const detail=(g-r)*.065
   const x=(i/4)%source.width|0,y=Math.floor(i/4/source.width)
   const hash=(Math.imul(x+19,92821)^Math.imul(y+71,68917))>>>0
-  const sand=color===BIOME_PALETTES.desert
-  const ripple=sand&&((y%64===18||y%64===19||y%64===43)&&x%64>9&&x%64<51)?-13:0
-  const grit=sand?(hash%131===0?-24:hash%67===0?13:0):0
+  const meadow=color===BIOME_PALETTES.desert
+  const ripple=0 // Dune lines look out of place once the land is green
+  const grit=meadow?(hash%131===0?-9:hash%67===0?7:0):0
   const texture=ripple+grit
   out.data[i]=clamp(color[0]+offset+detail+texture)
   out.data[i+1]=clamp(color[1]+offset+detail+texture*.87)
@@ -62,7 +62,7 @@ export function tintBiomePath(src,kind){
   const dark=Math.max(-72,Math.min(46,(brightness-135)*.52))
   const x=(i/4)%192|0,y=Math.floor(i/4/192)
   const noise=((x*37+y*127+x*y*7)>>>0)%31===0?-13:0
-  const c=kind==='desert'?[177,128,67]:[170,179,184]
+  const c=kind==='desert'?[126,153,94]:[170,179,184]
   for(let k=0;k<3;k++)out.data[i+k]=clamp(c[k]+dark+noise)
  }
  return out
