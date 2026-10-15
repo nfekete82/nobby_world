@@ -28,7 +28,8 @@ Neubau. Das Spiel benötigt im Einzelspielermodus keinen externen Server.
 
 | Eingabe | Aktion |
 | --- | --- |
-| Pfeiltasten | Bewegen |
+| Pfeiltasten | Bewegen; automatischen Lauf unterbrechen |
+| Linksklick auf die Karte | Sicher zum angeklickten Ziel laufen (A*-Wegfindung) |
 | Leertaste | Nahkampf / NPC ansprechen / Portal benutzen |
 | H oder Heilen-Button | 25 % Leben heilen, kostet 25 Mana |
 | Esc oder Menü-Button | Status, Inventar, Fähigkeiten, Ausrüstung, Optionen, Speichern |
@@ -61,7 +62,7 @@ registriert. Alternativ: `npm run world:new -- meine-welt`.
 - `public/tiny-swords/`: tatsächlich verwendete PNGs und kleine Compiler-Eingaben.
 - `src/tiled/`: editierbare TMX/TSX-Karten und zugehörige Terrain-PNGs.
 - `src/ui/`: Pack-basierte Papier-/Holzrahmen und HUD mit echten Engine-Werten.
-- `scripts/world-data.mjs`: validiert Karten/Asset-Referenzen und kompiliert Events.
+- `scripts/world-data.mjs`: validiert Karten/Assets und kompiliert Events sowie eine Hinderniskarte für Linksklick-Bewegung.
 - `art/`: unveränderte ImageGen-Ausgaben, Produktionsbriefs, Pack-Digests und
   erhaltene Gameplay-Daten der Migration.
 

@@ -19,6 +19,7 @@
  --rpg-ui-panel-shadow:0 6px 0 #29354455;--rpg-ui-shadow-lg:0 6px 0 #29354455;
  --rpg-ui-control-tracking:.03em;--rpg-ui-shadow-glow:none;
 }
+canvas{cursor:crosshair}
 canvas,img,.nobby-portrait,#nobby-hud *,.rpg-ui-main-menu-layout,.rpg-ui-dialog,.rpg-ui-save-load,.rpg-shop-container,.rpg-shop-modal-card{image-rendering:pixelated}
 :is(.rpg-ui-main-menu-layout,.rpg-ui-dialog,.rpg-ui-save-load,.rpg-shop-container,.rpg-shop-modal-card){
  border:24px solid transparent;border-image:var(--nobby-paper-frame) 64 fill / 24px / 0 stretch;

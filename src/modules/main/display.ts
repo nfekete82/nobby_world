@@ -1,5 +1,6 @@
 import type { RpgClientEngine, RpgClientEngineHooks } from '@rpgjs/client'
 import { updateHud } from '../../ui/hud'
+import { updateClickMove } from '../../navigation/click-move'
 
 // RPG-JS 5.0 keeps its Pixi stage private. Isolate that version-specific access
 // here; the map and GUI continue to use the engine's own renderer and camera.
@@ -16,6 +17,7 @@ let lastMap: unknown, lastWidth = 0, lastHeight = 0, viewport: any
 export const display: RpgClientEngineHooks = {
     onStep(engine: RpgClientEngine) {
         updateHud(engine)
+        updateClickMove(engine)
         const map = engine.sceneMap.data()
         const screen = engine.renderer?.screen
         if (!map || !screen?.width || !screen.height) return
