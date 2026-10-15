@@ -26,6 +26,22 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
   await page.waitForFunction(()=>window.__spellReview?.engine?.getCurrentPlayer()&&
    !document.querySelector('#nobby-hud')?.hidden,{},{timeout:20000});
   const world=worlds.find(w=>w.id==='simplemap'),nav=unpackNavigation(world.navigation);
+  // The HUD becomes visible before RPG-JS has received its authoritative
+  // spawn (x/y are initially zero). A premature search starts at (0,0),
+  // outside navigable terrain, and wrongly reports "no clean shot".
+  await page.waitForFunction(start=>{
+   const e=window.__spellReview?.engine,p=e?.getCurrentPlayer();
+   return e?.sceneMap.data()?.id==='simplemap'&&p?.hpSignal?.()>0&&
+    Number.isFinite(p?.x?.())&&Number.isFinite(p?.y?.())&&
+    Math.hypot(p.x()-start.x,p.y()-start.y)<48;
+  },world.start,{timeout:15000}).catch(async()=>{
+    const value=await page.evaluate(()=>{
+     const e=window.__spellReview?.engine,p=e?.getCurrentPlayer();
+     return {mapId:e?.sceneMap.data()?.id,
+      player:p?{x:p.x(),y:p.y(),hp:p.hpSignal?.(),sp:p.spSignal?.()}:null};
+    });
+    throw new Error('Player map spawn not ready: '+JSON.stringify(value));
+  });
   const foe=world.objects.find(o=>o.kind==='monster');
   assert.ok(foe,'no authored enemy available');
   await page.evaluate(()=>{
@@ -55,7 +71,9 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
     candidateSites.push(candidate);
    }
   }
-  assert.ok(candidateSites.length,'no clean shot near the player start');
+  assert.ok(candidateSites.length,'no clean shot near the fully spawned player: '+
+    JSON.stringify({origin,worldStart:world.start,
+      originBlocked:isBlocked(nav,Math.round(origin.x/16),Math.round(origin.y/16))}));
 
   await page.waitForFunction(targetId=>{
    const p=Object.values(window.__spellReview.server.subRoom.players())[0];
