@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import { randomUUID } from 'node:crypto'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import xml from 'xml-js'
@@ -82,7 +83,7 @@ export function editorWrite({id,original,updated},rootDir=root,{compile=()=>comp
  try{
   const backup=path.join(rootDir,'art','map-backups')
   fs.mkdirSync(backup,{recursive:true})
-  const stamp=new Date().toISOString().replace(/[:.]/g,'-')
+  const stamp=new Date().toISOString().replace(/[:.]/g,'-')+'-'+randomUUID()
   fs.writeFileSync(path.join(backup,'web-editor-'+id+'-'+stamp+'.tmx'),current)
   rememberSave(filename)
   fs.writeFileSync(temp,updated,'utf8')
