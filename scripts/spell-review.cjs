@@ -10,7 +10,10 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
  const stop=await ensureDevServer();
  let browser;
  try{
-  browser=await chromium.launch({channel:'chrome',headless:true,args:['--enable-unsafe-swiftshader']});
+  browser=await chromium.launch({
+   ...(process.env.CI?{}:{channel:'chrome'}),
+   headless:true,args:['--enable-unsafe-swiftshader']
+  });
   const page=await browser.newPage({viewport:{width:1280,height:800}});
   const errors=[];
   page.on('pageerror',e=>errors.push(e.message));
