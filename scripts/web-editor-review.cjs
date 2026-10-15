@@ -15,9 +15,19 @@ const ensureDevServer=require('./ensure-dev-server.cjs')
   page.on('dialog',d=>void d.accept())
   await page.goto('http://127.0.0.1:5173/')
   await page.waitForSelector('#nobby-hud:not([hidden])',{timeout:20000})
-  await page.keyboard.press('Escape',{delay:120})
-  const launch=page.getByRole('button',{name:'🗺 Karteneditor'})
-  await launch.waitFor({timeout:6000})
+  // Give the standalone game focus before dispatching the same Escape
+  // action a player uses. Some headless Chrome runs begin without canvas focus.
+  await page.locator('#rpg canvas').first().click({position:{x:20,y:20}})
+  await page.keyboard.press('Escape',{delay:160})
+  const menu=page.locator('.rpg-ui-main-menu-layout')
+  if(!(await menu.isVisible())){
+   // The HUD menu button dispatches the identical RPG-JS action; using this
+   // fallback avoids flakes caused by an unfocused headless browser window.
+   await page.locator('#nobby-hud button[data-action="escape"]').click()
+  }
+  await menu.waitFor({state:'visible',timeout:12000})
+  const launch=page.locator('.rpg-ui-main-menu-layout button.we-launch')
+  await launch.waitFor({state:'visible',timeout:12000})
   await launch.click()
   const editor=page.getByRole('dialog',{name:'Nobby World Karteneditor'})
   await editor.waitFor()
