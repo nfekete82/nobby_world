@@ -1,5 +1,6 @@
 import art from '../art/registry.json'
 import './web-editor.css'
+import {expandLayerGrid,expansionFill,validateMapExpansion} from './map-resize.mjs'
 
 type Sheet={first:number,count:number,cols:number,img:HTMLImageElement,source:string,title:string}
 type PaintLayer={node:Element,name:string,gids:number[]}
@@ -72,6 +73,13 @@ class MapEditor {
  private dirty=false
  private spriteCache=new Map<string,HTMLImageElement>()
  private picker=elt<HTMLSelectElement>('select')
+ private objectArea=elt<HTMLElement>('section','we-object-area')
+ private gallery=elt<HTMLElement>('div','we-object-gallery')
+ private objectSearch=elt<HTMLInputElement>('input','we-search')
+ private resizePanel=elt<HTMLElement>('section','we-resize-panel')
+ private resizeWidth=elt<HTMLInputElement>('input')
+ private resizeHeight=elt<HTMLInputElement>('input')
+ private zoomText=elt<HTMLElement>('span','we-zoom-status','100 %')
  private layerPicker=elt<HTMLSelectElement>('select')
  private paletteTabs=elt<HTMLElement>('div','we-tabs')
  private viewport=elt<HTMLElement>('div','we-viewport')
@@ -92,13 +100,36 @@ class MapEditor {
    const el=button(label,()=>this.setTool(id));el.dataset.tool=id;toolbar.append(el)
   }
   this.layerPicker.addEventListener('change',()=>{this.layerIndex=Number(this.layerPicker.value);this.redraw()})
-  toolbar.append(field('Ebene',this.layerPicker))
+  toolbar.append(field('Ebene',this.layerPicker),
+   button('−',()=>this.zoomAt(.8),'we-zoom-button'),
+   this.zoomText,button('+',()=>this.zoomAt(1.25),'we-zoom-button'),
+   button('⤢ Einpassen',()=>this.fitMap()),
+   button('▣ Karte erweitern',()=>this.toggleMapSize(),'we-resize-toggle'))
   const pane=elt('main','we-body')
   this.stage.append(this.canvas);this.viewport.append(this.stage)
   const sidebar=elt('aside','we-sidebar')
   const toolHelp=elt('p','we-help','Objekte anklicken und ziehen oder eine Kachel aus dem Tileset wählen. Mausrad zoomt, Rechtsklick zieht die Ansicht.')
-  this.picker.addEventListener('change',()=>{this.chosenAsset=this.picker.value})
-  sidebar.append(field('Objekt für Platzieren',this.picker),this.detail,this.paletteTabs,this.palette,toolHelp,this.staticNotice)
+  this.picker.addEventListener('change',()=>{
+   this.chosenAsset=this.picker.value;this.refreshGallerySelection()
+  })
+  this.objectSearch.type='search'
+  this.objectSearch.placeholder='🔍 Objekte suchen …'
+  this.objectSearch.setAttribute('aria-label','Objekte suchen')
+  this.objectSearch.addEventListener('input',()=>this.filterGallery())
+  this.gallery.setAttribute('aria-label','Objektvorschau')
+  this.objectArea.append(field('Objekt für Platzieren',this.picker),
+   field('Objekte mit Bildvorschau',this.objectSearch),this.gallery)
+  this.resizeWidth.type='number';this.resizeHeight.type='number'
+  this.resizeWidth.min='1';this.resizeHeight.min='1'
+  this.resizeWidth.max='128';this.resizeHeight.max='128'
+  this.resizeWidth.step='1';this.resizeHeight.step='1'
+  this.resizePanel.hidden=true
+  this.resizePanel.append(elt('h3','','Kartenfläche erweitern'),
+   elt('p','we-help','Bestehende Insel bleibt erhalten. Zusätzliche Fläche entsteht rechts und unten zunächst als gesperrtes Wasser.'),
+   field('Breite in Kacheln',this.resizeWidth),
+   field('Höhe in Kacheln',this.resizeHeight),
+   button('Fläche erweitern',()=>this.expandMap(),'we-primary'))
+  sidebar.append(this.resizePanel,this.objectArea,this.detail,this.paletteTabs,this.palette,toolHelp,this.staticNotice)
   pane.append(this.viewport,sidebar)
   this.message.setAttribute('role','status')
   const footer=elt('footer','we-footer')
@@ -134,6 +165,7 @@ class MapEditor {
   this.tool=tool
   this.root.querySelectorAll<HTMLButtonElement>('[data-tool]').forEach(b=>b.classList.toggle('we-active',b.dataset.tool===tool))
   this.palette.hidden=tool!=='tile';this.paletteTabs.hidden=tool!=='tile'
+  this.objectArea.hidden=tool!=='select'&&tool!=='object'
   this.detail.hidden=tool!=='select'
   this.redraw()
  }
@@ -151,6 +183,7 @@ class MapEditor {
    this.h=Number(map.getAttribute('height'))*64
    if(!this.w||!this.h||this.w>8192||this.h>8192)throw Error('Kartengröße wird nicht unterstützt')
    this.canvas.width=this.w;this.canvas.height=this.h
+   this.resizeWidth.value=String(this.w/64);this.resizeHeight.value=String(this.h/64)
    const references=Array.from(map.querySelectorAll(':scope > tileset'))
    this.sheet=await Promise.all(references.map(async ref=>{
     const source=ref.getAttribute('source')||''
@@ -165,10 +198,7 @@ class MapEditor {
    this.parseLayers()
    await this.preloadSprites()
    this.buildPalettes()
-   this.zoom=Math.min(1,Math.max(.35,Math.min((this.viewport.clientWidth-30)/this.w,(this.viewport.clientHeight-30)/this.h)))
-   this.offsetX=(this.viewport.clientWidth-this.w*this.zoom)/2
-   this.offsetY=(this.viewport.clientHeight-this.h*this.zoom)/2
-   this.updateStage()
+   this.fitMap()
    this.redraw()
    this.status(this.id+' · '+this.w/64+' × '+this.h/64+' Kacheln · 64 px Raster')
   }catch(error){this.status('Fehler: '+String(error));this.root.querySelectorAll('button').forEach(b=>{if(b.textContent?.includes('Speichern'))b.disabled=true})}
@@ -211,6 +241,131 @@ class MapEditor {
    this.paletteTabs.append(button(sheet.title,()=>this.showSheet(idx)))
   })
   this.showSheet(this.sheet.findIndex(s=>this.chosenGid>=s.first&&this.chosenGid<s.first+s.count))
+  this.buildGallery()
+ }
+
+ private objectEntries(){
+  const props=Object.entries(art.assets)
+   .filter(([_,a])=>a.kind==='prop')
+   .map(([id,a])=>({id,label:id.replaceAll('-',' '),asset:a,group:
+     /tree|bush|rock|sheep/.test(id)?'Natur & Tiere':'Häuser & Gebäude'}))
+  const actors=[
+   {id:'npc:mira',label:'Mira (NPC)',asset:art.assets.female,group:'Figuren & Portale'},
+   {id:'monster:ritter',label:'Ritter (Gegner)',asset:art.assets['enemy-warrior'],group:'Figuren & Portale'},
+   {id:'monster:berserker',label:'Berserker (Gegner)',asset:art.assets['enemy-berserker'],group:'Figuren & Portale'},
+   {id:'portal:map',label:'Kartenportal',asset:art.assets['portal-marker'],group:'Figuren & Portale'}
+  ]
+  return [...props,...actors]
+ }
+ private buildGallery(){
+  this.gallery.replaceChildren()
+  let group=''
+  for(const entry of this.objectEntries()){
+   if(group!==entry.group){
+    group=entry.group
+    this.gallery.append(elt('h4','we-object-group',group))
+   }
+   const b=elt<HTMLButtonElement>('button','we-object-card')
+   b.type='button';b.dataset.asset=entry.id
+   b.title=entry.label+' platzieren'
+   const thumb=elt<HTMLCanvasElement>('canvas','we-object-thumb')
+   thumb.width=92;thumb.height=78
+   b.append(thumb,elt('span','',entry.label))
+   b.addEventListener('click',()=>{
+    this.chosenAsset=entry.id;this.picker.value=entry.id
+    this.refreshGallerySelection();this.setTool('object')
+    this.status(entry.label+' ausgewählt · Mehrfachplatzierung aktiv – zum Beenden »Objekte« wählen.')
+   })
+   this.gallery.append(b)
+   const asset=entry.asset as any
+   const src=asset?.animations?.stand?.image
+   if(!src)continue
+   const draw=(img:HTMLImageElement)=>{
+    if(!img.naturalWidth)return
+    const ctx=thumb.getContext('2d');if(!ctx)return
+    ctx.clearRect(0,0,thumb.width,thumb.height);ctx.imageSmoothingEnabled=false
+    const [fw,fh]=asset.frame
+    const ratio=Math.min(84/fw,72/fh)
+    const dw=fw*ratio,dh=fh*ratio
+    ctx.drawImage(img,0,0,fw,fh,(92-dw)/2,(78-dh)/2,dw,dh)
+   }
+   const cached=this.spriteCache.get(src)
+   if(cached)draw(cached)
+   else void image(pathUrl(src)).then(img=>{
+    this.spriteCache.set(src,img);draw(img)
+    if(img.naturalWidth)this.redraw()
+   })
+  }
+  this.refreshGallerySelection()
+  this.filterGallery()
+ }
+ private refreshGallerySelection(){
+  this.gallery.querySelectorAll<HTMLButtonElement>('[data-asset]').forEach(b=>{
+   const selected=b.dataset.asset===this.chosenAsset
+   b.classList.toggle('we-active',selected)
+   b.setAttribute('aria-pressed',String(selected))
+  })
+ }
+ private filterGallery(){
+  const query=this.objectSearch.value.trim().toLocaleLowerCase('de')
+  let matching=0
+  for(const el of this.gallery.children){
+   if(!(el instanceof HTMLButtonElement))continue
+   el.hidden=!el.textContent?.toLocaleLowerCase('de').includes(query)
+   if(!el.hidden)matching++
+  }
+  for(const header of this.gallery.querySelectorAll<HTMLElement>('.we-object-group')){
+   let following=header.nextElementSibling
+   let visible=false
+   while(following&&!following.classList.contains('we-object-group')){
+    if(!(following as HTMLElement).hidden)visible=true
+    following=following.nextElementSibling
+   }
+   header.hidden=!visible
+  }
+  this.gallery.setAttribute('data-found',String(matching))
+ }
+ private fitMap(){
+  if(!this.w||!this.h)return
+  this.zoom=Math.min(2.5,Math.max(.25,Math.min((this.viewport.clientWidth-24)/this.w,(this.viewport.clientHeight-24)/this.h)))
+  this.offsetX=(this.viewport.clientWidth-this.w*this.zoom)/2
+  this.offsetY=(this.viewport.clientHeight-this.h*this.zoom)/2
+  this.updateStage()
+ }
+ private zoomAt(factor:number){
+  const zoom=Math.max(.25,Math.min(2.5,this.zoom*factor))
+  const x=this.viewport.clientWidth/2,y=this.viewport.clientHeight/2
+  this.offsetX=x-(x-this.offsetX)*zoom/this.zoom
+  this.offsetY=y-(y-this.offsetY)*zoom/this.zoom
+  this.zoom=zoom;this.updateStage()
+ }
+ private toggleMapSize(){
+  this.resizePanel.hidden=!this.resizePanel.hidden
+  if(!this.resizePanel.hidden){
+   this.resizeWidth.value=String(this.w/64)
+   this.resizeHeight.value=String(this.h/64)
+  }
+ }
+ private expandMap(){
+  if(!this.document)return
+  const oldW=this.w/64,oldH=this.h/64
+  const newW=Number(this.resizeWidth.value),newH=Number(this.resizeHeight.value)
+  const error=validateMapExpansion(oldW,oldH,newW,newH)
+  if(error){this.status(error);return}
+  this.saveHistory()
+  for(const layer of this.layer){
+   layer.gids=expandLayerGrid(layer.gids,oldW,oldH,newW,newH,expansionFill(layer.name))
+   layer.node.setAttribute('width',String(newW))
+   layer.node.setAttribute('height',String(newH))
+  }
+  this.document.documentElement.setAttribute('width',String(newW))
+  this.document.documentElement.setAttribute('height',String(newH))
+  this.w=newW*64;this.h=newH*64
+  this.canvas.width=this.w;this.canvas.height=this.h
+  for(const layer of this.layer)this.updateLayerNode(layer)
+  this.resizePanel.hidden=true
+  this.redraw();this.updateStage()
+  this.status('Karte auf '+newW+' × '+newH+' Kacheln erweitert · Neue Fläche ist Wasser. Zum Übernehmen speichern.')
  }
  private showSheet(idx:number){
   const sheet=this.sheet[Math.max(0,idx)]||this.sheet[0];if(!sheet)return
@@ -274,7 +429,10 @@ class MapEditor {
    for(let y=0;y<=this.h;y+=64){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(this.w,y);ctx.stroke()}
   }
  }
- private updateStage(){this.stage.style.transform=`translate(${this.offsetX}px,${this.offsetY}px) scale(${this.zoom})`}
+ private updateStage(){
+  this.stage.style.transform=`translate(${this.offsetX}px,${this.offsetY}px) scale(${this.zoom})`
+  this.zoomText.textContent=Math.round(this.zoom*100)+' %'
+ }
  private wheel(e:WheelEvent){
   e.preventDefault()
   const zoom=Math.max(.25,Math.min(2.5,this.zoom*(e.deltaY<0?1.12:.89)))
@@ -337,7 +495,8 @@ class MapEditor {
   }
   if(kind==='portal')setProp(el,'target',this.id==='wald'?'simplemap':'wald')
   group.append(el)
-  this.selected=el;this.setTool('select');this.updateDetails()
+  // Placement remains active until the user explicitly selects another tool.
+  this.selected=el;this.updateDetails()
   const sprite=definition?.animations?.stand?.image
   if(sprite&&!this.spriteCache.has(sprite))
    void image(pathUrl(sprite)).then(img=>{this.spriteCache.set(sprite,img);this.redraw()})
@@ -427,8 +586,13 @@ class MapEditor {
  private undo(){
   if(!this.history.length){this.status('Nichts rückgängig zu machen');return}
   const previous=this.history.pop()!
-  this.document=readXml(previous);this.selected=null;this.parseLayers();this.updateDetails()
-  this.redraw();this.dirty=true;this.status('Letzten Schritt rückgängig gemacht')
+  this.document=readXml(previous);this.selected=null
+  const map=this.document.documentElement
+  this.w=Number(map.getAttribute('width'))*64;this.h=Number(map.getAttribute('height'))*64
+  this.canvas.width=this.w;this.canvas.height=this.h
+  this.resizeWidth.value=String(this.w/64);this.resizeHeight.value=String(this.h/64)
+  this.parseLayers();this.updateDetails()
+  this.redraw();this.updateStage();this.dirty=true;this.status('Letzten Schritt rückgängig gemacht')
  }
  private xml(){return '<?xml version="1.0" encoding="UTF-8"?>\n'+new XMLSerializer().serializeToString(this.document.documentElement)+'\n'}
  private export(){
