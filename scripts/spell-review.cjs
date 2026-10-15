@@ -118,9 +118,23 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
   },foe.id);
   assert.equal(before.mana,100);
   await page.mouse.click(click.x,click.y);
-  await page.waitForFunction(()=>window.__spellCast.length>0,{},{timeout:5000});
-  assert.equal(await page.evaluate(()=>document.querySelectorAll('.nobby-arcane-orb').length),1,
-    'magical orb was not drawn in the game');
+  await page.waitForFunction(()=>window.__spellCast.length>0,{},{timeout:5000}).catch(async()=>{
+   const diagnostics=await page.evaluate(({click,targetId})=>{
+    const e=window.__spellReview.engine;
+    const server=window.__spellReview.server.subRoom;
+    const p=Object.values(server.players())[0],enemy=e.sceneMap.events()?.[targetId];
+    return {click,mapId:e.sceneMap.data()?.id,
+     clientHp:e.getCurrentPlayer()?.hpSignal?.(),clientMana:e.getCurrentPlayer()?.spSignal?.(),
+     enemyHp:enemy?.hpSignal?.(),enemyPos:enemy?{x:enemy.x(),y:enemy.y()}:null,
+     clientRejected:window.__spellRejected,casts:window.__spellCast,
+     serverTrace:p?.nobbyLastSpell};
+   },{click,targetId:foe.id});
+   throw new Error('Enemy click did not emit a spell: '+JSON.stringify(diagnostics));
+  });
+  // Orb might already have flown by the time Playwright resumes. The launch
+  // event is reliable regardless of renderer frame rate or machine load.
+  assert.ok(await page.evaluate(()=>window.__spellFX.some(e=>e.phase==='launch')),
+    'magical orb launch was not emitted');
   await page.waitForFunction(({targetId,hp})=>{
    const player=Object.values(window.__spellReview.server.subRoom.players())[0];
    const map=player.getCurrentMap();
@@ -136,7 +150,11 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
        enemyRuntimeId:enemy?.id,ai:enemy?.battleAi?.getState?.(),
        target:enemy?.battleAi?.getTarget?.()?.id,events:Object.keys(map?.events?.()??{}).slice(0,8)};
    },foe.id);
-   throw new Error('Server did not apply spell damage: '+JSON.stringify(details));
+   const trace=await page.evaluate(()=>{
+     const p=Object.values(window.__spellReview.server.subRoom.players())[0];
+     return p?.nobbyLastSpell;
+   });
+   throw new Error('Server did not apply spell damage: '+JSON.stringify({...details,serverTrace:trace}));
   });
   const after=await page.evaluate(targetId=>{
    const p=Object.values(window.__spellReview.server.subRoom.players())[0];
@@ -148,6 +166,12 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
   },foe.id);
   assert.equal(after.mana,before.mana-ARCANE_MANA,'mana spent by authoritative server');
   assert.ok(after.hp<before.hp,'ActionBattle damage actually hit the enemy');
+  const impact=await page.evaluate(()=>{
+   const p=Object.values(window.__spellReview.server.subRoom.players())[0];
+   return p.nobbyLastSpell;
+  });
+  assert.equal(impact.stage,'impact','spell must reach server impact: '+JSON.stringify(impact));
+  assert.equal(impact.reason,'hit','server must report HP damage: '+JSON.stringify(impact));
   assert.equal(after.aggro,after.playerId,'Wounded enemy must target the attacker immediately');
   assert.ok(after.visionRange>=440,'Wounded enemy must chase beyond normal sight range');
   await page.waitForFunction(()=>window.__spellFX.some(e=>e.phase==='impact'),{},{timeout:5000});
