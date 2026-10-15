@@ -3,6 +3,7 @@ import worlds from '../generated/worlds.json'
 import art from '../art/registry.json'
 
 let root: HTMLElement, hp: HTMLElement, mana: HTMLElement, title: HTMLElement, region: HTMLElement, gold: HTMLElement
+let healButton: HTMLButtonElement
 let lastUpdate=0
 function mount(engine: RpgClientEngine){
  root=document.createElement('aside');root.id='nobby-hud';root.setAttribute('aria-label','Nobbys Status')
@@ -12,6 +13,7 @@ function mount(engine: RpgClientEngine){
  portrait.style.backgroundImage=`url("${import.meta.env.BASE_URL}${hero.animations.stand.image}")`
  portrait.style.backgroundSize=`${hero.frame[0]*hero.animations.stand.frames}px ${hero.frame[1]}px`
  portrait.style.backgroundPosition=`${32-hero.foot[0]}px ${78-hero.foot[1]}px`
+ healButton=root.querySelector<HTMLButtonElement>('button[data-action="heal"]')!
  hp=root.querySelector('.hp')!;mana=root.querySelector('.mana')!;title=root.querySelector('.nobby-name')!;region=root.querySelector('.nobby-region strong')!;gold=root.querySelector('.nobby-region span')!
  root.querySelectorAll<HTMLButtonElement>('button[data-action]').forEach(b=>b.addEventListener('click',()=>{engine.processAction(b.dataset.action!);b.blur()}))
 }
@@ -30,7 +32,9 @@ export function updateHud(engine:RpgClientEngine){
  if(!player)return
  title.textContent=`Nobby · Stufe ${player._level()}`
  const params=player._param()
- meter(hp,player.hpSignal(),params.maxHp||1,'LEBEN');meter(mana,player.spSignal(),params.maxSp||1,'MANA')
+ const currentHp=player.hpSignal(), currentMana=player.spSignal(), maximumHp=params.maxHp||1
+ meter(hp,currentHp,maximumHp,'LEBEN');meter(mana,currentMana,params.maxSp||1,'MANA')
+ healButton.disabled=!(currentHp>0&&currentHp<maximumHp&&currentMana>=25)
  const id=String(engine.sceneMap.data()?.id??'').replace(/^map-/,'')
  region.textContent=worlds.find(w=>w.id===id)?.title??'Nobby World';gold.textContent=`${player._gold()} Gold`
 }

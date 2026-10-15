@@ -14,7 +14,7 @@ export const player: RpgPlayerHooks = {
         if (action == 'escape') {
             player.callMainMenu()
         }
-        if(action==='heal'&&player.sp>=25&&player.hp>0){
+        if(action==='heal'&&player.sp>=25&&player.hp>0&&player.hp<player.param[MAXHP]){
             const now=Date.now(),p=player as any
             if((p.nobbyHealUntil??0)>now)return
             p.nobbyHealUntil=now+1200;player.sp-=25

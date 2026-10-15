@@ -1,4 +1,5 @@
 import '../art/pixel-rendering';
+import '../ui/theme-assets';
 import { spritesheets } from '../art/sprites';
 import { provideClientGlobalConfig, provideClientModules } from "@rpgjs/client";
 import { provideMain } from "../modules/main";

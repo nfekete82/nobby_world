@@ -34,7 +34,8 @@ Neubau. Das Spiel benötigt im Einzelspielermodus keinen externen Server.
 | Esc oder Menü-Button | Status, Inventar, Fähigkeiten, Ausrüstung, Optionen, Speichern |
 | Button rechts oben | Browser-Vollbild |
 
-Die Ansicht füllt das Fenster. Kamera-Zoom ist ganzzahlig, sämtliche Texturen
+Die Ansicht füllt das Fenster. Papier- und Holzrahmen laden auch unter einem konfigurierten Vite-Unterpfad.
+Der Heil-Button wird bei voller Gesundheit oder zu wenig Mana deaktiviert. Kamera-Zoom ist ganzzahlig, sämtliche Texturen
 werden mit Nearest Neighbor dargestellt. Alle Originalassets behalten ihre
 Pixelgröße; transparente Ränder werden über zentrale Fußpunkte ausgeglichen.
 
