@@ -4,7 +4,7 @@ import { findRoute, unpackNavigation } from './pathfinding.mjs'
 
 type Point={x:number,y:number}
 type Nav=ReturnType<typeof unpackNavigation>
-type State={mapId:string,path:Point[],lastInput:number,lastProgress:number,previous:Point|null}
+type State={mapId:string,path:Point[],lastInput:number,lastProgress:number,previous:Point|null,raf:number|null}
 const instances=new WeakMap<RpgClientEngine,State>()
 const cache=new Map<string,Nav>()
 
@@ -62,6 +62,7 @@ function init(engine:RpgClientEngine,state:State):void{
     state.lastInput=0
     state.lastProgress=performance.now()
     state.previous=position(player)
+    if(route.length)startRoute(engine,state)
     diagnose(route.length?'route-accepted':'route-empty',{mapId,waypoints:route.length})
     window.dispatchEvent(new CustomEvent('nobby:move-target',{
       detail:{mapId,target,waypoints:route.length}
@@ -72,36 +73,58 @@ function init(engine:RpgClientEngine,state:State):void{
       state.path=[]
   },{capture:true})
 }
-/** Use the same predicted, server-authoritative movement packets as the keyboard. */
-export function updateClickMove(engine:RpgClientEngine){
-  let state=instances.get(engine)
-  if(!state){
-    state={mapId:'',path:[],lastInput:0,lastProgress:0,previous:null}
-    init(engine,state)
-    instances.set(engine,state)
+/**
+ * Mouse navigation has its own animation-frame clock: engine onStep may run
+ * slower than keyboard sampling. Feeding discrete impulses only on onStep
+ * caused the renderer to alternate between walk and stand.
+ */
+function startRoute(engine:RpgClientEngine,state:State){
+  if(state.raf!==null)return
+  const step=()=>{
+    state.raf=null
+    if(driveRoute(engine,state))
+      state.raf=requestAnimationFrame(step)
   }
+  state.raf=requestAnimationFrame(step)
+}
+
+function driveRoute(engine:RpgClientEngine,state:State):boolean{
+  if(!state.path.length)return false
   const mapId=String(engine.sceneMap.data()?.id??'').replace(/^map-/,'')
-  if(mapId!==state.mapId){state.path=[];state.mapId=mapId}
-  if(!state.path.length)return
+  if(mapId!==state.mapId){state.path=[];return false}
   const player=engine.getCurrentPlayer() as any
   const hud=document.querySelector('#nobby-hud') as HTMLElement|null
   const canMove=typeof player?.canMove==='function'?player.canMove():player?.canMove
-  if(!player||hud?.hidden||canMove===false||(typeof player.knockbackActive==='function'&&player.knockbackActive())){
-    state.path=[];return
+  if(!player||hud?.hidden||canMove===false||player.knockbackActive?.()){
+    state.path=[];return false
   }
   const at=position(player),now=performance.now()
   if(!state.previous||Math.hypot(at.x-state.previous.x,at.y-state.previous.y)>4){
     state.previous=at;state.lastProgress=now
   }else if(now-state.lastProgress>1100){
-    state.path=[];return // dynamic obstacles / combat interruption
+    state.path=[];return false // Dynamic obstacle or blocked movement
   }
   while(state.path.length&&Math.abs(at.x-state.path[0].x)<=9&&Math.abs(at.y-state.path[0].y)<=9)
     state.path.shift()
-  // The keyboard produces movement input every simulation tick. Match its cadence
-  // to keep walk animation continuous; 65ms pulses caused stand/walk flicker.
-  if(!state.path.length||now-state.lastInput<16)return
-  const next=state.path[0],dx=next.x-at.x,dy=next.y-at.y
-  const direction=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up')
-  state.lastInput=now
-  void engine.processInput({input:{type:'move',direction} as any})
+  if(!state.path.length)return false
+  // At 60Hz this samples movement each animation frame, just like WASD.
+  if(now-state.lastInput>=14){
+    const next=state.path[0],dx=next.x-at.x,dy=next.y-at.y
+    const direction=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up')
+    state.lastInput=now
+    void engine.processInput({input:{type:'move',direction} as any})
+  }
+  return true
+}
+
+/** Hook solely maintains scene lifecycle; a click starts the movement clock. */
+export function updateClickMove(engine:RpgClientEngine){
+  let state=instances.get(engine)
+  if(!state){
+    state={mapId:'',path:[],lastInput:0,lastProgress:0,previous:null,raf:null}
+    init(engine,state)
+    instances.set(engine,state)
+  }
+  const mapId=String(engine.sceneMap.data()?.id??'').replace(/^map-/,'')
+  if(mapId!==state.mapId){state.path=[];state.mapId=mapId}
 }
