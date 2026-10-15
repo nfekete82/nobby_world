@@ -127,26 +127,27 @@ for(const [name,file]of [['grass','Terrain/Tileset/Tilemap_color1.png'],['forest
 const assets={}
 function actor(id,states,foot=[96,132],hitbox=[32,24]){assets[id]={kind:'actor',frame:[192,192],foot,hitbox,directional:true,animations:states}}
 const anim=(image,frames,fps)=>({image:'tiny-swords/'+image,frames,fps})
-actor('hero',{stand:anim('custom/nobby-idle.png',6,7),walk:anim('custom/nobby-run.png',4,10),attack:anim('custom/nobby-attack.png',11,28),heal:anim('custom/nobby-cast.png',11,16)})
-actor('female',{stand:anim('custom/mira-idle.png',6,7),walk:anim('custom/mira-idle.png',6,7)})
-for(const [id,color]of [['enemy-warrior','Red'],['enemy-berserker','Black']])actor(id,{stand:anim(`Units/${color} Units/Warrior/Warrior_Idle.png`,8,8),walk:anim(`Units/${color} Units/Warrior/Warrior_Run.png`,6,12),attack:anim(`Units/${color} Units/Warrior/Warrior_Attack1.png`,4,14)})
+// Calm ambient poses; movement, attacks and spells stay responsive.
+actor('hero',{stand:anim('custom/nobby-idle.png',6,2),walk:anim('custom/nobby-run.png',4,10),attack:anim('custom/nobby-attack.png',11,28),heal:anim('custom/nobby-cast.png',11,16)})
+actor('female',{stand:anim('custom/mira-idle.png',6,2),walk:anim('custom/mira-idle.png',6,5)})
+for(const [id,color]of [['enemy-warrior','Red'],['enemy-berserker','Black']])actor(id,{stand:anim(`Units/${color} Units/Warrior/Warrior_Idle.png`,8,5),walk:anim(`Units/${color} Units/Warrior/Warrior_Run.png`,6,12),attack:anim(`Units/${color} Units/Warrior/Warrior_Attack1.png`,4,14)})
 function prop(id,file,frame,frames,foot,hitbox,solid=true,fps=6){assets[id]={kind:'prop',frame,foot,hitbox,solid,directional:false,animations:{stand:anim(file,frames,fps),walk:anim(file,frames,fps)}}}
-prop('tree-oak','Terrain/Resources/Wood/Trees/Tree1.png',[192,256],8,[96,234],[40,24])
-prop('tree-birch','Terrain/Resources/Wood/Trees/Tree2.png',[192,256],8,[96,234],[40,24])
-prop('tree-small','Terrain/Resources/Wood/Trees/Tree3.png',[192,192],8,[96,164],[32,20])
-prop('bush','Terrain/Decorations/Bushes/Bushe1.png',[128,128],8,[64,99],[40,20],false)
+prop('tree-oak','Terrain/Resources/Wood/Trees/Tree1.png',[192,256],8,[96,234],[40,24],true,3)
+prop('tree-birch','Terrain/Resources/Wood/Trees/Tree2.png',[192,256],8,[96,234],[40,24],true,3)
+prop('tree-small','Terrain/Resources/Wood/Trees/Tree3.png',[192,192],8,[96,164],[32,20],true,3)
+prop('bush','Terrain/Decorations/Bushes/Bushe1.png',[128,128],8,[64,99],[40,20],false,3)
 prop('rock','Terrain/Decorations/Rocks/Rock1.png',[64,64],1,[32,55],[36,22])
 prop('ore','Terrain/Resources/Gold/Gold Stones/Gold Stone 1.png',[128,128],1,[64,102],[54,30])
-prop('sheep','Terrain/Resources/Meat/Sheep/Sheep_Idle.png',[128,128],6,[64,96],[32,20],false,8)
+prop('sheep','Terrain/Resources/Meat/Sheep/Sheep_Idle.png',[128,128],6,[64,96],[32,20],false,5)
 for(const [id,file,frame,foot,hitbox]of [
  ['house','House1.png',[128,192],[64,170],[88,44]],['house-large','House2.png',[128,192],[64,170],[92,46]],
  ['barracks','Barracks.png',[192,256],[96,226],[140,64]],['monastery','Monastery.png',[192,320],[96,288],[130,62]],
  ['tower','Tower.png',[128,256],[64,230],[76,42]],['castle','Castle.png',[320,256],[160,224],[240,66]]
 ])prop(id,'Buildings/Blue Buildings/'+file,frame,1,foot,hitbox)
 prop('portal-stone','Terrain/Decorations/Rocks/Rock2.png',[64,64],1,[32,55],[28,24],false)
-prop('portal-marker','Units/Blue Units/Monk/Heal_Effect.png',[192,192],11,[96,132],[28,24],false,12)
-prop('foam','Terrain/Tileset/Water Foam.png',[192,192],16,[96,96],[1,1],false,8)
-prop('water-rock','Terrain/Decorations/Rocks in the Water/Water Rocks_01.png',[64,64],16,[32,52],[1,1],false,8)
+prop('portal-marker','Units/Blue Units/Monk/Heal_Effect.png',[192,192],11,[96,132],[28,24],false,9)
+prop('foam','Terrain/Tileset/Water Foam.png',[192,192],16,[96,96],[1,1],false,6)
+prop('water-rock','Terrain/Decorations/Rocks in the Water/Water Rocks_01.png',[64,64],16,[32,52],[1,1],false,6)
 for(const asset of Object.values(assets))for(const state of Object.values(asset.animations)){
  const p=read('public/'+state.image),[fw,fh]=asset.frame
  if(p.width!==fw*state.frames||p.height!==fh)throw Error(`${state.image}: expected ${fw*state.frames}×${fh}, got ${p.width}×${p.height}`)

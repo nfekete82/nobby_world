@@ -92,3 +92,25 @@ test('generated click navigation matches both Tiled maps and allows each start',
   assert.ok(bytes.some(b=>b!==0),w.id+' has no blocked cells')
  }
 })
+
+test('idle and ambient animation cadence is calm without slowing responsive combat',()=>{
+ const expected={
+  hero:{stand:2,walk:10,attack:28,heal:16},
+  female:{stand:2,walk:5},
+  'enemy-warrior':{stand:5,walk:12,attack:14},
+  'enemy-berserker':{stand:5,walk:12,attack:14},
+  'tree-oak':{stand:3},'tree-birch':{stand:3},'tree-small':{stand:3},bush:{stand:3},
+  sheep:{stand:5},foam:{stand:6},'water-rock':{stand:6},'portal-marker':{stand:9}
+ }
+ for(const [id,animations] of Object.entries(expected)){
+  for(const [name,fps] of Object.entries(animations))
+   assert.equal(art.assets[id].animations[name].fps,fps,id+'/'+name+' should use the intended FPS')
+ }
+ const runtime=fs.readFileSync('src/art/sprites.ts','utf8')
+ assert.ok(runtime.includes('time:index*60/state.fps'))
+ assert.ok(runtime.includes('time:frames.length*60/state.fps'))
+ assert.ok(!runtime.includes("stableIdle&&name==='stand'?4:state.fps"))
+ const compiler=fs.readFileSync('scripts/compile-art.mjs','utf8')
+ assert.ok(compiler.includes("nobby-idle.png',6,2"))
+ assert.ok(compiler.includes("Tree1.png',[192,256],8,[96,234],[40,24],true,3"))
+})

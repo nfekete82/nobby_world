@@ -16,9 +16,9 @@ export function spritesheets(){
             image:state.image,framesWidth:state.frames,framesHeight:1,
             animations:({direction}: {direction:string})=>[
                 [...frames.map((frameX,index)=>({
-                    time:index*60/(stableIdle&&name==='stand'?4:state.fps),frameX,frameY:0,
+                    time:index*60/state.fps,frameX,frameY:0,
                     scale:asset.directional&&direction==='left'?[-1,1]:[1,1]
-                })),{time:frames.length*60/(stableIdle&&name==='stand'?4:state.fps)}]
+                })),{time:frames.length*60/state.fps}]
             ]
           }]
         }))

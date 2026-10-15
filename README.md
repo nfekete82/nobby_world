@@ -124,3 +124,12 @@ werden nach einer zur Flugdistanz passenden Verzögerung abgewickelt.
 Klicks auf den Boden und die vorhandenen WASD-/Diagonaltasten funktionieren weiter.
 Der leuchtende Projektil-Effekt wird bislang clientseitig für den Zaubernden
 angezeigt; eine synchrone Anzeige für alle Spieler ist ein späterer Multiplayer-Schritt.
+
+### Ruhige Animationen (FPS)
+
+Das Sprite-Timing liegt in `src/art/registry.json` unter `assets.*.animations.*.fps`.
+Aktuell: Nobby idle **2 FPS** (zwei ruhige Posen), Mira idle **2 FPS**,
+Gegner idle **5 FPS**, Bäume/Büsche **3 FPS**, Schafe **5 FPS**, Wasser
+**6 FPS**, Portal **9 FPS**. Laufen, Angriff und Zaubern sind unverändert
+schnell. Die gleichen Werte sind in `scripts/compile-art.mjs` gesetzt,
+damit `npm run art:prepare` sie nicht zurücksetzt.
