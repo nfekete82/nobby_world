@@ -21,7 +21,8 @@
     "art:prepare": "node scripts/compile-art.mjs",
     "test:art": "node scripts/art-review.cjs",
     "art:check": "node scripts/preflight-art.mjs",
-    "test:click": "node scripts/click-move-review.cjs"
+    "test:click": "node scripts/click-move-review.cjs",
+    "test:spell": "node scripts/spell-review.cjs"
   },
   "keywords": [],
   "author": "",
