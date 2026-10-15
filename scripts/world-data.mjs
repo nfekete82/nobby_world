@@ -68,11 +68,55 @@ export function readWorld(file){
   return world
 }
 
+
+/** Navigation is derived from Tiled collisions and solid prop footprints.
+ * The 16px grid represents the top-left corner of the 32x24 actor hitbox. */
+function buildNavigation(world,map,directory){
+  const cell=16,tile=art.tileSize,[pw,ph]=art.actorHitbox
+  const cols=Math.ceil(world.width/cell),rows=Math.ceil(world.height/cell)
+  if(cols*rows>100000)throw Error(`${world.id}: navigation grid exceeds 100,000 cells`)
+  const bits=new Uint8Array(Math.ceil(cols*rows/8))
+  const block=(cx,cy)=>{const i=cy*cols+cx;bits[i>>3]|=1<<(i&7)}
+  const markRect=(x,y,w,h)=>{
+    const left=Math.max(0,Math.floor((x-pw)/cell)+1)
+    const top=Math.max(0,Math.floor((y-ph)/cell)+1)
+    const right=Math.min(cols,Math.ceil((x+w)/cell))
+    const bottom=Math.min(rows,Math.ceil((y+h)/cell))
+    for(let cy=top;cy<bottom;cy++)for(let cx=left;cx<right;cx++)block(cx,cy)
+  }
+  for(let cy=0;cy<rows;cy++)for(let cx=0;cx<cols;cx++)
+    if(cx*cell+pw>world.width||cy*cell+ph>world.height)block(cx,cy)
+  const blockedGids=new Set()
+  for(const reference of list(map.tileset)){
+    const a=attrs(reference),tileset=read(path.resolve(directory,a.source)).tileset
+    for(const tileNode of list(tileset.tile))
+      if(list(tileNode.properties?.property).some(p=>attrs(p).name==='collision'&&String(attrs(p).value)==='true'))
+        blockedGids.add(Number(a.firstgid)+Number(attrs(tileNode).id))
+  }
+  const width=Math.round(world.width/tile),height=Math.round(world.height/tile)
+  for(const layer of list(map.layer)){
+    if(attrs(layer.data).encoding!=='csv')throw Error(`${world.id}: Tiled CSV layers required for navigation`)
+    const ids=String(layer.data._text??'').trim().split(/\s*,\s*/).map(Number)
+    if(ids.length!==width*height)throw Error(`${world.id}: incomplete tile layer`)
+    ids.forEach((raw,i)=>{
+      const gid=(raw>>>0)&0x1fffffff
+      if(blockedGids.has(gid))markRect((i%width)*tile,Math.floor(i/width)*tile,tile,tile)
+    })
+  }
+  for(const object of world.objects){
+    if(object.kind!=='prop')continue
+    const asset=art.assets[object.asset]
+    if(asset.solid)markRect(object.x,object.y,asset.hitbox[0],asset.hitbox[1])
+  }
+  return {cell,cols,rows,blocked:Buffer.from(bits).toString('hex')}
+}
+
 export function compileWorlds(){
   const directory=path.join(projectRoot,'src/tiled')
   const worlds=fs.readdirSync(directory).filter(f=>f.endsWith('.tmx')).sort().map(f=>readWorld(path.join(directory,f))).filter(Boolean)
   for(const w of worlds){
     const map=read(path.join(directory,w.id+'.tmx')).map
+    w.navigation=buildNavigation(w,map,directory)
     for(const reference of list(map.tileset)){
       const source=attrs(reference).source
       const file=source?path.resolve(directory,source):null
