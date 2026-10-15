@@ -266,3 +266,41 @@ Die EP-Leiste zeigt den aktuellen Fortschritt innerhalb der Stufe, das
 Charakterfenster (**C**) zusätzlich die noch fehlenden EP. Jeder Aufstieg
 gibt 3 frei verteilbare Attributpunkte. Das Spiel berechnet weiterhin EP,
 Stufen und die verfügbaren Punkte auf dem autoritativen Server.
+
+### Karteneditor: sicher erweitern, speichern und einfach bedienen
+
+**Karte erweitern:** Über **▣ Karte erweitern** Breite und Höhe in 64px-Kacheln
+erhöhen. Bestehende Felder und Objekte bleiben an ihren Koordinaten; neue
+Fläche ist Wasser mit blockierter Kollision. **💾 Speichern** validiert alle
+CSV-Ebenen und Spielobjekte, schreibt die TMX-Datei atomar und kontrolliert
+Breite, Höhe und Daten nach dem Schreiben. Ein Backup liegt unter
+`art/map-backups/web-editor-*.tmx`. Bei einem Fehler wird die vorherige TMX
+wiederhergestellt, der Editor bleibt mit deinen Änderungen offen und zeigt
+die konkrete Fehlermeldung. Nach **erfolgreichem Speichern** kannst du
+weiter editieren; mit **✕ Schließen** wird die Spielwelt neu kompiliert
+und einmal kontrolliert neu geladen. So unterbricht kein erzwungener
+Vite-Reload das Speichern.
+
+**Kacheln versus Objekte:** Beim Klick auf **🖌 Kacheln** erscheinen
+die Ebenenauswahl, eine Erklärung der Ebene sowie die Filter **Gelände,
+Wasser, Wege, Brücken, Details**. Ein Filter wählt die passende Ebene vor;
+die gewünschte Kachel danach aus der Vorschau anklicken. Bei **🌲 Platzieren**
+und **↖ Objekte** gibt es stattdessen **Wald, Wasserobjekte, Felsen,
+Gebäude, Deko, Tiere, NPCs, Gegner, Portale**. Das Platzieren bleibt aktiv,
+bis du auf Objekte zurückschaltest. Die Ebenenauswahl wird bei Objekten
+absichtlich ausgeblendet: Objekte sind unabhängig von den Kachelebenen.
+
+**Ebenen:** Wassergrund = unterste Ozeanfläche; Uferwellen = optische Wellen;
+Gelände = Gras/Erde/Inselland; Wege = sichtbare Wege; Brücke = sichtbare
+Übergänge; **Sperrflächen (Logik)** = unsichtbare Kollision. In der
+Kachelauswahl wird die Kollisionsschicht rot überblendet. Nachdem du neues
+Land über dem hinzugefügten Wasser angelegt hast, auf **Sperrflächen
+(Logik)** wechseln und die roten Sperren auf dem neuen Land mit
+**⌫ Löschen** entfernen. Die echten Tiled-Namen werden nicht geändert,
+damit vorhandene Karten kompatibel bleiben.
+
+**OrbStack:** Den Editor-Container einmalig mit
+`docker compose --profile editor up -d editor` starten. Änderungen an
+TypeScript/JavaScript werden über Vite automatisch übernommen. Bei
+Konfigurationsänderungen mit Vite-Neustart kann einmalig
+`docker compose --profile editor restart editor` erforderlich sein.
