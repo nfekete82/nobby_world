@@ -32,6 +32,6 @@ test('both Tiled grass and forest sheets regenerate at exactly the original dime
   const tsx=fs.readFileSync('src/tiled/'+name+'.tsx','utf8')
   assert.match(tsx,new RegExp(name+'-darker\\.png'))
  }
- assert.match(fs.readFileSync('src/tiled/path.tsx','utf8'),/tiny-swords\/path\.png/)
+ assert.match(fs.readFileSync('src/tiled/path.tsx','utf8'),/tiny-swords\/path-earthy\.png/)
  assert.match(fs.readFileSync('src/tiled/water.tsx','utf8'),/tiny-swords\/water\.png/)
 })
