@@ -29,7 +29,7 @@ Neubau. Das Spiel benötigt im Einzelspielermodus keinen externen Server.
 | Eingabe | Aktion |
 | --- | --- |
 | Pfeiltasten | Bewegen; zwei Pfeiltasten gleichzeitig ermöglichen diagonale Bewegung |
-| WASD | Normale Laufsteuerung |
+| WASD | Laufen; z. B. W+D für schräg oben rechts |
 | Linksklick auf die Karte | Automatisch auch diagonal laufen, ohne Wasser- oder Mauerecken zu schneiden (8-Wege-A*) |
 | Leertaste | Nahkampf / NPC ansprechen / Portal benutzen |
 | H oder Heilen-Button | 25 % Leben heilen, kostet 25 Mana |
