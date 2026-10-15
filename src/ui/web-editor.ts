@@ -202,6 +202,10 @@ class MapEditor {
    if(a.kind!=='prop')continue
    const o=elt<HTMLOptionElement>('option','',id);o.value=id;this.picker.append(o)
   }
+  for(const [value,label] of [['npc:mira','NPC · Mira'],['monster:ritter','Gegner · Ritter'],
+   ['monster:berserker','Gegner · Berserker'],['portal:map','Kartenportal']]){
+   const option=elt<HTMLOptionElement>('option','',label);option.value=value;this.picker.append(option)
+  }
   this.picker.value=this.chosenAsset
   this.sheet.forEach((sheet,idx)=>{
    this.paletteTabs.append(button(sheet.title,()=>this.showSheet(idx)))
@@ -313,18 +317,30 @@ class MapEditor {
   const root=this.document.documentElement
   const id=asNumber(root.getAttribute('nextobjectid')||'1',1)
   root.setAttribute('nextobjectid',String(id+1))
-  const asset=this.chosenAsset,definition=(art.assets as any)[asset]
+  const choice=this.chosenAsset
+  const kind=choice.startsWith('npc:')?'npc':choice.startsWith('monster:')?'monster':
+   choice.startsWith('portal:')?'portal':'prop'
+  const asset=kind==='prop'?choice:kind==='npc'?'female':kind==='monster'?
+   (choice==='monster:berserker'?'enemy-berserker':'enemy-warrior'):'portal-marker'
+  const definition=(art.assets as any)[asset]
   const el=this.document.createElement('object')
-  for(const [key,val] of Object.entries({id:String(id),name:asset,class:'prop',
+  const name=kind==='npc'?'Dorfbewohner':kind==='monster'?'Gegner':kind==='portal'?'Kartenportal':asset
+  for(const [key,val] of Object.entries({id:String(id),name,class:kind,
     x:String(Math.round(p.x)),y:String(Math.round(p.y)),
     width:String(definition?.hitbox?.[0]||32),height:String(definition?.hitbox?.[1]||24)}))
     el.setAttribute(key,val)
-  setProp(el,'asset',asset)
+  if(kind==='prop')setProp(el,'asset',asset)
+  if(kind==='npc')setProp(el,'text','Hallo, nobby!')
+  if(kind==='monster'){
+   setProp(el,'enemy',choice==='monster:berserker'?'berserker':'ritter')
+   setProp(el,'level','1','int');setProp(el,'hp','0','int');setProp(el,'vision','110','int')
+  }
+  if(kind==='portal')setProp(el,'target',this.id==='wald'?'simplemap':'wald')
   group.append(el)
   this.selected=el;this.setTool('select');this.updateDetails()
-  const name=definition?.animations?.stand?.image
-  if(name&&!this.spriteCache.has(name))
-   void image(pathUrl(name)).then(img=>{this.spriteCache.set(name,img);this.redraw()})
+  const sprite=definition?.animations?.stand?.image
+  if(sprite&&!this.spriteCache.has(sprite))
+   void image(pathUrl(sprite)).then(img=>{this.spriteCache.set(sprite,img);this.redraw()})
   this.redraw()
  }
  private startPointer(e:PointerEvent){
@@ -395,6 +411,11 @@ class MapEditor {
    const text=elt<HTMLTextAreaElement>('textarea');text.value=prop(obj,'text')
    text.addEventListener('change',()=>{this.saveHistory();setProp(obj,'text',text.value)})
    this.detail.append(field('Dialog',text))
+  }
+  if(kind==='portal'){
+   const target=elt<HTMLInputElement>('input');target.value=prop(obj,'target')
+   target.addEventListener('change',()=>{this.saveHistory();setProp(obj,'target',target.value.trim())})
+   this.detail.append(field('Zielkarte (Dateiname ohne .tmx)',target))
   }
   this.detail.append(button('Objekt löschen',()=>this.removeSelected()))
  }
