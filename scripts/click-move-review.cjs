@@ -26,6 +26,8 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
     window.__nobbyClickDiagnostics=[];
     window.__nobbyControlEvents=[];
     window.__nobbyDiagonalEvents=[];
+    window.__nobbyDiagonalAnimationEvents=[];
+    window.addEventListener('nobby:diagonal-animation',event=>window.__nobbyDiagonalAnimationEvents.push(event.detail));
     window.addEventListener('nobby:move-control',event=>window.__nobbyControlEvents.push(event.detail));
     window.addEventListener('nobby:diagonal-input',event=>window.__nobbyDiagonalEvents.push(event.detail));
     window.addEventListener('nobby:move-target',event=>window.__nobbyClickEvents.push(event.detail));
@@ -143,13 +145,27 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
   const mouseVectorEvents=await page.evaluate(()=>window.__nobbyDiagonalEvents.filter(e=>e.source==='mouse'));
   assert.ok(mouseVectorEvents.length>0,'mouse diagonals must send real vector motion, not alternating arrow impulses');
   assert.equal(mouseVectorEvents[0].mode,'normalized-vector');
-  console.log('Diagonal click accepted and moved on both axes.',{from:current,to:moved,waypoints:diagonal.route.length,vectorPackets:mouseVectorEvents.length});
+  // The authoritative vector can move the player while the local component
+  // still renders "stand". Verify the actual renderer's selected animation,
+  // not just input packets or coordinate changes.
+  const mouseAnimation=await page.evaluate(()=>{
+    const player=window.__clickReview.engine.getCurrentPlayer();
+    return {animation:player.animationPlayback?.()?.name,
+      starts:window.__nobbyDiagonalAnimationEvents.filter(e=>e.action==='start'),
+      nobbyWalk:player.animationName?.()}
+  });
+  assert.ok(mouseAnimation.starts.length>0,'diagonal movement never selected a local walk animation');
+  assert.equal(mouseAnimation.animation,'walk',
+    'the Pixi character must display running feet during a diagonal click: '+JSON.stringify(mouseAnimation));
+  console.log('Diagonal click animated with the native walk frames.',{from:current,to:moved,waypoints:diagonal.route.length,vectorPackets:mouseVectorEvents.length,animation:mouseAnimation.animation});
   // Keyboard chords use authoritative normalized vector packets. We verify
   // their directions independently of the visual animation debug buffer:
   // the latter only records cardinal processMovementInput() callbacks.
   await page.keyboard.down('ArrowUp');
   await page.keyboard.down('ArrowRight');
   await page.waitForTimeout(400);
+  const arrowWalk=await page.evaluate(()=>window.__clickReview.engine.getCurrentPlayer().animationPlayback?.()?.name);
+  assert.equal(arrowWalk,'walk','ArrowUp+ArrowRight must animate Nobby\'s feet');
   await page.keyboard.up('ArrowRight');
   await page.keyboard.up('ArrowUp');
   const arrows=await page.evaluate(()=>window.__nobbyDiagonalEvents.filter(e=>e.source==='keyboard'&&e.dx===1&&e.dy===-1));
@@ -159,6 +175,8 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
   await page.keyboard.down('w');
   await page.keyboard.down('d');
   await page.waitForTimeout(400);
+  const wasdWalk=await page.evaluate(()=>window.__clickReview.engine.getCurrentPlayer().animationPlayback?.()?.name);
+  assert.equal(wasdWalk,'walk','W+D must animate Nobby\'s feet');
   await page.keyboard.up('d');
   await page.keyboard.up('w');
   const wasd=await page.evaluate(()=>window.__nobbyDiagonalEvents.filter(e=>e.source==='keyboard'&&e.dx===1&&e.dy===-1));
