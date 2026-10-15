@@ -348,3 +348,35 @@ sodass auch ältere und lokal erweiterte Karten keine existierenden IDs verliere
 Erst beim Malen und Speichern werden die neuen Tileset-Referenzen in der
 TMX-Datei mitgespeichert. Gebäude und Kakteen verwenden die generierten
 Sprite-Assets und benötigen keine neuen Kachelebenen.
+
+### Werkstatt-Workflow: Wald, Wüste und Schnee
+
+**Esc → Karteneditor → Gegend wählen:** Wald, Wüste oder Schnee.
+Unter **🖌 Kacheln** erscheinen passende Flächen, Wasser, Wege, Brücken
+und zusätzliche **Übergänge** (Sandweg/Schneepfad). Unter **🌲 Platzieren**
+sind die zur Gegend passenden Objekte zu finden: sechs neue Wüstenobjekte
+(zwei Kakteen, Fels, Lehmhaus, Zelt, Tempel) und ein Schneebaum.
+Ein Objekt bleibt für Mehrfachplatzierung ausgewählt.
+
+**Kollisionen:** Neue, gemalte Landschaft/Wege/Brücken entfernen standardmäßig
+die Sperrfläche an dieser 64px-Kachel. Die Option
+**„Beim Malen Boden/Wege begehbar machen“** lässt sich im Editor abschalten.
+**„🧭 Vorhandene Wege entsperren“** korrigiert alte, sichtbare Wege/Brücken
+und Biomflächen, die noch auf gesperrtem Wasser liegen. Das ist eine bewusste
+Änderung der logischen Ebene; Wasser, Gras und Brückengrafiken werden **nicht**
+zusammengeführt oder gelöscht. Bei der Reparatur nur bewusst angelegte
+Wege/Brücken/Flächen prüfen, danach speichern.
+
+Die Wüstengrafik verwendet stärkere Sand-Schattierung, dezente Dünenlinien
+und Körnung statt eines einheitlich eingefärbten Gras-Tilesets.
+Die neue Weggrafik ist als transparentes 3×3-Tileset ausgelegt und kann
+auf die Sand- bzw. Schneeschicht gelegt werden; sie ist keine automatische
+48-Kachel-Wang-/Blob-Autotiling-Engine. Ein komplexeres, vollständig
+automatisches Multi-Terrain-Autotiling wäre ein späterer Ausbauschritt.
+
+**Lokale Karten schützen:** Bei lokal editierten `src/tiled/*.tmx`
+keinen Reset/Checkout und keinen Stash-Pop ausführen. Die Änderung dieses
+Branches enthält keine zusätzlichen Änderungen an den beiden bereits
+eingecheckten TMX-Karten; `git pull --ff-only` kann den Code daher unabhängig
+von deiner 100×40-Karte aktualisieren. Wenn Git wegen anderer Dateien
+blockiert, zuerst Kopien davon außerhalb des Repos anlegen.
