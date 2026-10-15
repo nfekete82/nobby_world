@@ -1,6 +1,7 @@
 import type { RpgClientEngine } from '@rpgjs/client'
 import worlds from '../generated/worlds.json'
 import art from '../art/registry.json'
+import { ensureEditorMenu } from './web-editor'
 
 let root: HTMLElement, hp: HTMLElement, mana: HTMLElement, title: HTMLElement, region: HTMLElement, gold: HTMLElement
 let healButton: HTMLButtonElement
@@ -26,6 +27,7 @@ function meter(node:HTMLElement,value:number,max:number,label:string){
 export function updateHud(engine:RpgClientEngine){
  if(performance.now()-lastUpdate<100)return;lastUpdate=performance.now()
  if(!root)mount(engine)
+ ensureEditorMenu(engine)
  const player=engine.getCurrentPlayer() as any
  // The same private integration boundary as the camera; native GUI keeps full
  // ownership of input, focus, saves and menus. No parallel game state is stored.
