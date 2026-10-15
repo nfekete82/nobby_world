@@ -14,10 +14,44 @@ const ensureDevServer = require('./ensure-dev-server.cjs');
  const dir='artifacts/tiny-swords/after';fs.mkdirSync(dir,{recursive:true});
  async function ready(){await page.waitForFunction(()=>window.__editor?.engine?.getCurrentPlayer()&&document.querySelector('#nobby-hud')?.hidden===false);await page.waitForTimeout(500)}
  async function shot(name){await page.screenshot({path:dir+'/'+name+'.png'})}
- async function teleport(x,y){await page.waitForTimeout(350);await page.evaluate(async({x,y})=>{
-   const e=window.__editor.engine;e.interruptCurrentPlayerMovement(e.getCurrentPlayer());
-   await Object.values(window.__editor.server.subRoom.players())[0].teleport({x,y});e.applyAuthoritativeState({x,y});
-  },{x,y});await page.waitForTimeout(100);console.log('teleport',x,y,await page.evaluate(()=>{const e=window.__editor.engine,p=e.getCurrentPlayer(),s=Object.values(window.__editor.server.subRoom.players())[0];return {client:[p.x(),p.y()],server:[s.x(),s.y()],move:p.canMove,dialog:e.guiService.gui()['rpg-dialog'].display()}}));await page.waitForFunction(({x,y})=>{const p=window.__editor.engine.getCurrentPlayer();return Math.abs(p.x()-x)<2&&Math.abs(p.y()-y)<2},{x,y},{timeout:2000});await page.waitForTimeout(500)}
+ // Test-only camera positioning. A standalone RPG-JS client can receive a
+ // previously queued authoritative movement tick just after server.teleport().
+ // Reconcile both sides over several animation frames instead of asserting
+ // a transient client position 100 ms after the server move.
+ async function teleport(x,y){
+  await page.waitForTimeout(200);
+  const state=await page.evaluate(async({x,y})=>{
+   const engine=window.__editor.engine;
+   const server=Object.values(window.__editor.server.subRoom.players())[0];
+   engine.interruptCurrentPlayerMovement(engine.getCurrentPlayer());
+   await server.teleport({x,y});
+   const close=(a,b)=>Math.abs(a-b)<2;
+   if(!close(server.x(),x)||!close(server.y(),y)){
+    throw new Error(`Server teleport failed: wanted (${x}, ${y}); got (${server.x()}, ${server.y()})`);
+   }
+   const nextFrame=()=>new Promise(resolve=>requestAnimationFrame(resolve));
+   for(let attempt=1;attempt<=60;attempt++){
+    const player=engine.getCurrentPlayer();
+    engine.interruptCurrentPlayerMovement(player);
+    engine.applyAuthoritativeState({x,y});
+    await nextFrame();
+    const current=engine.getCurrentPlayer();
+    if(current&&close(current.x(),x)&&close(current.y(),y)){
+     // Make sure a stale network tick does not immediately restore old coords.
+     await new Promise(resolve=>setTimeout(resolve,120));
+     const stable=engine.getCurrentPlayer();
+     if(stable&&close(stable.x(),x)&&close(stable.y(),y)){
+      return {client:[stable.x(),stable.y()],server:[server.x(),server.y()],attempts:attempt};
+     }
+    }
+    await new Promise(resolve=>setTimeout(resolve,70));
+   }
+   const player=engine.getCurrentPlayer();
+   throw new Error(`Client/server test teleport desync after retries: wanted (${x}, ${y}), client (${player?.x()}, ${player?.y()}), server (${server.x()}, ${server.y()}), dialogOpen=${engine.guiService.gui()['rpg-dialog'].display()}`);
+  },{x,y});
+  console.log('teleport',x,y,state);
+  await page.waitForTimeout(300);
+ }
  const position=()=>page.evaluate(()=>{const p=Object.values(window.__editor.server.subRoom.players())[0];return{x:p.x(),y:p.y()}})
  const hold=async(key,ms)=>{await page.keyboard.down(key);await page.waitForTimeout(ms);await page.keyboard.up(key);await page.waitForTimeout(100)}
  await page.goto('http://127.0.0.1:5173/');await ready();assert.equal(await page.getByRole('button',{name:'✦ Heilen H'}).isDisabled(),true,'full-health heal should be disabled');await shot('village');
@@ -25,7 +59,7 @@ const ensureDevServer = require('./ensure-dev-server.cjs');
  for(const tab of ['Items','Skills','Equip','Options']){await page.getByText(tab,{exact:true}).first().click();await page.waitForTimeout(300);await shot(tab.toLowerCase())}
  await page.getByText('Save',{exact:true}).click();await page.locator('[data-slot-index="0"]').waitFor();await shot('save');
  await page.reload();await ready();
- await teleport(784,1176);await hold('ArrowDown',100);await page.keyboard.press('Space',{delay:150});await page.getByText('Willkommen, Nobby! Hier beginnt unsere neue Welt.',{exact:true}).waitFor();await shot('dialog');await page.keyboard.press('Space',{delay:150});await page.waitForTimeout(300);
+ await teleport(784,1176);await hold('ArrowDown',100);await page.keyboard.press('Space',{delay:150});await page.getByText('Willkommen, Nobby! Hier beginnt unsere neue Welt.',{exact:true}).waitFor();await shot('dialog');await page.keyboard.press('Space',{delay:150});await page.waitForFunction(()=>window.__editor.engine.guiService.gui()['rpg-dialog'].display()===false,{},{timeout:5000});await page.waitForTimeout(300);
  checks.push('native status/items/skills/equipment/options/save screens and German NPC dialogue render with pack frames');
  await teleport(1380,800);const waterBefore=await position();await hold('ArrowRight',1000);const waterAfter=await position();assert.ok(waterAfter.x>waterBefore.x&&waterAfter.x<=1441,'river blocks walking');checks.push('river collision blocks walking');
  await teleport(1380,1060);await hold('ArrowRight',2300);assert.ok((await position()).x>1664,'bridge crosses the river');await teleport(1450,1060);await shot('bridge');checks.push('bridge crosses the same river');
