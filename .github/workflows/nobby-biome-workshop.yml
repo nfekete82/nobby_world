@@ -1,0 +1,33 @@
+name: Nobby World biome workshop
+
+on:
+  push:
+    branches:
+      - feat/player-level-progression
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-editor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run map, art and gameplay regression tests
+        run: npm test
+      - name: Build browser game
+        run: npm run build
+      - name: Install Chromium for in-game editor test
+        run: npx playwright install --with-deps chromium
+      - name: Exercise in-game editor
+        env:
+          CI: 'true'
+        run: npm run test:web-editor
