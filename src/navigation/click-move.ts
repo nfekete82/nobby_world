@@ -9,6 +9,7 @@ const instances=new WeakMap<RpgClientEngine,State>()
 const cache=new Map<string,Nav>()
 let currentEngine:RpgClientEngine|null=null
 let installed=false
+const enhancedKeyboards=new WeakSet<object>()
 const mapIdOf=(engine:RpgClientEngine)=>String(engine.sceneMap.data()?.id??'').replace(/^map-/,'')
 /** CanvasEngine's keyboard recognizes combo names but RPG-JS binds only four.
  * Register four composite bindings that alternate their native cardinal
@@ -18,7 +19,6 @@ const mapIdOf=(engine:RpgClientEngine)=>String(engine.sceneMap.data()?.id??'').r
 function enableKeyboardDiagonals(engine:RpgClientEngine):void{
   const keyboard=(engine as any).activeKeyboardControls?.()?.keyboard
   if(!keyboard||typeof keyboard.setInputs!=='function')return
-  if(keyboard.getControl?.('up_right'))return
   const original=keyboard.options??{}
   const diagonalPairs:[string,string,string][]=[
     ['up_left','up','left'],['up_right','up','right'],
@@ -40,6 +40,27 @@ function enableKeyboardDiagonals(engine:RpgClientEngine):void{
     }
   }
   if(Object.keys(additions).length)keyboard.setInputs({...original,...additions})
+  if(enhancedKeyboards.has(keyboard)||typeof keyboard.getDirection!=='function')return
+  enhancedKeyboards.add(keyboard)
+  const originalDirection=keyboard.getDirection.bind(keyboard)
+  // CanvasEngine recognizes simultaneous arrow keys natively. For remapped
+  // WASD keys, getDirection() currently returns "none" and dispatches two
+  // separate cardinals (the second one overwrites the first's velocity).
+  // Recognize held remapped keys only when a vertical AND horizontal key are
+  // pressed. Single-key keyboard behavior remains unchanged.
+  keyboard.getDirection=()=>{
+    const native=originalDirection()
+    if(native!=='none')return native
+    const pressed=(action:string):boolean=>{
+      const raw=keyboard.options?.[action]?.bind
+      const binds=Array.isArray(raw)?raw:[raw]
+      return binds.some((key:unknown)=>
+        typeof key==='string'&&!!keyboard.keyState?.[key.toLowerCase()]?.isDown)
+    }
+    const vertical=pressed('up')?'up':pressed('down')?'down':null
+    const horizontal=pressed('left')?'left':pressed('right')?'right':null
+    return vertical&&horizontal?`${vertical}_${horizontal}`:'none'
+  }
 }
 
 function nativeControls(engine:RpgClientEngine):any{
