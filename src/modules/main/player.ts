@@ -7,7 +7,7 @@ export const player: RpgPlayerHooks = {
         player.initializeDefaultStats()
         player.paramsModifier = { atk: {value:14}, pdef: {value:8} }
         player.changeMap('simplemap', 'start')
-        player.name = 'Nobby'
+        player.name = 'nobby'
         player.setGraphic('hero')
         player.setHitbox(...art.actorHitbox as [number,number])
     },
