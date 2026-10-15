@@ -58,3 +58,30 @@ canvas,img,.nobby-portrait,#nobby-hud *,.rpg-ui-main-menu-layout,.rpg-ui-dialog,
 .nobby-controls{position:absolute;bottom:24px;left:24px;display:flex;gap:18px;background:#293544bf;color:#fff0cd;padding:10px 14px;font-size:11px;line-height:1.5}
 @media(max-width:760px){.nobby-region{top:148px;left:20px;transform:none;padding:2px 12px}.nobby-status{width:250px}.nobby-controls{display:none}.nobby-actions{right:12px;bottom:16px}.nobby-actions kbd{display:none}}
 @media(max-height:540px){.nobby-region{display:none}.nobby-status{top:8px;left:8px}.nobby-controls{display:none}}
+
+/* Arcane bolt: screen-space particles follow Pixi's camera, never receive clicks. */
+.nobby-arcane-orb,.nobby-arcane-burst,.nobby-arcane-impact{
+ position:fixed;z-index:18;pointer-events:none;left:-100px;top:-100px;
+ transform:translate(-50%,-50%);border-radius:50%;
+}
+.nobby-arcane-orb{
+ width:23px;height:23px;
+ background:radial-gradient(circle,#ffffff 0 20%,#b6f9ff 29%,#6fe6ff 49%,#6f8dff 70%,#7351dd 92%,transparent 96%);
+ box-shadow:0 0 7px 2px #e8fcff,0 0 18px 6px #6cdbffb8,0 0 27px 11px #875deb78;
+ animation:nobby-arcane-pulse .22s ease-in-out infinite alternate;
+}
+.nobby-arcane-orb::after{
+ content:'';position:absolute;inset:3px;border-radius:50%;
+ background:conic-gradient(from 0deg,transparent,#edffffc9,transparent,#9aefffbb,transparent);
+ animation:nobby-arcane-spin .32s linear infinite;
+}
+.nobby-arcane-burst,.nobby-arcane-impact{
+ width:33px;height:33px;border:3px solid #c5f8ff;
+ box-shadow:0 0 14px #74dcff, inset 0 0 12px #8aafff;
+ animation:nobby-arcane-flash .29s ease-out both;
+}
+.nobby-arcane-impact{width:54px;height:54px;border-color:#eee0ff}
+@keyframes nobby-arcane-pulse{to{transform:translate(-50%,-50%) scale(1.22);filter:brightness(1.25)}}
+@keyframes nobby-arcane-spin{to{transform:rotate(360deg)}}
+@keyframes nobby-arcane-flash{from{opacity:1;transform:translate(-50%,-50%) scale(.35)}to{opacity:0;transform:translate(-50%,-50%) scale(1.65)}}
+@media(prefers-reduced-motion:reduce){.nobby-arcane-orb,.nobby-arcane-orb::after{animation:none}}

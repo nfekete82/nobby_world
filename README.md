@@ -31,6 +31,7 @@ Neubau. Das Spiel benötigt im Einzelspielermodus keinen externen Server.
 | Pfeiltasten | Bewegen; zwei Pfeiltasten gleichzeitig ermöglichen diagonale Bewegung |
 | WASD | Laufen; z. B. W+D für schräg oben rechts |
 | Linksklick auf die Karte | Automatisch auch diagonal laufen, ohne Wasser- oder Mauerecken zu schneiden (8-Wege-A*) |
+| Linksklick auf Gegner | Blaue Arkankugel aus der Distanz (12 Mana, 380px Reichweite); bei Bedarf sicher heranlaufen |
 | Leertaste | Nahkampf / NPC ansprechen / Portal benutzen |
 | H oder Heilen-Button | 25 % Leben heilen, kostet 25 Mana |
 | Esc oder Menü-Button | Status, Inventar, Fähigkeiten, Ausrüstung, Optionen, Speichern |
@@ -111,3 +112,15 @@ Der Save-Namensraum bleibt `nobby_world_rpgjs_v1`. Der frühere 3D-Prototyp ist 
 Git archiviert. Seine 80-Gegner-Wellen, Zauber und Farmmechaniken wurden im
 RPG-JS-Neustart nicht übernommen. Die aktuell vorhandenen Spielmechaniken bleiben
 beim Grafikumbau erhalten; es gibt zwei Nahkampf-Gegnerarten und keine Bossbegegnung.
+
+### Nobby als Magier
+
+Ein Linksklick auf einen lebenden Gegner wählt ihn als Ziel und wirkt eine blaue Arkankugel.
+Nobby läuft nur dann näher, wenn das Ziel außerhalb der 380px-Reichweite liegt
+oder die Sichtlinie blockiert wird. Der Zauber kostet 12 Mana und hat 850ms
+Abklingzeit. Der Server prüft Ziel, Sichtlinie, Mana, Reichweite und Cooldown
+und wendet Treffer über die bestehende Action-Battle-KI an; Treffer
+werden nach einer zur Flugdistanz passenden Verzögerung abgewickelt.
+Klicks auf den Boden und die vorhandenen WASD-/Diagonaltasten funktionieren weiter.
+Der leuchtende Projektil-Effekt wird bislang clientseitig für den Zaubernden
+angezeigt; eine synchrone Anzeige für alle Spieler ist ein späterer Multiplayer-Schritt.
