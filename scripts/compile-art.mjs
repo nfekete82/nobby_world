@@ -158,7 +158,7 @@ prop('desert-cactus-small','biomes/desert-cactus-small.png',[64,128],1,[32,113],
 prop('desert-rock','biomes/desert-rock.png',[64,64],1,[32,55],[38,22],true,1)
 prop('desert-house','biomes/desert-house.png',[128,192],1,[64,171],[82,42],true,1)
 prop('desert-tent','biomes/desert-tent.png',[128,192],1,[64,171],[80,35],true,1)
-prop('desert-temple','biomes/desert-temple.png',[128,192],1,[64,171],[90,44],true,1)
+prop('desert-temple','biomes/desert-temple.png',[192,320],1,[96,288],[130,62],true,1)
 prop('snow-pine','biomes/snow-pine.png',[128,192],1,[64,172],[34,24],true,1)
 prop('desert-agave','biomes/desert-agave.png',[64,64],1,[32,56],[26,16],false,1)
 prop('desert-shrub','biomes/desert-shrub.png',[64,64],1,[32,56],[24,16],false,1)
