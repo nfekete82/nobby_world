@@ -1,0 +1,47 @@
+import { applyPlayerHitToEvent } from '@rpgjs/action-battle/server'
+import worlds from '../../generated/worlds.json'
+import { unpackNavigation } from '../../navigation/pathfinding.mjs'
+import { ARCANE_ACTION, ARCANE_MANA, ARCANE_COOLDOWN_MS, ARCANE_SPEED,
+  ARCANE_STARTUP_MS, canCast, distance } from '../../combat/arcane-rules.mjs'
+
+const maps=new Map(worlds.map(w=>[w.id,{
+  monsterIds:new Set(w.objects.filter(o=>o.kind==='monster').map(o=>o.id)),
+  nav:unpackNavigation(w.navigation)
+}]))
+const pos=(entity:any)=>({x:Number(entity.x()),y:Number(entity.y())})
+const cooldowns=new WeakMap<object,number>()
+
+/** Damage, cost and hit eligibility are authoritative. Target coordinates are
+ * NEVER accepted from the browser. No arbitrary props/NPCs/player PvP. */
+export function castArcaneBolt(player:any,data:any):boolean{
+ const map=player.getCurrentMap?.()
+ const id=map?.id??''
+ const rules=maps.get(String(id).replace(/^map-/,''))
+ const targetId=typeof data?.targetId==='string'?data.targetId:''
+ if(!map||!rules?.monsterIds.has(targetId)||!player.hp||player.hp<=0)return false
+ const target=map.getEvent?.(targetId)
+ if(!target?.battleAi||!Number.isFinite(target.hp)||target.hp<=0)return false
+ const now=Date.now(),from=pos(player),to=pos(target)
+ if(canCast({from,to,nav:rules.nav,mana:player.sp,
+   cooldownReady:now>=(cooldowns.get(player)??0)})!=='ok')return false
+ cooldowns.set(player,now+ARCANE_COOLDOWN_MS)
+ player.sp-=ARCANE_MANA
+ // Existing blue mage casting artwork. Ordinary melee/heal still work.
+ void player.setAnimation('heal',1,{durationMs:500})
+ const flightMs=ARCANE_STARTUP_MS+Math.round(distance(from,to)/ARCANE_SPEED*1000)
+ setTimeout(()=>{
+   const current=player.getCurrentMap?.()
+   if(current!==map||!player.hp||player.hp<=0)return
+   const victim=current.getEvent?.(targetId)
+   if(victim!==target||!victim?.battleAi||victim.hp<=0)return
+   // The monster may have moved while the projectile flew.
+   if(distance(from,pos(victim))>ARCANE_RANGE+48||
+      !canCast({from,to:pos(victim),nav:rules.nav,mana:ARCANE_MANA}))return
+   // Integrates the existing AI damage/defeat/EXP/loot/reward hooks.
+   applyPlayerHitToEvent(player,victim,undefined,{
+     damageMultiplier:1.25,knockbackMultiplier:0.2,source:'arcane-bolt'
+   })
+ },flightMs)
+ return true
+}
+export { ARCANE_ACTION }
