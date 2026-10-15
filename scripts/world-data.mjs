@@ -6,6 +6,7 @@ import { ensureDarkerGrass } from './darken-grass.mjs'
 import { preparePathArt } from './path-art.mjs'
 import { ensureBiomeTerrain } from './biome-art.mjs'
 import { ensureBiomeProps } from './biome-props.mjs'
+import { makePastureMask } from '../src/wildlife/sheep-ai.mjs'
 
 export const projectRoot=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..')
 const art=JSON.parse(fs.readFileSync(path.join(projectRoot,'src/art/registry.json'),'utf8'))
@@ -126,6 +127,19 @@ export function compileWorlds({writeOutput=true}={}){
   for(const w of worlds){
     const map=read(path.join(directory,w.id+'.tmx')).map
     w.navigation=buildNavigation(w,map,directory)
+    // Sheep may roam only on visibly grassy, collision-free land (not paths,
+    // water, sand, snow or rocky ground). This mask follows user-edited maps.
+    const width=Math.round(w.width/art.tileSize),height=Math.round(w.height/art.tileSize)
+    const paintLayers=list(map.layer).map(l=>({
+      name:attrs(l).name,
+      gids:String(l.data?._text??'').trim().split(/\\s*,\\s*/).map(Number)
+    }))
+    const sheets=list(map.tileset).map(t=>{
+      const source=attrs(t).source
+      const definition=read(path.resolve(directory,source)).tileset
+      return {source,firstgid:Number(attrs(t).firstgid),count:Number(attrs(definition).tilecount)}
+    })
+    w.pasture=makePastureMask(width,height,paintLayers,sheets)
     for(const reference of list(map.tileset)){
       const source=attrs(reference).source
       const file=source?path.resolve(directory,source):null
