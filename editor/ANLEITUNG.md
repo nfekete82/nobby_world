@@ -21,11 +21,29 @@ Zum Gestalten immer die Live-Vorschau auf **5173** verwenden.
 und eine Kachel im Tileset-Fenster. Mit dem Stempelwerkzeug kannst du Wege, Böden,
 Wasser und Dekoration malen. Die bestehenden Tilesets sind bereits eingebunden.
 Mit **Karte → Kartengröße ändern** kannst du die Karte vergrößern. Verwende endliche,
-orthogonale Karten mit 32×32-Pixel-Kacheln.
+orthogonale Karten mit 64×64-Pixel-Kacheln.
 
 Einige Tiles haben bereits Kollisionen. Für neue blockierende Tiles kannst du im
 Tileset die boolesche Eigenschaft `collision = true` setzen. Erstelle zunächst Wege
 und freie Flächen um Startpunkte und Gegner, damit sie erreichbar bleiben.
+
+## Bäume, Gebäude und Dekoration
+
+Ziehe eine Vorlage wie `tree-oak.tx`, `house.tx`, `tower.tx` oder `sheep.tx`
+aus `editor/templates` auf die Objektebene „Spiellogik“. Die Klasse ist `prop`.
+Die Eigenschaft `asset` wählt eine Grafik aus der zentralen Registry.
+Das Rechteck markiert die Bodenfläche; die Grafik steht darüber. Bäume und Häuser
+werden automatisch nach ihrer Bodenposition sortiert. Der Spieler kann hinter
+ihnen verschwinden. Ändere die Rechteckgröße nicht zur Skalierung: Framegrößen,
+Fußpunkte und Kollisionen stehen einheitlich in `src/art/registry.json`.
+
+Der Wassergrund ist sichtbar und nicht blockierend. Die ausgeblendete Ebene
+„Wasser und Klippen · Kollision“ sperrt Wasser und Felswände. Für neues Wasser
+auch dort die blockierende Wasser-Kachel malen; unter einer Brücke diese Maske
+löschen. Die Brücke besteht aus 4×2 Kacheln. Die Wege sind ein 3×3-Randset.
+Bei neuen Inselrändern die passende Ecke/Kante der Wiese verwenden.
+
+**H** heilt Nobby um 25 % Leben und verbraucht 25 Mana. **Esc** öffnet das Menü.
 
 ## Gegner setzen
 

@@ -2,27 +2,27 @@
   {
     "id": "simplemap",
     "title": "Die erste Insel",
-    "width": 800,
-    "height": 640,
+    "width": 2560,
+    "height": 2048,
     "start": {
-      "x": 300,
-      "y": 300
+      "x": 784,
+      "y": 1088
     },
     "objects": [
       {
         "id": "object-2",
         "kind": "npc",
         "name": "Mira",
-        "x": 300,
-        "y": 400,
+        "x": 784,
+        "y": 1216,
         "text": "Willkommen, Nobby! Hier beginnt unsere neue Welt."
       },
       {
         "id": "object-3",
         "kind": "monster",
         "name": "Roter Ritter",
-        "x": 500,
-        "y": 360,
+        "x": 1296,
+        "y": 768,
         "enemy": "ritter",
         "level": 1,
         "hp": 0,
@@ -32,8 +32,8 @@
         "id": "object-4",
         "kind": "monster",
         "name": "Waldwächter",
-        "x": 600,
-        "y": 520,
+        "x": 1936,
+        "y": 1280,
         "enemy": "berserker",
         "level": 2,
         "hp": 0,
@@ -43,36 +43,764 @@
         "id": "object-5",
         "kind": "portal",
         "name": "Zum wald",
-        "x": 420,
-        "y": 470,
+        "x": 2064,
+        "y": 1024,
         "target": "wald"
+      },
+      {
+        "id": "object-100",
+        "kind": "prop",
+        "name": "Nobbys Haus",
+        "x": 512,
+        "y": 960,
+        "asset": "house"
+      },
+      {
+        "id": "object-101",
+        "kind": "prop",
+        "name": "Miras Haus",
+        "x": 960,
+        "y": 960,
+        "asset": "house-large"
+      },
+      {
+        "id": "object-102",
+        "kind": "prop",
+        "name": "Gästehaus",
+        "x": 512,
+        "y": 1344,
+        "asset": "house"
+      },
+      {
+        "id": "object-103",
+        "kind": "prop",
+        "name": "Handelshaus",
+        "x": 1088,
+        "y": 1344,
+        "asset": "house-large"
+      },
+      {
+        "id": "object-104",
+        "kind": "prop",
+        "name": "Heilerhalle",
+        "x": 384,
+        "y": 640,
+        "asset": "monastery"
+      },
+      {
+        "id": "object-105",
+        "kind": "prop",
+        "name": "Wachhaus",
+        "x": 1152,
+        "y": 640,
+        "asset": "barracks"
+      },
+      {
+        "id": "object-106",
+        "kind": "prop",
+        "name": "Blaue Burg",
+        "x": 1024,
+        "y": 320,
+        "asset": "castle"
+      },
+      {
+        "id": "object-107",
+        "kind": "prop",
+        "name": "Uferturm",
+        "x": 1984,
+        "y": 320,
+        "asset": "tower"
+      },
+      {
+        "id": "object-108",
+        "kind": "prop",
+        "name": "Schaf",
+        "x": 320,
+        "y": 1344,
+        "asset": "sheep"
+      },
+      {
+        "id": "object-109",
+        "kind": "prop",
+        "name": "Schaf",
+        "x": 320,
+        "y": 1472,
+        "asset": "sheep"
+      },
+      {
+        "id": "object-110",
+        "kind": "prop",
+        "name": "Schaf",
+        "x": 448,
+        "y": 1536,
+        "asset": "sheep"
+      },
+      {
+        "id": "object-111",
+        "kind": "prop",
+        "name": "Schaf",
+        "x": 576,
+        "y": 1664,
+        "asset": "sheep"
+      },
+      {
+        "id": "object-112",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1746,
+        "y": 746,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-113",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1432,
+        "y": 957,
+        "asset": "tree-small"
+      },
+      {
+        "id": "object-114",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1581,
+        "y": 1357,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-115",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1520,
+        "y": 1816,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-116",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 255,
+        "y": 1847,
+        "asset": "tree-small"
+      },
+      {
+        "id": "object-117",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1547,
+        "y": 382,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-118",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1796,
+        "y": 416,
+        "asset": "tree-small"
+      },
+      {
+        "id": "object-119",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2183,
+        "y": 432,
+        "asset": "tree-small"
+      },
+      {
+        "id": "object-120",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 254,
+        "y": 246,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-121",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 204,
+        "y": 1641,
+        "asset": "tree-small"
+      },
+      {
+        "id": "object-122",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1211,
+        "y": 1758,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-123",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 193,
+        "y": 809,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-124",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2362,
+        "y": 935,
+        "asset": "tree-small"
+      },
+      {
+        "id": "object-125",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2179,
+        "y": 1329,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-126",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 476,
+        "y": 1817,
+        "asset": "tree-small"
+      },
+      {
+        "id": "object-127",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1371,
+        "y": 1626,
+        "asset": "tree-small"
+      },
+      {
+        "id": "object-128",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2026,
+        "y": 719,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-129",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1899,
+        "y": 1490,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-130",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2330,
+        "y": 1236,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-131",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1895,
+        "y": 1837,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-132",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2320,
+        "y": 1695,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-133",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1720,
+        "y": 1728,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-134",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2284,
+        "y": 1471,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-135",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2279,
+        "y": 217,
+        "asset": "tree-small"
+      },
+      {
+        "id": "object-136",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1784,
+        "y": 218,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-137",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2173,
+        "y": 872,
+        "asset": "tree-small"
+      },
+      {
+        "id": "object-138",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1541,
+        "y": 1537,
+        "asset": "tree-small"
+      },
+      {
+        "id": "object-139",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2360,
+        "y": 393,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-140",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 305,
+        "y": 425,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-141",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1605,
+        "y": 888,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-142",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2303,
+        "y": 761,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-143",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 204,
+        "y": 593,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-144",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 999,
+        "y": 1636,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-145",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1889,
+        "y": 889,
+        "asset": "tree-small"
+      },
+      {
+        "id": "object-146",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1394,
+        "y": 246,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-147",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1441,
+        "y": 1252,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-148",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1748,
+        "y": 1389,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-149",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2162,
+        "y": 1808,
+        "asset": "tree-small"
+      },
+      {
+        "id": "object-150",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 333,
+        "y": 1662,
+        "asset": "bush"
+      },
+      {
+        "id": "object-151",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 342,
+        "y": 886,
+        "asset": "bush"
+      },
+      {
+        "id": "object-152",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 668,
+        "y": 1554,
+        "asset": "rock"
+      },
+      {
+        "id": "object-153",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 609,
+        "y": 1802,
+        "asset": "rock"
+      },
+      {
+        "id": "object-154",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 418,
+        "y": 811,
+        "asset": "rock"
+      },
+      {
+        "id": "object-155",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 2114,
+        "y": 299,
+        "asset": "bush"
+      },
+      {
+        "id": "object-156",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 268,
+        "y": 342,
+        "asset": "bush"
+      },
+      {
+        "id": "object-157",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 830,
+        "y": 195,
+        "asset": "rock"
+      },
+      {
+        "id": "object-158",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 1127,
+        "y": 1791,
+        "asset": "bush"
+      },
+      {
+        "id": "object-159",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 210,
+        "y": 1249,
+        "asset": "rock"
+      },
+      {
+        "id": "object-160",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 474,
+        "y": 469,
+        "asset": "rock"
+      },
+      {
+        "id": "object-161",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 2056,
+        "y": 1371,
+        "asset": "rock"
+      },
+      {
+        "id": "object-162",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 1158,
+        "y": 1651,
+        "asset": "rock"
+      },
+      {
+        "id": "object-163",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 983,
+        "y": 1220,
+        "asset": "rock"
+      },
+      {
+        "id": "object-164",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 2282,
+        "y": 1806,
+        "asset": "bush"
+      },
+      {
+        "id": "object-165",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 1685,
+        "y": 933,
+        "asset": "bush"
+      },
+      {
+        "id": "object-166",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 681,
+        "y": 889,
+        "asset": "rock"
+      },
+      {
+        "id": "object-167",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 2189,
+        "y": 218,
+        "asset": "rock"
+      },
+      {
+        "id": "object-168",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 670,
+        "y": 757,
+        "asset": "rock"
+      },
+      {
+        "id": "object-169",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 701,
+        "y": 259,
+        "asset": "bush"
+      },
+      {
+        "id": "object-170",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 651,
+        "y": 199,
+        "asset": "bush"
+      },
+      {
+        "id": "object-171",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 1758,
+        "y": 1526,
+        "asset": "bush"
+      },
+      {
+        "id": "object-172",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 1398,
+        "y": 1730,
+        "asset": "rock"
+      },
+      {
+        "id": "object-173",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 334,
+        "y": 1746,
+        "asset": "bush"
+      },
+      {
+        "id": "object-174",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 1338,
+        "y": 931,
+        "asset": "bush"
+      },
+      {
+        "id": "object-175",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 1226,
+        "y": 900,
+        "asset": "bush"
+      },
+      {
+        "id": "object-176",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 1293,
+        "y": 424,
+        "asset": "rock"
+      },
+      {
+        "id": "object-177",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 2094,
+        "y": 409,
+        "asset": "bush"
+      },
+      {
+        "id": "object-178",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 980,
+        "y": 1725,
+        "asset": "bush"
+      },
+      {
+        "id": "object-179",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 1515,
+        "y": 289,
+        "asset": "bush"
+      },
+      {
+        "id": "object-180",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 1803,
+        "y": 1680,
+        "asset": "bush"
+      },
+      {
+        "id": "object-181",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 670,
+        "y": 1396,
+        "asset": "bush"
+      },
+      {
+        "id": "object-182",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 1962,
+        "y": 792,
+        "asset": "bush"
+      },
+      {
+        "id": "object-183",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 556,
+        "y": 381,
+        "asset": "bush"
+      },
+      {
+        "id": "object-184",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 1782,
+        "y": 1289,
+        "asset": "bush"
+      },
+      {
+        "id": "object-185",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 1123,
+        "y": 787,
+        "asset": "bush"
+      },
+      {
+        "id": "object-186",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 539,
+        "y": 751,
+        "asset": "bush"
+      },
+      {
+        "id": "object-187",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 1384,
+        "y": 342,
+        "asset": "bush"
+      },
+      {
+        "id": "object-188",
+        "kind": "prop",
+        "name": "Wasserstein",
+        "x": 1536,
+        "y": 768,
+        "asset": "water-rock"
+      },
+      {
+        "id": "object-189",
+        "kind": "prop",
+        "name": "Wasserstein",
+        "x": 1600,
+        "y": 1344,
+        "asset": "water-rock"
+      },
+      {
+        "id": "object-190",
+        "kind": "prop",
+        "name": "Wasserstein",
+        "x": 2048,
+        "y": 1600,
+        "asset": "water-rock"
       }
     ]
   },
   {
     "id": "wald",
     "title": "Übungswald",
-    "width": 800,
-    "height": 640,
+    "width": 3072,
+    "height": 2432,
     "start": {
-      "x": 300,
-      "y": 300
+      "x": 784,
+      "y": 1600
     },
     "objects": [
       {
         "id": "object-2",
         "kind": "npc",
         "name": "Mira",
-        "x": 300,
-        "y": 400,
+        "x": 784,
+        "y": 1728,
         "text": "Willkommen, Nobby! Hier beginnt unsere neue Welt."
       },
       {
         "id": "object-3",
         "kind": "monster",
         "name": "Roter Ritter",
-        "x": 500,
-        "y": 360,
+        "x": 1424,
+        "y": 1088,
         "enemy": "ritter",
         "level": 1,
         "hp": 0,
@@ -82,8 +810,8 @@
         "id": "object-4",
         "kind": "monster",
         "name": "Waldwächter",
-        "x": 600,
-        "y": 520,
+        "x": 2000,
+        "y": 512,
         "enemy": "berserker",
         "level": 2,
         "hp": 0,
@@ -93,9 +821,1025 @@
         "id": "object-5",
         "kind": "portal",
         "name": "Zum simplemap",
-        "x": 420,
-        "y": 470,
+        "x": 464,
+        "y": 1600,
         "target": "simplemap"
+      },
+      {
+        "id": "object-100",
+        "kind": "prop",
+        "name": "Waldhütte",
+        "x": 512,
+        "y": 1472,
+        "asset": "house"
+      },
+      {
+        "id": "object-101",
+        "kind": "prop",
+        "name": "Alter Wachturm",
+        "x": 2112,
+        "y": 384,
+        "asset": "tower"
+      },
+      {
+        "id": "object-102",
+        "kind": "prop",
+        "name": "Goldader",
+        "x": 2240,
+        "y": 576,
+        "asset": "ore"
+      },
+      {
+        "id": "object-103",
+        "kind": "prop",
+        "name": "Goldader",
+        "x": 1856,
+        "y": 384,
+        "asset": "ore"
+      },
+      {
+        "id": "object-104",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1418,
+        "y": 1374,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-105",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2574,
+        "y": 2154,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-106",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 640,
+        "y": 699,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-107",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 881,
+        "y": 253,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-108",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2225,
+        "y": 2108,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-109",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1188,
+        "y": 426,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-110",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2808,
+        "y": 629,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-111",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1263,
+        "y": 1314,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-112",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 253,
+        "y": 2085,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-113",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 221,
+        "y": 619,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-114",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 314,
+        "y": 220,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-115",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2630,
+        "y": 399,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-116",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 426,
+        "y": 858,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-117",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1102,
+        "y": 1005,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-118",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2514,
+        "y": 644,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-119",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2637,
+        "y": 1421,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-120",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1328,
+        "y": 1850,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-121",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 342,
+        "y": 1944,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-122",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1606,
+        "y": 1629,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-123",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1034,
+        "y": 1345,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-124",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 511,
+        "y": 1191,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-125",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1023,
+        "y": 674,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-126",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1621,
+        "y": 227,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-127",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2743,
+        "y": 781,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-128",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2720,
+        "y": 1697,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-129",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1447,
+        "y": 733,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-130",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2456,
+        "y": 941,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-131",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2513,
+        "y": 1312,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-132",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 551,
+        "y": 1888,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-133",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 474,
+        "y": 679,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-134",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1453,
+        "y": 354,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-135",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 746,
+        "y": 510,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-136",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1683,
+        "y": 764,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-137",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 494,
+        "y": 222,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-138",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 990,
+        "y": 505,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-139",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 230,
+        "y": 1497,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-140",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2394,
+        "y": 275,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-141",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2860,
+        "y": 957,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-142",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 249,
+        "y": 1096,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-143",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1666,
+        "y": 1833,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-144",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 503,
+        "y": 445,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-145",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 698,
+        "y": 2222,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-146",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1817,
+        "y": 2147,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-147",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2755,
+        "y": 2086,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-148",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1288,
+        "y": 912,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-149",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 432,
+        "y": 1027,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-150",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2058,
+        "y": 1875,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-151",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1755,
+        "y": 937,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-152",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1386,
+        "y": 2205,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-153",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1860,
+        "y": 1889,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-154",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2298,
+        "y": 1329,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-155",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 682,
+        "y": 1366,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-156",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2572,
+        "y": 1151,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-157",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2542,
+        "y": 1935,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-158",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1645,
+        "y": 1291,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-159",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1956,
+        "y": 2041,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-160",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2503,
+        "y": 1681,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-161",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2863,
+        "y": 1231,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-162",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 529,
+        "y": 2197,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-163",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 200,
+        "y": 1723,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-164",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1601,
+        "y": 2048,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-165",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2826,
+        "y": 389,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-166",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1949,
+        "y": 206,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-167",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1538,
+        "y": 497,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-168",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1066,
+        "y": 279,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-169",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2420,
+        "y": 462,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-170",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2259,
+        "y": 1875,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-171",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 652,
+        "y": 949,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-172",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 661,
+        "y": 321,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-173",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2253,
+        "y": 869,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-174",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1189,
+        "y": 779,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-175",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1290,
+        "y": 242,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-176",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1811,
+        "y": 596,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-177",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1172,
+        "y": 1497,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-178",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1019,
+        "y": 1915,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-179",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1375,
+        "y": 542,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-180",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 256,
+        "y": 866,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-181",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 1668,
+        "y": 2221,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-182",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2405,
+        "y": 2071,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-183",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 2416,
+        "y": 1474,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-184",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 203,
+        "y": 1313,
+        "asset": "tree-birch"
+      },
+      {
+        "id": "object-185",
+        "kind": "prop",
+        "name": "Baum",
+        "x": 369,
+        "y": 1336,
+        "asset": "tree-oak"
+      },
+      {
+        "id": "object-186",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 298,
+        "y": 1804,
+        "asset": "rock"
+      },
+      {
+        "id": "object-187",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 2671,
+        "y": 198,
+        "asset": "bush"
+      },
+      {
+        "id": "object-188",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 2469,
+        "y": 1093,
+        "asset": "bush"
+      },
+      {
+        "id": "object-189",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 444,
+        "y": 523,
+        "asset": "rock"
+      },
+      {
+        "id": "object-190",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 482,
+        "y": 1810,
+        "asset": "rock"
+      },
+      {
+        "id": "object-191",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 1496,
+        "y": 638,
+        "asset": "bush"
+      },
+      {
+        "id": "object-192",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 2129,
+        "y": 2159,
+        "asset": "bush"
+      },
+      {
+        "id": "object-193",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 1597,
+        "y": 1500,
+        "asset": "bush"
+      },
+      {
+        "id": "object-194",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 1083,
+        "y": 808,
+        "asset": "bush"
+      },
+      {
+        "id": "object-195",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 231,
+        "y": 2235,
+        "asset": "bush"
+      },
+      {
+        "id": "object-196",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 1452,
+        "y": 1809,
+        "asset": "rock"
+      },
+      {
+        "id": "object-197",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 1152,
+        "y": 603,
+        "asset": "bush"
+      },
+      {
+        "id": "object-198",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 672,
+        "y": 1535,
+        "asset": "bush"
+      },
+      {
+        "id": "object-199",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 2469,
+        "y": 541,
+        "asset": "rock"
+      },
+      {
+        "id": "object-200",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 2487,
+        "y": 392,
+        "asset": "bush"
+      },
+      {
+        "id": "object-201",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 1244,
+        "y": 670,
+        "asset": "bush"
+      },
+      {
+        "id": "object-202",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 1657,
+        "y": 320,
+        "asset": "bush"
+      },
+      {
+        "id": "object-203",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 608,
+        "y": 1099,
+        "asset": "bush"
+      },
+      {
+        "id": "object-204",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 861,
+        "y": 495,
+        "asset": "bush"
+      },
+      {
+        "id": "object-205",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 2584,
+        "y": 935,
+        "asset": "rock"
+      },
+      {
+        "id": "object-206",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 1605,
+        "y": 632,
+        "asset": "rock"
+      },
+      {
+        "id": "object-207",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 1984,
+        "y": 2231,
+        "asset": "bush"
+      },
+      {
+        "id": "object-208",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 2608,
+        "y": 716,
+        "asset": "rock"
+      },
+      {
+        "id": "object-209",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 2699,
+        "y": 682,
+        "asset": "bush"
+      },
+      {
+        "id": "object-210",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 1745,
+        "y": 240,
+        "asset": "rock"
+      },
+      {
+        "id": "object-211",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 2512,
+        "y": 1549,
+        "asset": "rock"
+      },
+      {
+        "id": "object-212",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 2263,
+        "y": 205,
+        "asset": "rock"
+      },
+      {
+        "id": "object-213",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 570,
+        "y": 1352,
+        "asset": "bush"
+      },
+      {
+        "id": "object-214",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 1190,
+        "y": 278,
+        "asset": "bush"
+      },
+      {
+        "id": "object-215",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 2790,
+        "y": 1491,
+        "asset": "bush"
+      },
+      {
+        "id": "object-216",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 313,
+        "y": 474,
+        "asset": "bush"
+      },
+      {
+        "id": "object-217",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 2805,
+        "y": 1865,
+        "asset": "bush"
+      },
+      {
+        "id": "object-218",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 2429,
+        "y": 612,
+        "asset": "rock"
+      },
+      {
+        "id": "object-219",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 1873,
+        "y": 998,
+        "asset": "bush"
+      },
+      {
+        "id": "object-220",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 573,
+        "y": 837,
+        "asset": "bush"
+      },
+      {
+        "id": "object-221",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 2351,
+        "y": 943,
+        "asset": "rock"
+      },
+      {
+        "id": "object-222",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 745,
+        "y": 224,
+        "asset": "bush"
+      },
+      {
+        "id": "object-223",
+        "kind": "prop",
+        "name": "Natur",
+        "x": 1705,
+        "y": 2094,
+        "asset": "bush"
+      },
+      {
+        "id": "object-224",
+        "kind": "prop",
+        "name": "Wasserstein",
+        "x": 1792,
+        "y": 1472,
+        "asset": "water-rock"
+      },
+      {
+        "id": "object-225",
+        "kind": "prop",
+        "name": "Wasserstein",
+        "x": 2176,
+        "y": 1536,
+        "asset": "water-rock"
+      },
+      {
+        "id": "object-226",
+        "kind": "prop",
+        "name": "Wasserstein",
+        "x": 1920,
+        "y": 1728,
+        "asset": "water-rock"
       }
     ]
   }

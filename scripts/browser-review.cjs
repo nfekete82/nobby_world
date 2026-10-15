@@ -29,7 +29,7 @@ const fs=require('node:fs');
   await page.screenshot({path:'artifacts/rpgjs/world.png'});
   // The engine polls keyboard input per frame; a held key represents real play.
   await page.keyboard.press('Escape',{delay:150});
-  await page.getByText('Nobby',{exact:true}).waitFor();
+  await page.getByText('Nobby',{exact:true}).first().waitFor();
   assert.ok((await page.locator('body').innerText()).includes('HP 741'));
   await page.screenshot({path:'artifacts/rpgjs/menu.png'});
   await page.getByText('Save',{exact:true}).click();
@@ -43,7 +43,7 @@ const fs=require('node:fs');
   // Reload resets the unsaved session to the spawn; approaching the NPC proves
   // that actual keyboard movement and action collision detection both work.
   await page.reload();await page.waitForSelector('canvas');await page.waitForTimeout(1500);
-  await page.keyboard.down('ArrowDown');await page.waitForTimeout(600);await page.keyboard.up('ArrowDown');
+  await page.keyboard.down('ArrowDown');await page.waitForTimeout(650);await page.keyboard.up('ArrowDown');
   await page.keyboard.press('Space',{delay:150});
   await page.getByText('Willkommen, Nobby! Hier beginnt unsere neue Welt.',{exact:true}).waitFor();
   await page.screenshot({path:'artifacts/rpgjs/dialog.png'});

@@ -92,6 +92,50 @@
         "berserker"
       ],
       "valuesAsFlags": false
+    },
+    {
+      "id": 7,
+      "name": "prop",
+      "type": "class",
+      "color": "#ff78a36b",
+      "drawFill": true,
+      "useAs": [
+        "object"
+      ],
+      "members": [
+        {
+          "name": "asset",
+          "type": "string",
+          "value": "tree-oak",
+          "propertyType": "Grafik"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "name": "Grafik",
+      "type": "enum",
+      "storageType": "string",
+      "values": [
+        "tree-oak",
+        "tree-birch",
+        "tree-small",
+        "bush",
+        "rock",
+        "ore",
+        "sheep",
+        "house",
+        "house-large",
+        "barracks",
+        "monastery",
+        "tower",
+        "castle",
+        "portal-stone",
+        "portal-marker",
+        "foam",
+        "water-rock"
+      ],
+      "valuesAsFlags": false
     }
   ]
 }
