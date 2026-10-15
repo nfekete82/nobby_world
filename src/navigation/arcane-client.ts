@@ -6,7 +6,7 @@ import { ARCANE_ACTION, ARCANE_MANA, ARCANE_COOLDOWN_MS, ARCANE_RANGE, ARCANE_SP
 import type { NavigationGrid } from './pathfinding.mjs'
 
 type Point={x:number,y:number}
-type Foe={id:string,x:number,y:number,hp:number,actor:any}
+type Foe={id:string,x:number,y:number,hp:number,actor:any,frame:number[],foot:number[]}
 const castTimes=new WeakMap<RpgClientEngine,number>()
 const pos=(e:any):Point=>({x:Number(e.x()),y:Number(e.y())})
 const center=(p:Point):Point=>({x:p.x+16,y:p.y+12})
