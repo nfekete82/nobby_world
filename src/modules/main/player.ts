@@ -1,5 +1,6 @@
 import { RpgPlayer, MAXHP, type RpgPlayerHooks } from '@rpgjs/server'
 import art from '../../art/registry.json'
+import { ARCANE_ACTION, castArcaneBolt } from './arcane-bolt'
 
 export const player: RpgPlayerHooks = {
     onConnected(player: RpgPlayer) {
@@ -10,7 +11,11 @@ export const player: RpgPlayerHooks = {
         player.setGraphic('hero')
         player.setHitbox(...art.actorHitbox as [number,number])
     },
-    onInput(player: RpgPlayer, { action }) {
+    onInput(player: RpgPlayer, { action, data }: any) {
+        if (action === ARCANE_ACTION) {
+            castArcaneBolt(player,data)
+            return
+        }
         if (action == 'escape') {
             player.callMainMenu()
         }
