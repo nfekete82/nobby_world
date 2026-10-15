@@ -68,11 +68,15 @@ function enemies(engine:RpgClientEngine,id:string):Foe[]{
   const actor=alive[o.id] as any
   if(!actor)return null
   const x=Number(actor.x()),y=Number(actor.y())
-  const hp=Number(actor.hpSignal?.()??0)
+  const syncedHp=Number(actor.hpSignal?.())
   const sprite=art.assets[o.enemy==='berserker'?'enemy-berserker':'enemy-warrior']
+  // The sprite can be rendered before its HP signal arrives. Never make a
+  // locally stale 0/undefined HP prevent clicking a visible monster: only
+  // the authoritative server decides whether it is alive and can be hit.
+  const hp=Number.isFinite(syncedHp)&&syncedHp>0?syncedHp:1
   return Number.isFinite(x)&&Number.isFinite(y)
    ? {id:o.id,x,y,hp,actor,frame:sprite.frame,foot:sprite.foot}:null
- }).filter((v):v is Foe=>!!v&&v.hp>0)
+ }).filter((v):v is Foe=>!!v)
 }
 function view(engine:RpgClientEngine):any{
  const search=(node:any):any=>{
