@@ -142,7 +142,7 @@ class MapEditor {
    const live=String(this.engine?.sceneMap?.data?.()?.id||'simplemap').replace(/^map-/,'')
    this.id=/^[a-zA-Z0-9_-]+$/.test(live)?live:'simplemap'
    this.status('Karte wird geladen …')
-   const url=pathUrl('map/'+this.id+'.tmx')+'?editor='+Date.now()
+   const url=pathUrl('map/'+this.id+'.tmx') // Tiled Vite middleware resolves literal filenames; cache handled by fetch()
    const reply=await fetch(url,{cache:'no-store'})
    if(!reply.ok)throw Error('Karte konnte nicht geladen werden ('+reply.status+')')
    this.source=await reply.text();this.document=readXml(this.source)
