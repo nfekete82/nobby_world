@@ -1,5 +1,6 @@
 import {test} from 'node:test'
 import assert from 'node:assert/strict'
+import fs from 'node:fs'
 import {
  EDITOR_TILE_SIZE,EDITOR_MAX_SIDE_TILES,EDITOR_MAX_TOTAL_TILES,
  validateMapExpansion,expandLayerGrid,expansionFill
@@ -47,8 +48,8 @@ test('map editor respects 64px tiling and RPG-JS 100,000-node navigation cap',()
  assert.throws(()=>expandLayerGrid([1,2],40,32,60,40),/Altes Raster/)
 })
 test('in-game editor exposes searchable sprite gallery, persistent placement, resizing and zoom',()=>{
- const source=(await import('node:fs')).readFileSync('src/ui/web-editor.ts','utf8')
- const css=(await import('node:fs')).readFileSync('src/ui/web-editor.css','utf8')
+ const source=fs.readFileSync('src/ui/web-editor.ts','utf8')
+ const css=fs.readFileSync('src/ui/web-editor.css','utf8')
  assert.match(source,/private buildGallery\(\)/)
  assert.match(source,/private filterGallery\(\)/)
  assert.match(source,/\.chosenAsset=entry\.id/)
