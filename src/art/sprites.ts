@@ -20,7 +20,8 @@ export function spritesheets(){
                     scale:asset.directional&&direction==='left'?[-1,1]:[1,1]
                 })),{time:frames.length*60/(stableIdle&&name==='stand'?4:state.fps)}]
             ]
-          }]))
+          }]
+        }))
         return {id,image:asset.animations.stand.image,framesWidth:asset.animations.stand.frames,
             framesHeight:1,anchor:[footX/width,footY/height],x:boxW/2,y:boxH,
             trimTransparentBounds:true,textures}
