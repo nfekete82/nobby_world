@@ -26,3 +26,6 @@ src/tiled/tiny-swords/jungle.png
 src/tiled/tiny-swords/desert-path.png
 src/tiled/tiny-swords/snow-path.png
 public/tiny-swords/biomes/
+
+# Locally rendered style reference gallery (reproducible)
+artifacts/art-direction/

@@ -1,0 +1,88 @@
+# Nobby World — Master Pixel Art Style Guide
+
+**Status:** authoritative art contract for future graphics. Existing game sources remain the truth for exact sizes; this document does not overwrite previous art, TMX maps or gameplay.
+
+## 1. Master visual language
+
+Our **primary master** is the native, included **Pixel Frog / Tiny Swords** pack: trees, bush, warrior, tower, castle, terrain and monk. See `art/style-references.json`. This is not “generic pixel art”: new assets must look as if created by the same artist for the same game. The original native pack images are protected references, not assets to recolor or replace casually.
+
+- Camera: top-down/three-quarter Tiny Swords perspective, with visible building fronts and readable walkable ground. Keep viewpoint, vanishing cues and object silhouettes uniform across all biomes.
+- Shapes: rounded/blocky, readable chibi silhouettes; **large deliberately placed pixel clusters**, not thin photorealistic texture or noisy single-pixel confetti.
+- Outlines: crisp, stable, dark slate-blue outlines; starting reference `src/art/registry.json > palette.outline = #293544`. Outline weight and silhouette contrast must resemble nearby native sprites, **not** arbitrary fixed 1px/3px borders on everything.
+- Shading: limited flat color steps (generally ~3–4 shades per material); compact clusters, highlights consistently **upper-left**, shadows lower-right. Ambient shadows remain short and matte, not airbrushed.
+- Crispness: binary/pixel-hard silhouette on authored sprites; `nearest` sampling for runtime rendering, pixel-snapped positioning whenever practical. Avoid blur, gradients, bilinear upscale, glow halos, smooth vector edges, pseudo-3D and glossy plastic materials.
+- Density: small decorative motifs must remain subordinate to the main body of an object. Compare detail at **native sprite size**, not just zoomed out in an illustration.
+
+### Identity and character continuity
+
+The existing playable mage Nobby and shaman Nobby are the character identity references. Preserve the **brown hair, beard, man bun**, facial proportions and game-readable costume silhouettes when editing or adding poses. Keep mage and shaman visually distinct as *classes*, but proportional to the same native actors. Skeletons share the same world proportions, feet, light and shading. Do not substitute an independently styled full-body portrait for the in-game sprite.
+
+## 2. Technical pixel contract
+
+| Component | Existing implementation contract |
+| --- | --- |
+| Terrain/collision tile | **64 × 64 source px**; TMX and registry agree |
+| Actors | Default native frame **192 × 192 px**, common foot **[96,132]**, hitbox **[32,24]**; consult registry for exceptions |
+| Props | Use each existing native frame/foot/hitbox from `src/art/registry.json`; do **not** force props to actor dimensions |
+| Sprite sheets | Exactly `frameWidth × frames` and `frameHeight × (rows ?? 1)`; aligned per frame and facing |
+| Animation | Stable baseline, no wandering body, consistent scale and outfit per pose; no cut-off weapons, particles or body parts |
+| Runtime scaling | Nearest-neighbor filtering, no blurry fractional object scaling or size corrections via editor rectangles |
+| Atlas and metadata | `src/art/registry.json` owns runtime frames, anchors, collision and visibleBounds; verify with preflight |
+
+The runtime config already sets `TextureStyle.defaultOptions.scaleMode='nearest'` and `TextureSource.defaultOptions.scaleMode='nearest'` in `src/art/pixel-rendering.ts`. Changes must preserve both.
+
+## 3. Biomes share technique, not identical colors
+
+| Biome | Color intent and continuity |
+| --- | --- |
+| Forest/grass | Sage and olive grass, deep forest greens, cool blue-slate outlines; native Tiny Swords trees/bushes first |
+| Desert | **Distinctly warm yellow-gold sand**, ochre/rust/cream accents, jade cactus; no greenish dirt or grassy dominant pixels |
+| Snow | Bright ivory snow, cool muted blue-violet shadows, snowy native-scale evergreens, dark readable contours |
+| Jungle | Saturated but restrained leaf-greens/turquoise; native-size foliage clusters, tree trunk and canopy geometry as Tiny Swords |
+| Stone/buildings | Matte warm masonry/wood; dark slate outlines, roofs, windows and trim with consistent native perspective |
+
+Never solve biome distinction by changing the fundamental art style. Forest, desert, snow and jungle must have identical camera/view angle, pixel density and lighting direction.
+
+## 4. Terrain transitions are first-class assets
+
+- Paint terrain using real 64px tiles/autotile edges, corners and transition masks: grass↔path, path↔desert, desert↔rock, cliff ledge and snow↔soil.
+- Keep paths coherent and bridges visibly traversable. Terrain visuals and collision/pathfinding must **agree**, including water and stepped heights.
+- Avoid placing trees, cacti, houses, shadows or any other objects into otherwise reusable seamless ground tiles.
+- Preserve editor categories, layer semantics, sprite object IDs and user-made maps; no destructive world re-generation.
+
+## 5. Source of truth and approved references
+
+1. `art/style-references.json` identifies actual checked-in **native master** and **secondary authored** assets. It is validated automatically against the runtime registry.
+2. `art/pack-manifest.json` pins original Tiny Swords PNG hashes for proven native art. Do not change an original PNG in-place.
+3. `art/generated-source/` contains editable illustration sources; compiled PNGs are in `public/tiny-swords/`.
+4. Existing background: `docs/TINY_SWORDS_ART_DIRECTION.md`, `docs/BIOME_ART_DIRECTION.md`, `docs/STYLE_AND_AGGRO_REVIEW.md`, and `art/PROMPTS.md`.
+5. The optional existing before/after report is `artifacts/expansion/style-comparison-v2.png`. Generate a current reference contact sheet via `npm run art:references` and open `artifacts/art-direction/style-reference.html`.
+
+For every new asset, record: purpose/biome, 1–3 master references, source provenance/license, native frame dimensions, animation counts, foot anchor and acceptance screenshots. Update the reference manifest **only after** the new sprite has passed visual review; **do not** auto-promote every generated asset to “master”.
+
+## 6. Definition of done
+
+```sh
+npm ci
+npm run art:style:check
+npm test
+npm run build
+npm run art:references
+# For changed scenes/characters/biomes:
+npm run test:expansion
+```
+
+`art:style:check` combines the existing production preflight with a reference/renderer/original-pack guard. CI runs it on PRs. It catches wrong spritesheets, misplaced assets, invalid PNGs and modified native masters. `npm run art:references` generates a locally viewable side-by-side asset gallery. **Visual inspection of the gallery plus in-game screenshots is still mandatory:** no test can reliably assert matching art direction, shape language or aesthetic quality.
+
+## Shaman and actor animation stability
+
+The shaman, mage, Mira, and allied skeleton use the approved stable standing
+poses in `src/art/animation-policy.mjs`. Standing animations must not include
+running/jumping silhouettes. Shaman idle runs at **1.5 FPS** (source compiler
+and registry agree), not the old 4 FPS. Compiled actor sheets retain their
+full **192×192** cells and fixed **[96,132] foot**, so **do not set
+`trimTransparentBounds: true` for actors**: per-frame trimming can cause jitter.
+Props continue to use their historical trim behavior. Walking, fighting,
+casting, summoning and death animations always retain all authored frames.
+When new actor art is introduced, review *both* front and rear frames and
+check idle/stride/junction transitions in the actual game, not just static PNGs.
