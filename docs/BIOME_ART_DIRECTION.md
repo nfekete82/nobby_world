@@ -42,3 +42,23 @@ einschließlich der Feigenkakteen auswählbar.
 Die visuelle Referenz ist das bestehende Tiny-Swords-Waldset; neue Requisiten
 nehmen dessen Konturstärken, Farben und Perspektive auf, ohne das Original
 zu überschreiben.
+
+## Green Woodland Revision
+
+Die bisher prozedural erzeugten Wüstenhäuser sehen trotz Schattierung anders
+aus als die originalen Bäume. Deshalb werden `desert-house`,
+`desert-tent` und `desert-temple` jetzt **direkt aus dem originalen
+Pixel-Frog-Tiny-Swords-Haus-1, Haus-2 und Monastery** kompiliert. Die
+Originalpixelformen, Dächer und Schattierungen bleiben erhalten; nur blaue
+Dachflächen werden zu Moosgrün umgefärbt. Das Tempelgebäude besitzt dadurch
+native **192×320 px** und eine passende Hitbox. Bestehende Objekt-IDs bleiben
+unverändert. Der Name `desert-tent` bleibt aus Save-Kompatibilität bestehen;
+visuell ist es jetzt ein Dorfhaus aus dem gleichen Originalpack.
+
+Der Bereich `Wüste` nutzt jetzt einen warmen **grünen Wiesenfarbton**, keine
+beige Sandfläche mehr. Die Editor-Biom-Namen bleiben für Kompatibilität
+erhalten. Wasser bleibt Wasser, damit Ufer, Brücken und Kollisionen nicht
+durch eine rein visuelle Grünfärbung unlogisch werden.
+
+Source of truth: `scripts/green-native-buildings.mjs`,
+`scripts/biome-props.mjs`, `scripts/biome-art.mjs`.
