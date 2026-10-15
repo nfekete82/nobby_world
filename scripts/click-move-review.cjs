@@ -182,6 +182,14 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
   const wasd=await page.evaluate(()=>window.__nobbyDiagonalEvents.filter(e=>e.source==='keyboard'&&e.dx===1&&e.dy===-1));
   assert.ok(wasd.length>arrows.length+1,'W+D did not send diagonal vectors: '+JSON.stringify(wasd));
   const chord={arrows:arrows.length,wasd:wasd.length,mode:'normalized-vector'}
+  // Once diagonal input stops, the local-only playback must be released so
+  // ordinary standing, attacks and heals are not masked indefinitely.
+  await page.waitForFunction(()=>{
+    const p=window.__clickReview.engine.getCurrentPlayer();
+    return !p.animationPlayback?.();
+  },{},{timeout:4000});
+  assert.ok((await page.evaluate(()=>window.__nobbyDiagonalAnimationEvents))
+    .some(e=>e.action==='stop'),'diagonal walk override never released');
   assert.deepEqual(errors,[]);
   assert.deepEqual(missing,[]);
   console.log('Click-to-move browser review passed.',{from:before.current,to:after,target:before.dest,route:accepted,controls:await page.evaluate(()=>window.__nobbyControlEvents),chord});
