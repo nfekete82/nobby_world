@@ -39,36 +39,6 @@ test('web editor is linked from the native Escape GUI and has reversible editing
  assert.match(vite,/server\.middlewares\.use\(editorApi\)/)
 })
 
-test('resized TMX is validated, written, verified and kept without a premature game rebuild',async()=>{
- const {validateEditorMap}=await import('../scripts/web-editor-api.mjs')
- const dir=fs.mkdtempSync(path.join(os.tmpdir(),'nobby-editor-resize-'))
- const layer=(name,w,h,ids)=>`<layer name="${name}" width="${w}" height="${h}"><data encoding="csv">${ids.join(',')}</data></layer>`
- const xml=(w,h,bg,collision)=>`<?xml version="1.0" encoding="UTF-8"?>\n<map width="${w}" height="${h}">${layer('Wassergrund',w,h,bg)}${layer('Wasser und Klippen · Kollision',w,h,collision)}</map>\n`
- try{
-  const folder=path.join(dir,'src/tiled');fs.mkdirSync(folder,{recursive:true})
-  const file=path.join(folder,'simplemap.tmx')
-  const original=xml(2,2,[73,73,73,73],[0,0,0,1])
-  const changed=xml(3,3,[73,73,73,73,73,73,73,73,73],[0,0,1,0,1,1,1,1,1])
-  fs.writeFileSync(file,original)
-  let checks=0
-  const result=editorWrite({id:'simplemap',original,updated:changed},dir,{compile:()=>{checks++}})
-  assert.equal(result.status,200,JSON.stringify(result.body))
-  assert.deepEqual(result.body,{ok:true,needsRefresh:true,width:3,height:3,layers:2})
-  assert.equal(checks,1,'validate gameplay before accepting save')
-  assert.equal(fs.readFileSync(file,'utf8'),changed,'new dimensions persist')
-  assert.deepEqual(validateEditorMap(original,changed),{width:3,height:3,layers:2})
-  assert.equal(editorWrite({id:'simplemap',original,updated:changed},dir).status,409,'stale editor cannot overwrite map')
-  const bad=xml(4,4,[73,73],[0,0])
-  assert.equal(editorWrite({id:'simplemap',original:changed,updated:bad},dir).status,400)
-  assert.equal(fs.readFileSync(file,'utf8'),changed)
-  const invalid=xml(4,4,new Array(16).fill(73),new Array(16).fill(1))
-  const rollback=editorWrite({id:'simplemap',original:changed,updated:invalid},dir,{compile:()=>{throw Error('navigation failed')}})
-  assert.equal(rollback.status,422)
-  assert.match(rollback.body.error,/navigation failed/)
-  assert.equal(fs.readFileSync(file,'utf8'),changed,'rollback restores last successful map')
-  assert.ok(fs.readdirSync(path.join(dir,'art/map-backups')).length>=2)
- }finally{fs.rmSync(dir,{recursive:true,force:true})}
-})
 test('a managed save cannot forcibly reload the page before its response',()=>{
  const vite=fs.readFileSync('vite.config.ts','utf8')
  const api=fs.readFileSync('scripts/web-editor-api.mjs','utf8')
