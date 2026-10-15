@@ -9,6 +9,54 @@ type Foe={id:string,x:number,y:number,hp:number,actor:any}
 const castTimes=new WeakMap<RpgClientEngine,number>()
 const pos=(e:any):Point=>({x:Number(e.x()),y:Number(e.y())})
 const center=(p:Point):Point=>({x:p.x+16,y:p.y+12})
+type PendingCast={foeId:string,from:Point,to:Point}
+const pending=new WeakMap<RpgClientEngine,Map<string,PendingCast>>()
+const listening=new WeakSet<RpgClientEngine>()
+let spellSerial=0
+const reasonLabels:Record<string,string>={
+ mana:'Nicht genug Mana',cooldown:'Zauber lädt noch auf',
+ blocked:'Keine freie Sicht auf den Gegner',range:'Gegner außer Reichweite',
+ target:'Ungültiges Ziel','enemy-missing-or-dead':'Gegner nicht mehr da',
+ 'monster-id':'Unbekannter Gegner',map:'Karte nicht bereit',
+ 'player-dead':'Nobby ist besiegt','flight-occluded-or-out-of-range':'Zauberkugel verfehlt',
+ 'timeout':'Keine Antwort vom Spielserver'
+}
+function feedback(reason:string){
+ const node=document.createElement('div')
+ node.className='nobby-magic-feedback'
+ node.role='status'
+ node.textContent=reasonLabels[reason]??'Zauber nicht möglich'
+ document.body.append(node)
+ setTimeout(()=>node.remove(),1800)
+}
+function listenForSpellResults(engine:RpgClientEngine){
+ if(listening.has(engine))return
+ listening.add(engine)
+ pending.set(engine,new Map())
+ engine.socket.on('nobby:arcane-status',(message:any)=>{
+  if(!message||typeof message.requestId!=='string')return
+  window.dispatchEvent(new CustomEvent('nobby:spell-server',{detail:message}))
+  if(message.stage==='impact'){
+   window.dispatchEvent(new CustomEvent('nobby:spell-hit',{detail:message}))
+   return
+  }
+  const request=pending.get(engine)?.get(message.requestId)
+  if(!request)return
+  pending.get(engine)?.delete(message.requestId)
+  if(message.stage==='accepted'){
+   visual(engine,request.foeId,request.from,request.to)
+   window.dispatchEvent(new CustomEvent('nobby:spell-cast',{detail:{
+    targetId:request.foeId,action:ARCANE_ACTION,mana:ARCANE_MANA,confirmed:true
+   }}))
+  }else{
+   feedback(message.reason)
+   window.dispatchEvent(new CustomEvent('nobby:spell-rejected',{detail:{
+    reason:message.reason,targetId:request.foeId,source:'server'
+   }}))
+  }
+ })
+}
+
 
 /** Live synced monster objects, not static Tiled spawn coordinates. */
 function enemies(engine:RpgClientEngine,id:string):Foe[]{
@@ -90,13 +138,24 @@ export function tryArcaneCast(engine:RpgClientEngine,mapId:string,foeId:string,n
  const result=canCast({from,to,nav,mana:Number(p.spSignal?.()??0),
   cooldownReady:now>=(castTimes.get(engine)??0)})
  if(result!=='ok'){
-  window.dispatchEvent(new CustomEvent('nobby:spell-rejected',{detail:{reason:result,targetId:foeId}}))
+  feedback(result)
+  window.dispatchEvent(new CustomEvent('nobby:spell-rejected',{detail:{reason:result,targetId:foeId,source:'client'}}))
   return false
  }
+ listenForSpellResults(engine)
+ const requestId=`arcane-${++spellSerial}`
+ pending.get(engine)!.set(requestId,{foeId,from:center(from),to:center(to)})
  castTimes.set(engine,now+ARCANE_COOLDOWN_MS)
- engine.processAction(ARCANE_ACTION,{targetId:foeId})
- visual(engine,foeId,center(from),center(to))
- window.dispatchEvent(new CustomEvent('nobby:spell-cast',{detail:{targetId:foeId,action:ARCANE_ACTION,mana:ARCANE_MANA}}))
+ engine.processAction(ARCANE_ACTION,{targetId:foeId,requestId})
+ // An unacknowledged click is NOT considered a cast; no fake projectile.
+ setTimeout(()=>{
+  if(!pending.get(engine)?.has(requestId))return
+  pending.get(engine)?.delete(requestId)
+  feedback('timeout')
+  window.dispatchEvent(new CustomEvent('nobby:spell-rejected',{detail:{
+   reason:'timeout',targetId:foeId,source:'transport'
+  }}))
+ },2000)
  return true
 }
 
