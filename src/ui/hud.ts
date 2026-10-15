@@ -6,13 +6,15 @@ let root: HTMLElement, hp: HTMLElement, mana: HTMLElement, title: HTMLElement, r
 let healButton: HTMLButtonElement
 let lastUpdate=0
 function mount(engine: RpgClientEngine){
- root=document.createElement('aside');root.id='nobby-hud';root.setAttribute('aria-label','Nobbys Status')
+ root=document.createElement('aside');root.id='nobby-hud';root.setAttribute('aria-label','Spielerstatus')
  root.innerHTML='<div class="nobby-status"><div class="nobby-portrait" aria-hidden="true"></div><div class="nobby-vitals"><strong class="nobby-name"></strong><div class="nobby-meter hp"><i></i><span></span></div><div class="nobby-meter mana"><i></i><span></span></div></div></div><div class="nobby-region"><strong></strong><span></span></div><nav class="nobby-actions" aria-label="Spielaktionen"><button type="button" data-action="heal" title="H · 25 Mana, heilt 25 % Leben">✦ <span>Heilen</span><kbd>H</kbd></button><button type="button" data-action="escape">☰ <span>Menü</span><kbd>Esc</kbd></button></nav><div class="nobby-controls">Linksklick: Laufen · Gegner anklicken: Arkankugel (12 Mana) <b>WASD · Bewegen</b></div>'
  document.body.append(root)
  const portrait=root.querySelector<HTMLElement>('.nobby-portrait')!,hero=art.assets.hero
  portrait.style.backgroundImage=`url("${import.meta.env.BASE_URL}${hero.animations.stand.image}")`
- portrait.style.backgroundSize=`${hero.frame[0]*hero.animations.stand.frames}px ${hero.frame[1]}px`
- portrait.style.backgroundPosition=`${32-hero.foot[0]}px ${78-hero.foot[1]}px`
+ // Keep the sprite foot anchor stable while enlarging the portrait by 25%.
+ const portraitScale=1.25
+ portrait.style.backgroundSize=`${hero.frame[0]*hero.animations.stand.frames*portraitScale}px ${hero.frame[1]*portraitScale}px`
+ portrait.style.backgroundPosition=`${40-hero.foot[0]*portraitScale}px ${98-hero.foot[1]*portraitScale}px`
  healButton=root.querySelector<HTMLButtonElement>('button[data-action="heal"]')!
  hp=root.querySelector('.hp')!;mana=root.querySelector('.mana')!;title=root.querySelector('.nobby-name')!;region=root.querySelector('.nobby-region strong')!;gold=root.querySelector('.nobby-region span')!
  root.querySelectorAll<HTMLButtonElement>('button[data-action]').forEach(b=>b.addEventListener('click',()=>{engine.processAction(b.dataset.action!);b.blur()}))
@@ -30,7 +32,7 @@ export function updateHud(engine:RpgClientEngine){
  const modal=Object.values((engine as any).guiService?.gui?.()??{}).some((g:any)=>['rpg-dialog','rpg-main-menu','rpg-shop','rpg-save','rpg-title-screen','rpg-gameover','rpg-input','rpg-character-select'].includes(g.name)&&g.display?.())
  root.hidden=!player||modal
  if(!player)return
- title.textContent=`Nobby · Stufe ${player._level()}`
+ title.textContent=`nobby · Stufe ${player._level()}`
  const params=player._param()
  const currentHp=player.hpSignal(), currentMana=player.spSignal(), maximumHp=params.maxHp||1
  meter(hp,currentHp,maximumHp,'LEBEN');meter(mana,currentMana,params.maxSp||1,'MANA')
