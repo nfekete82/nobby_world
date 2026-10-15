@@ -5,11 +5,11 @@ import { PNG } from 'pngjs'
 import { ensureDarkerGrass, dimGrassPixels, GRASS_BRIGHTNESS } from '../scripts/darken-grass.mjs'
 
 test('grass tint is subtle, alpha-preserving, and does not tint transparent backgrounds',()=>{
- assert.equal(GRASS_BRIGHTNESS,0.94)
+ assert.equal(GRASS_BRIGHTNESS,0.80)
  const source=new PNG({width:2,height:1})
  source.data.set([100,150,80,255,20,30,40,0])
  const dark=dimGrassPixels(source)
- assert.deepEqual([...dark.data],[94,141,75,255,20,30,40,0])
+ assert.deepEqual([...dark.data],[80,120,64,255,20,30,40,0])
 })
 test('both Tiled grass and forest sheets regenerate at exactly the original dimensions',()=>{
  ensureDarkerGrass()

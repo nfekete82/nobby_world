@@ -37,10 +37,18 @@ export function worldEvent(object: any): EventDefinition {
     }
     if(object.kind==='prop')return {
         name:object.name,
+        // Physics bodies normally have mass 100; even a non-moving event can
+        // be displaced by a player or NPC. All authored scenery is fixed.
+        pushable:false,
+        mass:0,
         onInit(){
             const asset=ART.assets[object.asset as keyof typeof ART.assets]
-            this.setGraphic(object.asset);this.setHitbox(...asset.hitbox as [number,number])
+            this.setGraphic(object.asset)
+            this.setHitbox(...asset.hitbox as [number,number])
             this.through=!(asset as any).solid
+            this.pushable=false
+            this.setMass(0)
+            this.canMove=false
         }
     }
     return {

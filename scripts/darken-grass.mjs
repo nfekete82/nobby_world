@@ -6,7 +6,7 @@ import { PNG } from 'pngjs'
 // Subtle, uniform brightness adjustment of grass/forest Tiled tilesets.
 // Original pixel art stays intact. Other layers (paths, water, buildings,
 // characters, etc.) are not processed.
-export const GRASS_BRIGHTNESS=0.94
+export const GRASS_BRIGHTNESS=0.80
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..')
 const entries=[
  ['grass.png','grass-darker.png'],
@@ -23,10 +23,13 @@ export function dimGrassPixels(source){
 }
 export function ensureDarkerGrass(){
  const folder=path.join(root,'src/tiled/tiny-swords')
+ // Include recipe changes in the cache key; otherwise changing brightness
+ // leaves the previously generated grass sheets untouched on local machines.
+ const recipeModified=fs.statSync(fileURLToPath(import.meta.url)).mtimeMs
  for(const [input,output] of entries){
   const from=path.join(folder,input),to=path.join(folder,output)
   if(!fs.existsSync(from))throw Error('Grass source tileset missing: '+from)
-  if(fs.existsSync(to)&&fs.statSync(to).mtimeMs>=fs.statSync(from).mtimeMs)continue
+  if(fs.existsSync(to)&&fs.statSync(to).mtimeMs>=Math.max(fs.statSync(from).mtimeMs,recipeModified))continue
   const raw=PNG.sync.read(fs.readFileSync(from))
   if(raw.width!==576||raw.height!==384)
    throw Error(input+': expected 576x384 Tiled sheet, got '+raw.width+'x'+raw.height)
@@ -36,5 +39,5 @@ export function ensureDarkerGrass(){
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  ensureDarkerGrass()
- console.log('Gras und Waldwiese um 6 % abgedunkelt.')
+ console.log('Gras und Waldwiese um 20 % abgedunkelt.')
 }

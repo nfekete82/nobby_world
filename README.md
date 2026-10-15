@@ -133,3 +133,11 @@ Gegner idle **4 FPS**, Bäume/Büsche **2,5 FPS**, Schafe **4 FPS**, Wasser
 **5 FPS**, Portal **8 FPS**. Laufen, Angriff und Zaubern sind unverändert
 schnell. Die gleichen Werte sind in `scripts/compile-art.mjs` gesetzt,
 damit `npm run art:prepare` sie nicht zurücksetzt.
+
+#### Feste Gebäude und tiefere Wiesenfarbe
+
+Häuser, Türme, Bäume und sonstige Dekorationen sind im RPG-JS-Physiksystem
+**nicht schiebbar** (mass: 0, pushable: false), NPCs können sie nicht verschieben.
+Die Wiesen-Tilesets `grass` und `forest` sind um **20 %** abgedunkelt.
+Die abgeleiteten Dateien werden bei Änderungen an `scripts/darken-grass.mjs`
+automatisch neu erstellt, ohne die Originale zu überschreiben.

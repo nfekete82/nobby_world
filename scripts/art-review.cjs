@@ -78,6 +78,20 @@ const ensureDevServer = require('./ensure-dev-server.cjs');
  await teleport(540,1040);await hold('ArrowUp',800);assert.ok((await position()).y>=1003,'house ground footprint blocks walking');checks.push('house footprint collision');
  await freshScene();
  await teleport(2020,690);await shot('highlands');
+ // Building and all scenery physics must be fixed in the actual RPG-JS server.
+ const fixedProps=await page.evaluate(()=>{
+  const events=Object.values(window.__editor.server.subRoom.events())
+  return events.filter(e=>['house','house-large','barracks','monastery','tower','castle','tree-oak','tree-birch'].some(t=>e.graphics().includes(t)))
+   .map(e=>({id:e.id,graphic:e.graphics(),pushable:e.pushable,mass:e._mass?.(),canMove:e.canMove}))
+ })
+ assert.ok(fixedProps.length>=2,'fixed buildings and trees are present on the real map')
+ for(const p of fixedProps){
+  assert.equal(p.pushable,false,p.id+' must not be pushable')
+  assert.equal(p.mass,0,p.id+' must have infinite physical resistance (mass 0)')
+  assert.equal(p.canMove,false,p.id+' must not move autonomously')
+ }
+ checks.push('real map buildings and trees are physically immovable, even on NPC contact')
+ 
  const tree=await page.evaluate(()=>{const events=Object.values(window.__editor.server.subRoom.events());return events.filter(e=>e.graphics().includes('tree-oak')).map(e=>({x:e.x(),y:e.y()})).find(e=>e.x>1900&&e.y>900&&e.y<1600)});
  assert.ok(tree,'tree scene available');
  await teleport(tree.x+4,tree.y-40);await shot('behind-tree');await teleport(tree.x+4,tree.y+32);await shot('in-front-of-tree');checks.push('tree occlusion before/behind photographed');
