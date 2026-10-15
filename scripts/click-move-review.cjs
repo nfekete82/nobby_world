@@ -89,9 +89,24 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
   assert.ok(after.x>before.current.x+24,'click did not move player');
   assert.ok(Math.abs(after.y-before.current.y)<35,'player deviated from path');
   assert.ok(Math.abs(after.x-before.dest.x)<36,'player did not approach click');
+  // Physical arrow-key chords must also use native walk frames on BOTH axes.
+  await page.evaluate(()=>{ window.__RPGJS_MOBILE_DEBUG_EVENTS__=[]; });
+  await page.keyboard.down('ArrowUp');
+  await page.keyboard.down('ArrowRight');
+  await page.waitForTimeout(450);
+  await page.keyboard.up('ArrowRight');
+  await page.keyboard.up('ArrowUp');
+  const chord=await page.evaluate(()=>({
+    bound:!!window.__clickReview.engine.activeKeyboardControls?.()?.keyboard?.getControl?.('up_right'),
+    inputs:(window.__RPGJS_MOBILE_DEBUG_EVENTS__||[])
+      .filter(e=>e.type==='movement:input').map(e=>e.input)
+  }));
+  assert.equal(chord.bound,true,'Native up+right combo must be registered');
+  assert.ok(chord.inputs.includes('up')&&chord.inputs.includes('right'),
+    'Diagonal chord must drive both movement axes: '+JSON.stringify(chord));
   assert.deepEqual(errors,[]);
   assert.deepEqual(missing,[]);
-  console.log('Click-to-move browser review passed.',{from:before.current,to:after,target:before.dest,route:accepted,controls:await page.evaluate(()=>window.__nobbyControlEvents)});
+  console.log('Click-to-move browser review passed.',{from:before.current,to:after,target:before.dest,route:accepted,controls:await page.evaluate(()=>window.__nobbyControlEvents),chord});
  }finally{
   if(browser)await browser.close();
   await stop();
