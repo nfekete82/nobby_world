@@ -52,6 +52,24 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
    const p=window.__spellReview.engine.getCurrentPlayer();
    return p&&Math.abs(p.x()-expected.x)<8&&Math.abs(p.y()-expected.y)<8&&p.spSignal()===100
   },start,{timeout:12000});
+  // Wait for the authoritative server map to finish spawning its events.
+  // Player/HUD readiness may precede server event initialization on first load.
+  await page.waitForFunction(targetId=>{
+   const player=Object.values(window.__spellReview.server.subRoom.players())[0];
+   const map=player?.getCurrentMap?.();
+   const foe=map?.getEvent?.(targetId) ??
+     Object.values(map?.events?.()??{}).find(e=>e.nobbyWorldObjectId===targetId);
+   const client=window.__spellReview.engine.sceneMap.events()?.[targetId];
+   return !!(foe?.battleAi&&foe.hp>0&&client);
+  },foe.id,{timeout:12000}).catch(async()=>{
+   const data=await page.evaluate(targetId=>{
+    const player=Object.values(window.__spellReview.server.subRoom.players())[0];
+    const map=player?.getCurrentMap?.();
+    return {targetId,mapId:map?.id,serverEvents:Object.keys(map?.events?.()??{}).slice(0,8),
+      clientEvents:Object.keys(window.__spellReview.engine.sceneMap.events?.()??{}).slice(0,8)};
+   },foe.id);
+   throw new Error('RPG-JS did not spawn or synchronize the selected monster: '+JSON.stringify(data));
+  });
   // The authoritative map is the one the attacking player belongs to,
   // not necessarily server.subRoom (which may be a transfer wrapper).
   const before=await page.evaluate(targetId=>{
