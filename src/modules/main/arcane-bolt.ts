@@ -1,4 +1,5 @@
 import { applyPlayerHitToEvent } from '@rpgjs/action-battle/server'
+import { applyArcaneImpact } from '../../combat/arcane-impact.mjs'
 import worlds from '../../generated/worlds.json'
 import { unpackNavigation } from '../../navigation/pathfinding.mjs'
 import { ARCANE_ACTION, ARCANE_MANA, ARCANE_COOLDOWN_MS, ARCANE_SPEED,
@@ -75,39 +76,12 @@ export function castArcaneBolt(player:any,data:any):boolean{
    // Once the server accepts a homing bolt, subsequent NPC movement must
    // not invalidate a fair shot. Map changes and dead targets still cancel.
    // Only the cast's original line of sight and range are authoritative.
-   const originalHp=Number(victim.hp)
-   const ai=victim.battleAi as any
-   // Extend pursuit before applying the hit, so the AI does not instantly
-   // discard Nobby for being outside its small pre-combat vision radius.
-   ai.visionRange=Math.max(Number(ai.visionRange)||0,440)
-   let result:any
-   let engineError=''
-   try {
-    result=applyPlayerHitToEvent(player,victim,undefined,{
-      damageMultiplier:1.25,knockbackMultiplier:0,source:'arcane-bolt'
-    })
-   }catch(error){
-    engineError=error instanceof Error?error.message:String(error)
-    console.error('[Nobby arcane] native damage failed',error)
-   }
-   let actualDamage=Math.max(0,originalHp-Number(victim.hp))
-   // Guaranteed modest arcane damage if the default physical-weapon formula
-   // yields zero / throws. The server still owns HP, death and retaliation.
-   if(actualDamage===0&&victim.hp>0){
-    const magicalDamage=Math.min(victim.hp,18)
-    victim.hp=Math.max(0,originalHp-magicalDamage)
-    actualDamage=Math.max(0,originalHp-Number(victim.hp))
-    if(actualDamage>0){
-     ai.handleDamage(player,{damage:actualDamage,defeated:victim.hp<=0})
-    }
-   }
-   if(actualDamage>0&&victim.hp>0&&ai.getTarget?.()!==player){
-    ai.onDetectInShape?.(player,{id:'arcane-hit'})
-   }
+   const impact=applyArcaneImpact(player,victim,applyPlayerHitToEvent)
+   const {damage:actualDamage,hpBefore:originalHp,engineDamage,engineError}=impact
    trace('impact',actualDamage>0?'hit':'zero-damage',{
-    damage:actualDamage,engineDamage:result?.damage??null,
+    damage:actualDamage,engineDamage,
     hpBefore:originalHp,hpAfter:victim.hp,
-    aggro:ai.getTarget?.()?.id??null,
+    aggro:victim.battleAi?.getTarget?.()?.id??null,
     ...(engineError?{engineError}:{})
    })
   }catch(error){
