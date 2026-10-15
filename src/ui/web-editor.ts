@@ -238,9 +238,15 @@ class MapEditor {
    if(visible&&first<0)first=index
   })
   const current=this.sheet.findIndex(s=>this.chosenGid>=s.first&&this.chosenGid<s.first+s.count)
-  if(first>=0&&(current<0||
+  if(first>=0&&(current<0||!visibleInBiome(tilesetBiome(this.sheet[current].source),this.biome)||
    (this.activeCategory!=='Alle'&&tilesetCategory(this.sheet[current].source)!==this.activeCategory))){
    let index=first
+   // Selecting a biome should open its landscape, not generic background water.
+   if(this.activeCategory==='Alle'){
+    const preferred=this.biome==='Wüste'?'desert.tsx':this.biome==='Schnee'?'snow.tsx':'grass.tsx'
+    const found=this.sheet.findIndex(s=>s.source===preferred)
+    if(found>=0)index=found
+   }
    // Prefer blue background water over the collision-only water tile.
    if(this.activeCategory==='Wasser'){
     const water=this.sheet.findIndex(s=>s.source==='water-background.tsx')
