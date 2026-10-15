@@ -1,10 +1,12 @@
 import type { RpgClientEngine } from '@rpgjs/client'
 import worlds from '../generated/worlds.json'
 import { findRoute, unpackNavigation } from './pathfinding.mjs'
+import { targetAtPointer, needsApproach, tryArcaneCast } from './arcane-client'
+import { ARCANE_RANGE, clearShot, distance } from '../combat/arcane-rules.mjs'
 
 type Point={x:number,y:number}
 type Nav=ReturnType<typeof unpackNavigation>
-type State={mapId:string,path:Point[],lastInput:number,lastProgress:number,previous:Point|null,raf:number|null,held:string|null,controls:any}
+type State={mapId:string,path:Point[],targetId:string|null,lastInput:number,lastProgress:number,previous:Point|null,raf:number|null,held:string|null,controls:any}
 const instances=new WeakMap<RpgClientEngine,State>()
 const cache=new Map<string,Nav>()
 let currentEngine:RpgClientEngine|null=null
@@ -148,7 +150,7 @@ function release(state:State){
   state.held=null;state.controls=null
   if(key&&controls)void controls.applyControl(key,false).catch(console.warn)
 }
-function cancel(state:State){state.path=[];release(state)}
+function cancel(state:State){state.path=[];state.targetId=null;release(state)}
 function hold(engine:RpgClientEngine,state:State,key:string):boolean{
   const controls=nativeControls(engine)
   if(!controls)return false
@@ -219,7 +221,22 @@ function init():void{
     const target={x:p.x-16,y:p.y-12},state=instances.get(engine)!
     cancel(state)
     state.mapId=mapId
-    state.path=findRoute(nav,position(player),target)
+    const foe=targetAtPointer(engine,mapId,{x:p.x,y:p.y})
+    if(foe){
+      const approach=needsApproach(engine,mapId,foe.id,nav)
+      if(!approach){
+        tryArcaneCast(engine,mapId,foe.id,nav)
+        return // Enemy click never means walking through the enemy.
+      }
+      const route=findRoute(nav,position(player),approach)
+      const stopAt=route.findIndex(point=>
+        distance(point,approach)<=ARCANE_RANGE-38&&clearShot(nav,point,approach))
+      state.path=stopAt>=0?route.slice(0,stopAt+1):route
+      state.targetId=foe.id
+      window.dispatchEvent(new CustomEvent('nobby:enemy-target',{detail:{targetId:foe.id,approach:true}}))
+    }else{
+      state.path=findRoute(nav,position(player),target)
+    }
     state.lastProgress=performance.now()
     state.previous=position(player)
     window.dispatchEvent(new CustomEvent('nobby:move-target',{detail:{
@@ -274,6 +291,16 @@ function driveRoute(engine:RpgClientEngine,state:State):boolean{
     cancel(state);return false
   }
   const at=position(player),now=performance.now()
+  if(state.targetId){
+    const nav=navFor(mapId)
+    if(!nav){cancel(state);return false}
+    if(!needsApproach(engine,mapId,state.targetId,nav)){
+      const id=state.targetId
+      cancel(state)
+      tryArcaneCast(engine,mapId,id,nav)
+      return false
+    }
+  }
   if(!state.previous||Math.hypot(at.x-state.previous.x,at.y-state.previous.y)>4){
     state.previous=at;state.lastProgress=now
   }else if(now-state.lastProgress>1100){
@@ -281,7 +308,12 @@ function driveRoute(engine:RpgClientEngine,state:State):boolean{
   }
   while(state.path.length&&Math.abs(at.x-state.path[0].x)<=9&&Math.abs(at.y-state.path[0].y)<=9)
     state.path.shift()
-  if(!state.path.length){release(state);return false}
+  if(!state.path.length){
+    const id=state.targetId,nav=navFor(mapId)
+    release(state);state.targetId=null
+    if(id&&nav)tryArcaneCast(engine,mapId,id,nav)
+    return false
+  }
   const next=state.path[0],dx=next.x-at.x,dy=next.y-at.y
   const ax=Math.abs(dx),ay=Math.abs(dy)
   // A* emits straight 45° segments. Small sub-tile offsets are normal after
@@ -312,7 +344,7 @@ export function updateClickMove(engine:RpgClientEngine){
   currentEngine=engine
   let state=instances.get(engine)
   if(!state){
-    state={mapId,path:[],lastInput:0,lastProgress:0,previous:null,raf:null,held:null,controls:null}
+    state={mapId,path:[],targetId:null,lastInput:0,lastProgress:0,previous:null,raf:null,held:null,controls:null}
     instances.set(engine,state)
   }
   if(mapId!==state.mapId){cancel(state);state.mapId=mapId;stopDiagonalWalk(engine)}
