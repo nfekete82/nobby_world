@@ -2649,6 +2649,141 @@
           ]
         }
       }
+    },
+    "desert-agave": {
+      "kind": "prop",
+      "frame": [
+        64,
+        64
+      ],
+      "foot": [
+        32,
+        56
+      ],
+      "hitbox": [
+        26,
+        16
+      ],
+      "solid": false,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/biomes/desert-agave.png",
+          "frames": 1,
+          "fps": 1,
+          "visibleBounds": [
+            [
+              5,
+              11,
+              59,
+              58
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/biomes/desert-agave.png",
+          "frames": 1,
+          "fps": 1,
+          "visibleBounds": [
+            [
+              5,
+              11,
+              59,
+              58
+            ]
+          ]
+        }
+      }
+    },
+    "desert-shrub": {
+      "kind": "prop",
+      "frame": [
+        64,
+        64
+      ],
+      "foot": [
+        32,
+        56
+      ],
+      "hitbox": [
+        24,
+        16
+      ],
+      "solid": false,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/biomes/desert-shrub.png",
+          "frames": 1,
+          "fps": 1,
+          "visibleBounds": [
+            [
+              5,
+              11,
+              59,
+              58
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/biomes/desert-shrub.png",
+          "frames": 1,
+          "fps": 1,
+          "visibleBounds": [
+            [
+              5,
+              11,
+              59,
+              58
+            ]
+          ]
+        }
+      }
+    },
+    "desert-prickly-pear": {
+      "kind": "prop",
+      "frame": [
+        64,
+        64
+      ],
+      "foot": [
+        32,
+        56
+      ],
+      "hitbox": [
+        30,
+        18
+      ],
+      "solid": true,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/biomes/desert-prickly-pear.png",
+          "frames": 1,
+          "fps": 1,
+          "visibleBounds": [
+            [
+              5,
+              11,
+              59,
+              58
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/biomes/desert-prickly-pear.png",
+          "frames": 1,
+          "fps": 1,
+          "visibleBounds": [
+            [
+              5,
+              11,
+              59,
+              58
+            ]
+          ]
+        }
+      }
     }
   },
   "generation": {
