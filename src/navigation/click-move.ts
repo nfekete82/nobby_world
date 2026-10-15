@@ -9,6 +9,7 @@ const instances=new WeakMap<RpgClientEngine,State>()
 const cache=new Map<string,Nav>()
 let currentEngine:RpgClientEngine|null=null
 let installed=false
+const heldPhysicalKeys=new Set<string>()
 const enhancedKeyboards=new WeakSet<object>()
 const mapIdOf=(engine:RpgClientEngine)=>String(engine.sceneMap.data()?.id??'').replace(/^map-/,'')
 /** Native RPG-JS vector velocity with zero speed boost.
@@ -30,10 +31,8 @@ function enableKeyboardDiagonals(engine:RpgClientEngine):void{
     additions[combo]={
       bind:combo,repeat:true,
       keyDown(){
-        // Only the combo, not both independent cardinal bindings, runs.
-        const dx=b==='left'?-1:1
-        const dy=a==='up'?-1:1
-        applyDiagonal(engine,dx,dy,'keyboard')
+        // Suppress the two individual cardinal callbacks. The shared physical
+        // key sampler below sends the one authoritative vector instead.
       }
     }
   }
@@ -125,6 +124,22 @@ function viewportOf(node:any):any{
 }
 /** Register once per engine; do not depend on the renderer having mounted yet. */
 /** One pointer handler bound to the ready map engine, never transient engines. */
+/** Physical keyboard sampler; independent of CanvasEngine's 60Hz keyState.
+ * Supports arrow chords and WASD with the same normalized diagonal velocity.
+ */
+function physicalDirection():{dx:number,dy:number}|null{
+  const held=(...names:string[])=>names.some(name=>heldPhysicalKeys.has(name))
+  const up=held('arrowup','w'),down=held('arrowdown','s')
+  const left=held('arrowleft','a'),right=held('arrowright','d')
+  const dx=left===right?0:left?-1:1
+  const dy=up===down?0:up?-1:1
+  return dx&&dy?{dx,dy}:null
+}
+function drivePhysicalChord(engine:RpgClientEngine){
+  const dir=physicalDirection()
+  if(dir)applyDiagonal(engine,dir.dx,dir.dy,'keyboard')
+}
+
 function init():void{
   if(installed)return
   installed=true
@@ -160,10 +175,20 @@ function init():void{
     if(state.path.length)startRoute(engine,state)
   },{capture:true})
   window.addEventListener('keydown',event=>{
+    const key=event.key.toLowerCase()
+    if(['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d'].includes(key))
+      heldPhysicalKeys.add(key)
     if(!currentEngine)return
-    if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','w','a','s','d','W','A','S','D','Escape',' ','h','H'].includes(event.key))
-      cancel(instances.get(currentEngine)!)
+    if(['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d','escape',' ','h'].includes(key)){
+      const state=instances.get(currentEngine)
+      if(state)cancel(state)
+    }
+    drivePhysicalChord(currentEngine)
   },{capture:true})
+  window.addEventListener('keyup',event=>{
+    heldPhysicalKeys.delete(event.key.toLowerCase())
+  },{capture:true})
+  window.addEventListener('blur',()=>heldPhysicalKeys.clear())
 }
 /**
  * Mouse navigation has its own animation-frame clock: engine onStep may run
@@ -231,4 +256,5 @@ export function updateClickMove(engine:RpgClientEngine){
     instances.set(engine,state)
   }
   if(mapId!==state.mapId){cancel(state);state.mapId=mapId}
+  drivePhysicalChord(engine)
 }
