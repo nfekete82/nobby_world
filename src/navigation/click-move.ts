@@ -63,6 +63,53 @@ function enableKeyboardDiagonals(engine:RpgClientEngine):void{
 const diagonalRate=new WeakMap<RpgClientEngine,number>()
 const DIAGONAL_INTERVAL_MS=65
 const DIAGONAL_HOLD_MS=110
+// RPG-JS 5's local character renderer chooses animationPlayback.name ahead
+// of the synchronized stand/walk state. Vector movement alone does NOT call
+// its playPredictedWalkAnimation() hook, so the feet otherwise remain idle.
+// Use an owned, CLIENT-ONLY playback override: no position/server mutations.
+const diagonalWalks=new WeakMap<RpgClientEngine,{player:any,playback:{name:string}}>()
+const lastDiagonalWalkAt=new WeakMap<RpgClientEngine,number>()
+const DIAGONAL_WALK_GRACE_MS=160
+
+function stopDiagonalWalk(engine:RpgClientEngine):void{
+  const owned=diagonalWalks.get(engine)
+  if(!owned)return
+  diagonalWalks.delete(engine)
+  if(owned.player.animationPlayback?.()===owned.playback){
+    owned.player.animationPlayback.set(null)
+  }
+  window.dispatchEvent(new CustomEvent('nobby:diagonal-animation',{
+    detail:{action:'stop',name:'walk',owned:true}
+  }))
+}
+
+function ensureDiagonalWalk(engine:RpgClientEngine,player:any):void{
+  const current=diagonalWalks.get(engine)
+  if(current?.player===player&&player.animationPlayback?.()===current.playback)return
+  if(current)stopDiagonalWalk(engine)
+  // Never override attacks, heals, knockback or an existing one-shot.
+  const name=player.animationName?.()
+  if((name!=='stand'&&name!=='walk')||player.animationFixed||
+    player.animationIsPlaying?.()||player.knockbackActive?.()||player.animationPlayback?.())return
+  if(typeof player.animationPlayback?.set!=='function')return
+  const playback={name:'walk'}
+  diagonalWalks.set(engine,{player,playback})
+  player.animationPlayback.set(playback)
+  window.dispatchEvent(new CustomEvent('nobby:diagonal-animation',{
+    detail:{action:'start',name:'walk',owned:true,frames:4}
+  }))
+}
+
+function syncDiagonalWalk(engine:RpgClientEngine):void{
+  const owned=diagonalWalks.get(engine)
+  if(!owned)return
+  const player=engine.getCurrentPlayer() as any
+  if(player!==owned.player||player.knockbackActive?.()||player.animationFixed||
+    player.animationIsPlaying?.()||(typeof player.canMove==='function'?player.canMove()===false:player.canMove===false)||
+    performance.now()-(lastDiagonalWalkAt.get(engine)??0)>DIAGONAL_WALK_GRACE_MS){
+    stopDiagonalWalk(engine)
+  }
+}
 
 /** Real 45° velocity, handled by RPG-JS's authoritative vector-movement
  * physics. No extra speed is applied (additionalSpeed = 0). */
@@ -71,8 +118,15 @@ function applyDiagonal(engine:RpgClientEngine,dx:number,dy:number,source:'mouse'
   const now=performance.now()
   if(now-(diagonalRate.get(engine)??-Infinity)<DIAGONAL_INTERVAL_MS)return
   const player=engine.getCurrentPlayer() as any
-  if(!player||player.knockbackActive?.()||((document.querySelector('#nobby-hud') as HTMLElement|null)?.hidden))return
+  const canMove=typeof player?.canMove==='function'?player.canMove():player?.canMove
+  if(!player||player.knockbackActive?.()||player.animationIsPlaying?.()||canMove===false||
+    ((document.querySelector('#nobby-hud') as HTMLElement|null)?.hidden)){
+    stopDiagonalWalk(engine)
+    return
+  }
   diagonalRate.set(engine,now)
+  lastDiagonalWalkAt.set(engine,now)
+  ensureDiagonalWalk(engine,player)
   void engine.processDash({
     direction:{x:Math.sign(dx),y:Math.sign(dy)},
     additionalSpeed:0,cooldown:0,duration:DIAGONAL_HOLD_MS
@@ -182,13 +236,17 @@ function init():void{
     if(['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d','escape',' ','h'].includes(key)){
       const state=instances.get(currentEngine)
       if(state)cancel(state)
+      if(['escape',' ','h'].includes(key))stopDiagonalWalk(currentEngine)
     }
     drivePhysicalChord(currentEngine)
   },{capture:true})
   window.addEventListener('keyup',event=>{
     heldPhysicalKeys.delete(event.key.toLowerCase())
   },{capture:true})
-  window.addEventListener('blur',()=>heldPhysicalKeys.clear())
+  window.addEventListener('blur',()=>{
+    heldPhysicalKeys.clear()
+    if(currentEngine)stopDiagonalWalk(currentEngine)
+  })
 }
 /**
  * Mouse navigation has its own animation-frame clock: engine onStep may run
@@ -234,6 +292,7 @@ function driveRoute(engine:RpgClientEngine,state:State):boolean{
     applyDiagonal(engine,dx,dy,'mouse')
     return true
   }
+  stopDiagonalWalk(engine) // Native keyboard owns the cardinal walk animation.
   const direction=ax>ay?(dx>0?'right':'left'):(dy>0?'down':'up')
   if(!hold(engine,state,direction)){cancel(state);return false}
   return true
@@ -248,6 +307,7 @@ export function updateClickMove(engine:RpgClientEngine){
   if(currentEngine&&currentEngine!==engine){
     const previous=instances.get(currentEngine)
     if(previous)cancel(previous)
+    stopDiagonalWalk(currentEngine)
   }
   currentEngine=engine
   let state=instances.get(engine)
@@ -255,6 +315,7 @@ export function updateClickMove(engine:RpgClientEngine){
     state={mapId,path:[],lastInput:0,lastProgress:0,previous:null,raf:null,held:null,controls:null}
     instances.set(engine,state)
   }
-  if(mapId!==state.mapId){cancel(state);state.mapId=mapId}
+  if(mapId!==state.mapId){cancel(state);state.mapId=mapId;stopDiagonalWalk(engine)}
   drivePhysicalChord(engine)
+  syncDiagonalWalk(engine)
 }
