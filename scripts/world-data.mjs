@@ -122,6 +122,7 @@ export function compileWorlds({writeOutput=true}={}){
   ensureDarkerGrass()
   preparePathArt()
   ensureBiomeTerrain()
+  ensureMossWater()
   ensureBiomeProps()
   ensureSheepGraze()
   const directory=path.join(projectRoot,'src/tiled')
