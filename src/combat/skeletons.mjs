@@ -57,7 +57,8 @@ export function createSkeletonController(owner, adapter, overrides = {}) {
   if(now<ready)return status('rejected','cooldown')
   if(active.size>=rules.limit)return status('rejected','limit')
   if(!config)return status('rejected','map')
-  const point=spawnPosition(config.nav,position(owner),[...active.values()].map(e=>e.entity))
+  const occupied=[...active.values()].map(e=>e.entity).concat(adapter.occupied?.(map)??[])
+  const point=spawnPosition(config.nav,position(owner),occupied)
   if (!point) return status('rejected','position')
   pending=true
   const token=generation

@@ -73,6 +73,13 @@ test('concurrent requests create only one event and spend only 10 mana',async()=
  const result=await Promise.all(Array.from({length:20},()=>f.control.summon(1000)))
  assert.equal(result.filter(Boolean).length,1);assert.equal(f.owner.sp,90)
 })
+test('live actor occupancy prevents a spawn without charging mana',async()=>{
+ const f=fixture(),occupied=[]
+ for(let y=64;y<=256;y+=16)for(let x=64;x<=256;x+=16)occupied.push({x,y})
+ f.adapter.occupied=()=>occupied
+ assert.equal(await f.control.summon(1000),false)
+ assert.equal(f.owner.sp,100);assert.equal(f.control.count,0)
+})
 test('AI follows on existing navigation, selects only authored hostile monsters and attacks once per cooldown',async()=>{
  const f=fixture();await f.control.summon(1000)
  f.control.tick(1800);assert.ok(f.moves.length)

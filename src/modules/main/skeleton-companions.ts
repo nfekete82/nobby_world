@@ -24,6 +24,8 @@ export function companions(player:any){
   map:()=>player.getCurrentMap(),
   config:(map:any)=>configs.get(String(map?.id??'').replace(/^map-/,'')),
   enemies:(map:any)=>Object.values(map.events()),
+  occupied:(map:any)=>[...Object.values(map.events()),...Object.values(map.players())]
+   .filter((entity:any)=>entity.through!==true),
   exists:(map:any,entity:any)=>map.events()[entity.id]===entity,
   async spawn(map:any,point:any){
    const id=await map.createDynamicEvent({x:point.x,y:point.y,event:{
