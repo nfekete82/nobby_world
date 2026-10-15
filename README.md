@@ -397,3 +397,10 @@ Schafe selbst sind weiterhin durchquerbar. Alle Kartenmasken werden beim
 Kompilieren aus den tatsächlich gespeicherten TMX-Ebenen generiert.
 `scripts/sheep-art.mjs` erzeugt das 6-Frame-Fressspritesheet aus der
 vorhandenen Schafgrafik in einem ignorierten Ausgabeverzeichnis.
+
+### Schafe im laufenden Browser prüfen
+
+`npm run test:sheep` startet einen nicht-schreibenden Playwright-Test:
+Er öffnet die echte Startwelt, wartet auf die serverseitigen Schaf-Events,
+beobachtet ihre Positionen ca. 22 Sekunden und prüft den Gras- und
+Bewegungsradius. Der Test ändert keine Karten und legt keine Objekte an.
