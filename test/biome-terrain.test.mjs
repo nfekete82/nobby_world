@@ -63,3 +63,17 @@ test('the palette selects biome layer but does not automatically clear other lay
  assert.ok(editor.includes('const layer=this.layer[this.layerIndex],gid=erase?0:this.chosenGid'))
  assert.ok(!editor.includes('planTerrainPaint'))
 })
+
+test('green forest water preserves the original alpha and physical water collision',async()=>{
+ const {ensureMossWater,mossWaterPixels}=await import('../scripts/moss-water.mjs')
+ ensureMossWater()
+ const original=PNG.sync.read(fs.readFileSync('src/tiled/tiny-swords/water.png'))
+ const green=PNG.sync.read(fs.readFileSync('src/tiled/tiny-swords/water-moss.png'))
+ assert.equal(green.width,64);assert.equal(green.height,64)
+ assert.deepEqual(green.data,mossWaterPixels(original).data)
+ for(let i=3;i<green.data.length;i+=4)assert.equal(green.data[i],original.data[i])
+ for(const name of ['water','water-background']){
+  assert.match(fs.readFileSync('src/tiled/'+name+'.tsx','utf8'),/water-moss\.png/)
+ }
+ assert.match(fs.readFileSync('src/tiled/water.tsx','utf8'),/name="collision" type="bool" value="true"/)
+})
