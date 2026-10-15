@@ -2,6 +2,7 @@ import { isBlocked } from '../navigation/pathfinding.mjs'
 
 export const ARCANE_ACTION='nobby:arcane-bolt'
 export const ARCANE_MANA=12
+export const ARCANE_DAMAGE=10
 export const ARCANE_RANGE=380
 export const ARCANE_COOLDOWN_MS=850
 export const ARCANE_SPEED=640

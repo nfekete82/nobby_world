@@ -117,7 +117,7 @@ beim Grafikumbau erhalten; es gibt zwei Nahkampf-Gegnerarten und keine Bossbegeg
 
 Ein Linksklick auf einen lebenden Gegner wählt ihn als Ziel und wirkt eine blaue Arkankugel.
 Nobby läuft nur dann näher, wenn das Ziel außerhalb der 380px-Reichweite liegt
-oder die Sichtlinie blockiert wird. Der Zauber kostet 12 Mana und hat 850ms
+oder die Sichtlinie blockiert wird. Der Zauber verursacht 10 HP Schaden, kostet 12 Mana und hat 850ms
 Abklingzeit. Der Server prüft Ziel, Sichtlinie, Mana, Reichweite und Cooldown
 und wendet Treffer über die bestehende Action-Battle-KI an; Treffer
 werden nach einer zur Flugdistanz passenden Verzögerung abgewickelt.

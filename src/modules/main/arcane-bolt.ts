@@ -1,4 +1,3 @@
-import { applyPlayerHitToEvent } from '@rpgjs/action-battle/server'
 import { applyArcaneImpact } from '../../combat/arcane-impact.mjs'
 import worlds from '../../generated/worlds.json'
 import { unpackNavigation } from '../../navigation/pathfinding.mjs'
@@ -76,13 +75,12 @@ export function castArcaneBolt(player:any,data:any):boolean{
    // Once the server accepts a homing bolt, subsequent NPC movement must
    // not invalidate a fair shot. Map changes and dead targets still cancel.
    // Only the cast's original line of sight and range are authoritative.
-   const impact=applyArcaneImpact(player,victim,applyPlayerHitToEvent)
-   const {damage:actualDamage,hpBefore:originalHp,engineDamage,engineError}=impact
+   const impact=applyArcaneImpact(player,victim)
+   const {damage:actualDamage,hpBefore:originalHp}=impact
    trace('impact',actualDamage>0?'hit':'zero-damage',{
-    damage:actualDamage,engineDamage,
+    damage:actualDamage,
     hpBefore:originalHp,hpAfter:victim.hp,
-    aggro:victim.battleAi?.getTarget?.()?.id??null,
-    ...(engineError?{engineError}:{})
+    aggro:victim.battleAi?.getTarget?.()?.id??null
    })
   }catch(error){
    const reason=error instanceof Error?error.message:String(error)

@@ -206,6 +206,7 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
   },foe.id);
   assert.equal(after.mana,before.mana-ARCANE_MANA,'mana spent by authoritative server');
   assert.ok(after.hp<before.hp,'ActionBattle damage actually hit the enemy');
+  assert.equal(before.hp-after.hp,10,'Arkankugel must deal a balanced 10 HP, not old 18 HP');
   const impact=await page.evaluate(()=>{
    const p=Object.values(window.__spellReview.server.subRoom.players())[0];
    return p.nobbyLastSpell;
