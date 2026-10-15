@@ -1,7 +1,7 @@
 /** World-space coordinates use the top-left of the player's collision box. */
 export interface Point { x: number; y: number }
 export interface PackedNavigation {
-  cell: 16; cols: number; rows: number; blocked: string
+  cell: number; cols: number; rows: number; blocked: string
 }
 export interface NavigationGrid {
   cell: 16; cols: number; rows: number; bits: Uint8Array
