@@ -90,7 +90,10 @@ npm run test:browser
 # Chrome und die lokale Live-Vorschau auf 5173:
 npm run test:editor
 npm run test:art
+npm run test:click
 ```
+
+`npm run test:click` prüft einen echten Linksklick samt anschließender Figurbewegung im Browser.
 
 `npm run test:art` startet bei Bedarf selbst einen lokalen Vite-Server auf
 `127.0.0.1:5173`, beendet ihn nach dem Test und verwendet einen bereits laufenden

@@ -20,7 +20,8 @@
     "test:editor": "node scripts/editor-review.cjs",
     "art:prepare": "node scripts/compile-art.mjs",
     "test:art": "node scripts/art-review.cjs",
-    "art:check": "node scripts/preflight-art.mjs"
+    "art:check": "node scripts/preflight-art.mjs",
+    "test:click": "node scripts/click-move-review.cjs"
   },
   "keywords": [],
   "author": "",
