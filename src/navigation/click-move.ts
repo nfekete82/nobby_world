@@ -10,6 +10,38 @@ const cache=new Map<string,Nav>()
 let currentEngine:RpgClientEngine|null=null
 let installed=false
 const mapIdOf=(engine:RpgClientEngine)=>String(engine.sceneMap.data()?.id??'').replace(/^map-/,'')
+/** CanvasEngine's keyboard recognizes combo names but RPG-JS binds only four.
+ * Register four composite bindings that alternate their native cardinal
+ * callbacks on consecutive 60Hz input ticks. Both WASD keys stay held, while
+ * the native walk animation and authoritative movement pipeline are preserved.
+ */
+function enableKeyboardDiagonals(engine:RpgClientEngine):void{
+  const keyboard=(engine as any).activeKeyboardControls?.()?.keyboard
+  if(!keyboard||typeof keyboard.setInputs!=='function')return
+  if(keyboard.getControl?.('up_right'))return
+  const original=keyboard.options??{}
+  const diagonalPairs:[string,string,string][]=[
+    ['up_left','up','left'],['up_right','up','right'],
+    ['down_left','down','left'],['down_right','down','right']
+  ]
+  const additions:Record<string,any>={}
+  for(const [combo,a,b] of diagonalPairs){
+    if(original[combo])continue
+    if(typeof original[a]?.keyDown!=='function'||typeof original[b]?.keyDown!=='function')continue
+    let toggle=false
+    additions[combo]={
+      bind:combo,repeat:true,
+      keyDown(){
+        toggle=!toggle
+        // Each half-tick uses the same character keyDown as a normal WASD key.
+        // Velocity stays collision-aware; no client-side teleports or dashes.
+        original[toggle?a:b].keyDown()
+      }
+    }
+  }
+  if(Object.keys(additions).length)keyboard.setInputs({...original,...additions})
+}
+
 function nativeControls(engine:RpgClientEngine):any{
   const directive=(engine as any).activeKeyboardControls?.()
   // ControlsDirective.applyControl broadcasts to keyboard + gamepad + joystick;
@@ -127,7 +159,13 @@ function driveRoute(engine:RpgClientEngine,state:State):boolean{
     state.path.shift()
   if(!state.path.length){release(state);return false}
   const next=state.path[0],dx=next.x-at.x,dy=next.y-at.y
-  const direction=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up')
+  // Diagonal route segments alternate the two native controls on adjacent
+  // physics frames. This approximates a straight 45° trajectory at 60Hz,
+  // while keeping the exact foot-step animation of ordinary WASD movement.
+  const ax=Math.abs(dx),ay=Math.abs(dy)
+  const horizontal=dx>0?'right':'left',vertical=dy>0?'down':'up'
+  const direction=ax>ay+2?horizontal:ay>ax+2?vertical:
+    state.held===horizontal?vertical:horizontal
   if(!hold(engine,state,direction)){cancel(state);return false}
   return true
 }
@@ -137,6 +175,7 @@ export function updateClickMove(engine:RpgClientEngine){
   init()
   const mapId=mapIdOf(engine)
   if(!mapId||!navFor(mapId)||!engine.getCurrentPlayer()||!nativeControls(engine))return
+  enableKeyboardDiagonals(engine)
   if(currentEngine&&currentEngine!==engine){
     const previous=instances.get(currentEngine)
     if(previous)cancel(previous)
