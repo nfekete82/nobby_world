@@ -152,3 +152,12 @@ Das Tiled-Tileset `path-details.tsx` verwendet GIDs 218–227, die beiden
 vorhandenen Karten mischen sie dezent unter normale Wegfelder. Keine
 Kollisionen, Wegekonturen oder Raster ändern sich. `npm test`,
 `npm run art:check` und der Docker-Build erzeugen die Dateien automatisch.
+
+### Mana-Regeneration beim Stehen
+
+nobby erhält **5 Mana pro Sekunde**, sobald er rund 250 ms nicht mehr
+läuft oder zaubert. Die Regeneration läuft autoritativ auf dem Spielserver
+in 200-ms-Schritten (1 Mana pro Schritt), nur solange der Held lebt,
+auf einer Karte steht und noch Mana fehlt. Laufen und Zaubern setzen die
+kurze Ruhephase zurück; das Mana kann niemals den MAXSP-Wert überschreiten.
+Der Timer wird beim Verlassen der Spielsitzung entfernt.
