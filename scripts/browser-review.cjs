@@ -26,10 +26,16 @@ const fs=require('node:fs');
   await page.setViewportSize({width:1920,height:1080});await page.waitForTimeout(300);
   await page.screenshot({path:'artifacts/rpgjs/widescreen.png'});
   await page.setViewportSize({width:1280,height:800});await page.waitForTimeout(300);
+  const status=page.locator('#nobby-hud .nobby-status');
+  await status.waitFor();
+  assert.ok((await status.boundingBox()).width>=380,'status card must be larger');
+  assert.match(await page.locator('#nobby-hud .nobby-name').textContent(),/^nobby · Stufe /);
+  const meterFont=await page.locator('#nobby-hud .nobby-meter span').first().evaluate(el=>Number.parseFloat(getComputedStyle(el).fontSize));
+  assert.ok(meterFont>=12,'HP and mana labels should be readable');
   await page.screenshot({path:'artifacts/rpgjs/world.png'});
   // The engine polls keyboard input per frame; a held key represents real play.
   await page.keyboard.press('Escape',{delay:150});
-  await page.getByText('Nobby',{exact:true}).waitFor();
+  await page.getByText('nobby',{exact:true}).first().waitFor();
   assert.ok((await page.locator('body').innerText()).includes('HP 741'));
   await page.screenshot({path:'artifacts/rpgjs/menu.png'});
   await page.getByText('Save',{exact:true}).click();
@@ -43,9 +49,9 @@ const fs=require('node:fs');
   // Reload resets the unsaved session to the spawn; approaching the NPC proves
   // that actual keyboard movement and action collision detection both work.
   await page.reload();await page.waitForSelector('canvas');await page.waitForTimeout(1500);
-  await page.keyboard.down('ArrowDown');await page.waitForTimeout(600);await page.keyboard.up('ArrowDown');
+  await page.keyboard.down('ArrowDown');await page.waitForTimeout(650);await page.keyboard.up('ArrowDown');
   await page.keyboard.press('Space',{delay:150});
-  await page.getByText('Willkommen, Nobby! Hier beginnt unsere neue Welt.',{exact:true}).waitFor();
+  await page.getByText('Willkommen, nobby! Hier beginnt unsere neue Welt.',{exact:true}).waitFor();
   await page.screenshot({path:'artifacts/rpgjs/dialog.png'});
   await page.keyboard.press('Space',{delay:150});
   await page.setViewportSize({width:390,height:844});await page.waitForTimeout(500);

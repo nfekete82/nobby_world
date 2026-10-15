@@ -1,98 +1,220 @@
-# Nobby World — local 2D RPG workshop
+# Nobby World · Tiny Swords RPG
 
-A clean 2D RPG foundation using the official [RPG-JS v5 starter](https://github.com/rpgjs/starter/tree/v5).
-The previous custom Canvas/Three.js game has been removed from this branch.
+**Entwicklungsstand: v0.2.0-dev.0** · lokaler Art-Direction-Review. Noch kein finales Release.
 
-## Run
+Ein vollständig lokales 2D-RPG auf RPG-JS 5.0: zwei größere, in Tiled bearbeitbare
+Welten mit Nobby, Mira, Nahkampfgegnern, Kartenportalen und nativen Speicherständen.
+Grafikbasis ist der bereitgestellte **Tiny Swords Free Pack von Pixel Frog**.
+Nobby behält braunes Haar, Bart und seine blaue Robe; Mira blondes Haar und Grün.
+Die früheren Pipoya-Grafiken wurden aus dem laufenden Spiel entfernt.
 
-Use Node.js 24 LTS and npm:
+## Spielen
+
+Node.js 24 LTS verwenden:
 
 ```sh
 npm ci
 npm start
 ```
 
-Open http://localhost:8088. If the Docker game is already using that port, run
-`npm run dev -- --host 127.0.0.1 --port 5173` for development instead.
+Öffnen: http://localhost:8088. Mit Docker:
 
 ```sh
 docker compose up -d --build --force-recreate
 ```
 
-The Docker image builds the TypeScript/Vite application and serves its standalone
-single-player build with nginx. No external game server is needed in this mode.
+Die Docker-Version ist ein fertiger Build und übernimmt Änderungen nach einem
+Neubau. Das Spiel benötigt im Einzelspielermodus keinen externen Server.
 
-## Local map editor
-
-Double-click `Karteneditor.command` to open the prepared Tiled project and
-`Spielvorschau.command` to launch the live game at http://localhost:5173. Saving a
-map reloads the preview. Tiled is installed in `.tools/` and excluded from Git and
-Docker. On a new Mac (macOS 13+), run `npm run editor:setup` first.
-
-The [German editor guide](editor/ANLEITUNG.md) explains terrain painting, enemy
-templates, levels, NPC dialogs, start points and map portals. No Studio account or
-cloud API is used. Copy a map with Save As inside `src/tiled/`, or run
-`npm run world:new -- meine-welt`. Maps marked `nobbyWorld = true` are registered
-automatically; their filename without `.tmx` is their portal target.
-
-Two authored example maps contain melee enemies with HP, AI and gold/XP rewards.
-Templates supply Ritter, Berserker, NPC, start and portal objects. Enemy properties
-include level, optional HP and detection range. New custom enemy behaviors still
-require code. The red warrior uses the supplied Tiny Swords pack with proportional
-scaling and idle/run/attack sheets; starter Nobby retains the engine attack preview
-and hit feedback, without referencing nonexistent attack/hurt sheets.
-
-Docker on port 8088 remains a built snapshot; rebuilding is required there after
-map changes. Use port 5173 while editing.
-
-## Starting point
-
-- Official sample Tiled map and matching Pipoya character/tile assets.
-- Player named Nobby; movement with arrow keys and the engine's default inputs.
-- NPC interaction and the engine's standard menus.
-- The map fills the window with proportional camera zoom and follows Nobby;
-  the top-right button toggles browser fullscreen. Escape also exits fullscreen.
-- New storage namespace `nobby_world_rpgjs_v1`; old game saves are not migrated.
-- Engine packages pinned together at 5.0.0 to avoid the upstream starter's mixed
-  5.0/5.1 peer dependency conflict. No `--force` or `--legacy-peer-deps` is required.
-
-The previous 3D game, its 80-enemy world progression and spells are not ported.
-The new map portals connect authored maps and are separate from that older system.
-
-## Project structure
-
-| Path | Purpose |
+| Eingabe | Aktion |
 | --- | --- |
-| `src/modules/main/` | Player hooks, events and map registration |
-| `src/config/` | Client/server configuration |
-| `src/tiled/` | Tiled maps and tilesets |
-| `editor/`, `nobby-world.tiled-project` | Local editor templates, classes and guide |
-| `scripts/world-data.mjs` | Map validation and event-data compilation |
-| `src/generated/worlds.json` | Generated runtime map definitions |
-| `public/spritesheets/` | Character sprites |
-| `src/standalone.ts` | Single-player entry |
-| `src/client.ts` | Optional multiplayer entry, not deployed here |
+| Pfeiltasten | Bewegen; zwei Pfeiltasten gleichzeitig ermöglichen diagonale Bewegung |
+| WASD | Laufen; z. B. W+D für schräg oben rechts |
+| Linksklick auf die Karte | Automatisch auch diagonal laufen, ohne Wasser- oder Mauerecken zu schneiden (8-Wege-A*) |
+| Linksklick auf Gegner | Blaue Arkankugel aus der Distanz (12 Mana, 380px Reichweite); bei Bedarf sicher heranlaufen |
+| Leertaste | Nahkampf / NPC ansprechen / Portal benutzen |
+| H oder Heilen-Button | 25 % Leben heilen, kostet 25 Mana |
+| Esc oder Menü-Button | Status, Inventar, Fähigkeiten, Ausrüstung, Optionen, Speichern |
+| Button rechts oben | Browser-Vollbild |
 
-## Verification
+Diagonale Bewegung nutzt normalisierte Vektoren aus der nativen RPG-JS-Bewegungsphysik (ohne Geschwindigkeitsbonus). Kollisionen und Positionen werden weiterhin vom Spielserver geprüft. Die Kamera- und Schrittanimationen bleiben die vorhandenen RPG-JS-Animationen.
+
+Die Ansicht füllt das Fenster. Papier- und Holzrahmen laden auch unter einem konfigurierten Vite-Unterpfad.
+Der Heil-Button wird bei voller Gesundheit oder zu wenig Mana deaktiviert. Kamera-Zoom ist ganzzahlig, sämtliche Texturen
+werden mit Nearest Neighbor dargestellt. Alle Originalassets behalten ihre
+Pixelgröße; transparente Ränder werden über zentrale Fußpunkte ausgeglichen.
+
+## Eigene Karten · ohne Studio, Konto oder Cloud
+
+`Karteneditor.command` öffnet Tiled und das vorbereitete Projekt.
+`Spielvorschau.command` startet die Live-Vorschau unter http://localhost:5173.
+In Tiled speichern → die Vorschau lädt die Karte neu. Tiled liegt lokal unter
+`.tools/` und wird nicht mit Git/Docker verteilt. Auf einem neuen Mac (macOS 13+):
+`npm run editor:setup`.
+
+Die [Editor-Anleitung](editor/ANLEITUNG.md) erklärt 64px-Tiles, Wasser-Kollisionen,
+Bäume/Gebäude, Gegnerstufen, NPC-Texte und Kartenportale. Vorlagen liegen unter
+`editor/templates/`. Kopierte Karten mit `nobbyWorld = true` werden automatisch
+registriert. Alternativ: `npm run world:new -- meine-welt`.
+
+## Visuelles System
+
+- Dorf/Insel: 40×32 Tiles, 2560×2048 px; Übungswald: 48×38, 3072×2432 px.
+- Zusammenhängende Wege, Flussbrücke, Seen, Siedlung, Burg, Schafe und Hochflächen.
+- `src/art/registry.json`: Framegrößen, Fußpunkte, Hitboxen, sichtbare Grenzen,
+  Animationsdefinitionen und Herkunft der generierten Figuren.
+- `public/tiny-swords/`: tatsächlich verwendete PNGs und kleine Compiler-Eingaben.
+- `src/tiled/`: editierbare TMX/TSX-Karten und zugehörige Terrain-PNGs.
+- `src/ui/`: Pack-basierte Papier-/Holzrahmen und HUD mit echten Engine-Werten.
+- `scripts/world-data.mjs`: validiert Karten/Assets und kompiliert Events sowie eine Hinderniskarte für Linksklick-Bewegung.
+- `art/`: unveränderte ImageGen-Ausgaben, Produktionsbriefs, Pack-Digests und
+  erhaltene Gameplay-Daten der Migration.
+
+Verbindliche Regeln und tatsächliche Asset-Lücken:
+[Art Direction](docs/TINY_SWORDS_ART_DIRECTION.md),
+[Integrationsplan](docs/TINY_SWORDS_INTEGRATION_PLAN.md),
+[Herkunft/Lizenzen](CREDITS.md), [ImageGen-Briefs](art/PROMPTS.md).
+
+`npm run art:check` prüft **ohne npm-Abhängigkeiten** alle Asset-Dateien, Framegrößen, Tiled-Tilesets und verwendeten Tile-IDs.
+`npm run art:prepare` kompiliert vorhandene Quellbilder deterministisch neu.
+Normale Builds verändern keine Landschaft. `scripts/design-worlds.mjs` ist die
+abgeschlossene, einmalige Migration. Ohne `--force` verweigert sie das Überschreiben.
+Bei `node scripts/design-worlds.mjs --force` legt sie zuvor Sicherungen unter
+`art/map-backups/` ab. Nicht auf später selbst bearbeiteten Karten verwenden.
+
+## Prüfen
 
 ```sh
-npm run build
+npm run art:check
+npm run worlds:check
 npm test
-# With the local game running and Google Chrome installed:
+npm run build
+# Chrome und das Docker-Spiel auf 8088:
 npm run test:browser
-# With the live Vite server on port 5173:
+# Chrome und die lokale Live-Vorschau auf 5173:
 npm run test:editor
+npm run test:art
+npm run test:click
 ```
 
-The upstream production test checks map and UI stylesheet delivery at both root
-and a subpath. Seven map-import tests check templates, properties and validation.
-Browser evidence for the base game is in `artifacts/rpgjs/`; local editor integration
-evidence is in `artifacts/editor/`. The latter checks native combat, rewards, map
-transfers and saved-property live reload using a test-only injected inspection hook.
+`npm run test:click` prüft einen echten Linksklick samt anschließender Figurbewegung im Browser.
 
-## Previous version
+`npm run test:art` startet bei Bedarf selbst einen lokalen Vite-Server auf
+`127.0.0.1:5173`, beendet ihn nach dem Test und verwendet einen bereits laufenden
+Nobby-World-Server unverändert weiter. Es ist kein zweites Terminal nötig.
 
-The original game is preserved on branch
-`archive/nobby-world-before-rpgjs-2026-10-15` at commit `66b5c06`.
-It is not loaded or included in this new game's Docker build.
-See [credits](CREDITS.md) for starter and sample artwork sources.
+Tests prüfen Framegrenzen/Füße, referenzierte PNGs, echte Gelände-/Objektgrundflächen,
+Erreichbarkeit aller Begegnungen und Portale, Produktions-Builds unter Root/Subpfad,
+Nahkampf/Belohnungen, Dialoge, Speichern, Kartenwechsel, Live-Editing und echte
+Browseransichten. Vorher-/Nachher-Bilder: `artifacts/tiny-swords/`.
+
+Der Save-Namensraum bleibt `nobby_world_rpgjs_v1`. Der frühere 3D-Prototyp ist in
+Git archiviert. Seine 80-Gegner-Wellen, Zauber und Farmmechaniken wurden im
+RPG-JS-Neustart nicht übernommen. Die aktuell vorhandenen Spielmechaniken bleiben
+beim Grafikumbau erhalten; es gibt zwei Nahkampf-Gegnerarten und keine Bossbegegnung.
+
+### Nobby als Magier
+
+Ein Linksklick auf einen lebenden Gegner wählt ihn als Ziel und wirkt eine blaue Arkankugel.
+Nobby läuft nur dann näher, wenn das Ziel außerhalb der 380px-Reichweite liegt
+oder die Sichtlinie blockiert wird. Der Zauber verursacht 10 HP Schaden, kostet 12 Mana und hat 850ms
+Abklingzeit. Der Server prüft Ziel, Sichtlinie, Mana, Reichweite und Cooldown
+und wendet Treffer über die bestehende Action-Battle-KI an; Treffer
+werden nach einer zur Flugdistanz passenden Verzögerung abgewickelt.
+Klicks auf den Boden und die vorhandenen WASD-/Diagonaltasten funktionieren weiter.
+Der leuchtende Projektil-Effekt wird bislang clientseitig für den Zaubernden
+angezeigt; eine synchrone Anzeige für alle Spieler ist ein späterer Multiplayer-Schritt.
+
+### Ruhige Animationen (FPS)
+
+Das Sprite-Timing liegt in `src/art/registry.json` unter `assets.*.animations.*.fps`.
+Aktuell: Nobby idle **1,5 FPS** (zwei ruhige Posen), Mira idle **1,5 FPS**,
+Gegner idle **4 FPS**, Bäume/Büsche **2,5 FPS**, Schafe **4 FPS**, Wasser
+**5 FPS**, Portal **8 FPS**. Laufen, Angriff und Zaubern sind unverändert
+schnell. Die gleichen Werte sind in `scripts/compile-art.mjs` gesetzt,
+damit `npm run art:prepare` sie nicht zurücksetzt.
+
+#### Feste Gebäude und tiefere Wiesenfarbe
+
+Häuser, Türme, Bäume und sonstige Dekorationen sind im RPG-JS-Physiksystem
+**nicht schiebbar** (mass: 0, pushable: false), NPCs können sie nicht verschieben.
+Die Wiesen-Tilesets `grass` und `forest` sind um **20 %** abgedunkelt.
+Die abgeleiteten Dateien werden bei Änderungen an `scripts/darken-grass.mjs`
+automatisch neu erstellt, ohne die Originale zu überschreiben.
+
+### Waldwege mit natürlicher Abwechslung
+
+Die ursprüngliche `src/tiled/tiny-swords/path.png` bleibt als unveränderte
+Quelle erhalten. `scripts/path-art.mjs` erstellt die beiden Bildvarianten
+`path-earthy.png` (moosig-erdig abgedunkelte weiß-blaue Ränder) und
+`path-details.png` (zehn 64px-Varianten mit kleinen Steinen, Zweigen und Laub).
+Das Tiled-Tileset `path-details.tsx` verwendet GIDs 218–227, die beiden
+vorhandenen Karten mischen sie dezent unter normale Wegfelder. Keine
+Kollisionen, Wegekonturen oder Raster ändern sich. `npm test`,
+`npm run art:check` und der Docker-Build erzeugen die Dateien automatisch.
+
+### Mana-Regeneration beim Stehen
+
+nobby erhält **5 Mana pro Sekunde**, sobald er rund 250 ms nicht mehr
+läuft oder zaubert. Die Regeneration läuft autoritativ auf dem Spielserver
+in 200-ms-Schritten (1 Mana pro Schritt), nur solange der Held lebt,
+auf einer Karte steht und noch Mana fehlt. Laufen und Zaubern setzen die
+kurze Ruhephase zurück; das Mana kann niemals den MAXSP-Wert überschreiten.
+Der Timer wird beim Verlassen der Spielsitzung entfernt.
+
+### Karteneditor direkt im Spiel (erste Version)
+
+Der Browser-Karteneditor ist über **Esc → 🗺 Karteneditor** erreichbar und
+zeigt die echten Tiny-Swords-Kacheln, Häuser, Bäume, NPCs und Gegner an.
+Er unterstützt:
+- Kachelebenen auswählen, Kacheln aus allen vorhandenen Tilesets malen,
+  mit dem Rad zoomen und per rechter Maustaste die Karte verschieben
+- Gebäude und Bäume direkt platzieren, Objekte auswählen/verschieben/löschen,
+  Objektnamen und Asset wechseln sowie Gegnerstufen und NPC-Texte ändern
+- Rückgängig, TMX exportieren und Speichern; alle Änderungen bleiben im
+  von Tiled bearbeitbaren TMX-Format
+
+**Direkt in die Projektdateien speichern:** die lokale Entwickler-Vorschau
+starten (in einem Terminal: `npm run dev -- --host 127.0.0.1 --port 5173 --strictPort`),
+dann http://127.0.0.1:5173 öffnen und **Esc → Karteneditor**.
+Die Vite-API erlaubt Änderungen nur von der lokalen Vorschau, prüft die
+Dateiversion, erstellt vor jeder Änderung ein Backup unter
+`art/map-backups/web-editor-*.tmx` und validiert die Karten. Bei einem
+Fehler wird die Ursprungsdatei wiederhergestellt. Danach lädt die Vorschau
+bei Bedarf automatisch neu.
+
+**Docker auf Port 8088:** hier kann der Editor ebenfalls angezeigt und
+benutzt werden, aber der Webserver enthält keinen Dateischreibdienst.
+Mit **TMX exportieren** erhältst du die bearbeitete Karte zum manuellen
+Ersetzen. Für direktes Speichern stets die Entwicklungs-Vorschau 5173 benutzen.
+
+Die native RPG-JS-Spiellogik und die Original-Tiled-Vorlagen bleiben erhalten.
+Komplexe Spezialeditoren (Autotiling, mehrstufige Objektgruppen, neue eigene
+Sprites) werden weiterhin in Tiled gepflegt. Der Browser-Editor ist ein
+erster, bewusst begrenzter Kartenbau-Modus. Browser-Abnahmetest:
+`npm run test:web-editor`.
+
+
+#### Objektgalerie und Kartengröße
+
+**Esc → Karteneditor → 🌲 Platzieren:** rechts sind alle verfügbaren Gebäude,
+Bäume, Büsche, Steine, Figuren und Portale als **anklickbare Pixel-Art-Miniaturen**.
+Mit der Suchleiste passende Objekte filtern. Ein Klick auf ein Objekt aktiviert
+„Platzieren“ – weitere Klicks auf die Karte fügen dasselbe Objekt wiederholt
+hinzu; **↖ Objekte** beendet den Platziermodus. Die Eigenschaften eines Objekts
+kannst du weiterhin in „Objekte“ bearbeiten.
+
+**Nur die Ansicht vergrößern:** oben **+ / −** oder Mausrad verwenden.
+**⤢ Einpassen** zeigt wieder die ganze Karte.
+
+**Die Spielwelt erweitern:** oben **▣ Karte erweitern** anklicken, neue Breite
+und Höhe in 64px-Kacheln eingeben und **Fläche erweitern** wählen.
+Die vorhandene Karte bleibt links oben an ihrer bisherigen Position, einschließlich
+aller Landschaftskacheln, Gebäude, NPCs und Gegner. Rechts/unten kommt
+anfangs **Wasser mit Kollisionssperre** dazu. Das kannst du anschließend mit
+Geländekacheln übermalen und die Wasser-Kollision auf den neuen Landfeldern
+entfernen. Zum Übernehmen **Speichern** (Vorschau auf Port 5173) oder
+**TMX exportieren** (Docker). Rückgängig stellt die vorige Kartengröße
+und sämtliche Tilesets wieder her. Aktuelle technische Grenzen:
+128 Kacheln pro Seite und höchstens 6.250 Kacheln insgesamt, um das
+RPG-JS-Navigationslimit (100.000 Zellen) nicht zu überschreiten.

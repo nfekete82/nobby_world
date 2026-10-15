@@ -1,6 +1,6 @@
 {
   "name": "nobby-world",
-  "version": "0.1.0",
+  "version": "0.2.0-dev.0",
   "main": "index.js",
   "scripts": {
     "dev": "vite",
@@ -13,21 +13,30 @@
     "worlds:check": "node scripts/world-data.mjs",
     "world:new": "node scripts/new-world.mjs",
     "editor:setup": "sh scripts/setup-editor.sh",
-    "editor": "open -a .tools/Tiled.app nobby-world.tiled-project src/tiled/simplemap.tmx",
+    "editor": "npm run editor:setup && open -a \"$PWD/.tools/Tiled.app\" \"$PWD/nobby-world.tiled-project\" \"$PWD/src/tiled/simplemap.tmx\"",
     "prebuild": "node scripts/world-data.mjs",
     "predev": "node scripts/world-data.mjs",
     "prestart": "node scripts/world-data.mjs",
-    "test:editor": "node scripts/editor-review.cjs"
+    "test:editor": "node scripts/editor-review.cjs",
+    "art:prepare": "node scripts/compile-art.mjs",
+    "test:art": "node scripts/art-review.cjs",
+    "art:check": "node scripts/preflight-art.mjs",
+    "test:click": "node scripts/click-move-review.cjs",
+    "test:spell": "node scripts/spell-review.cjs",
+    "pretest": "node scripts/world-data.mjs",
+    "preart:check": "node scripts/world-data.mjs",
+    "test:web-editor": "node scripts/web-editor-review.cjs"
   },
   "keywords": [],
   "author": "",
   "license": "UNLICENSED",
-  "description": "Nobby World \u2014 fresh RPG-JS 2D foundation",
+  "description": "Nobby World — local Tiny Swords pixel-art RPG and map workshop",
   "devDependencies": {
     "@canvasengine/compiler": "2.4.0",
     "@vitejs/plugin-vue": "^6.0.10",
     "path-browserify": "^1.0.1",
     "playwright": "1.64.0",
+    "pngjs": "7.0.0",
     "vite": "^8.3.4",
     "xml-js": "^1.6.11"
   },

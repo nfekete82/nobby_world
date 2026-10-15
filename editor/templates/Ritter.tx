@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <template>
-  <object name="Ritter" class="monster" width="28" height="28">
+  <object name="Ritter" class="monster" width="32" height="24">
     <properties>
       <property name="enemy" type="string" value="ritter" />
       <property name="level" type="int" value="1" />

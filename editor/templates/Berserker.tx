@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <template>
-  <object name="Berserker" class="monster" width="28" height="28">
+  <object name="Berserker" class="monster" width="32" height="24">
     <properties>
       <property name="enemy" type="string" value="berserker" />
       <property name="level" type="int" value="2" />

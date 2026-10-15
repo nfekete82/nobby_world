@@ -6,3 +6,12 @@ dist/
 .DS_Store
 .tools/
 *.tiled-session
+art/map-backups/
+
+# Generated darker grass tilesets (original pack art remains intact)
+src/tiled/tiny-swords/grass-darker.png
+src/tiled/tiny-swords/forest-darker.png
+
+# Derived earthy path sprites (base path.png remains unchanged)
+src/tiled/tiny-swords/path-earthy.png
+src/tiled/tiny-swords/path-details.png

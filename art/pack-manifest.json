@@ -1,0 +1,132 @@
+{
+  "archive": "Tiny Swords (Free Pack) (1).zip",
+  "sha256": "764a511f6cd5d0b844d93dc02cf39f9ea3f5f3b9b0f19afbba2dfab6bd2a0464",
+  "author": "Pixel Frog",
+  "source": "https://pixelfrog-assets.itch.io/tiny-swords",
+  "retained": [
+    {
+      "file": "Buildings/Blue Buildings/Barracks.png",
+      "sha256": "8d4658300cbab598ad9a18855c48305935a95870259bbcf8d25bf2ab00f613b4"
+    },
+    {
+      "file": "Buildings/Blue Buildings/Castle.png",
+      "sha256": "a4ec9de93fbe416359043cc6b58a32119b08c7623ef2e09b3aef9d3adf439c1b"
+    },
+    {
+      "file": "Buildings/Blue Buildings/House1.png",
+      "sha256": "f68fbce236ca663e2c1d86484f4617586bc99f4f9b634c493e62fa7eeece5c63"
+    },
+    {
+      "file": "Buildings/Blue Buildings/House2.png",
+      "sha256": "21e35d4d47e778c996cc56d95170908f663ca8858f08a6f8637fa15c1236448f"
+    },
+    {
+      "file": "Buildings/Blue Buildings/Monastery.png",
+      "sha256": "19ceee020215c572f9365f27ee5bd35cd52e17f796d81b082f16206e0ea7da5c"
+    },
+    {
+      "file": "Buildings/Blue Buildings/Tower.png",
+      "sha256": "ac0f01128d951c9da4cfe811af175a35868b6d91cdda04fabbe9dcf909caf868"
+    },
+    {
+      "file": "Terrain/Decorations/Bushes/Bushe1.png",
+      "sha256": "38ea6583e856d4670ce43b843aaa3ef3e675b351b02353118f04b01ba3daa4eb"
+    },
+    {
+      "file": "Terrain/Decorations/Rocks/Rock1.png",
+      "sha256": "de9f1d954577003e278bae7ee71338c76b4799c9aabf34a002219ca2c67c7c00"
+    },
+    {
+      "file": "Terrain/Decorations/Rocks/Rock2.png",
+      "sha256": "a121425512ad1cf3a10b5731f507beed83507d2e7b5d180aa32f0d967e81299c"
+    },
+    {
+      "file": "Terrain/Decorations/Rocks in the Water/Water Rocks_01.png",
+      "sha256": "83d1a8925a9294c42bc421710d263718d958570006f43e6c7c65f4c7f5e115b4"
+    },
+    {
+      "file": "Terrain/Resources/Gold/Gold Stones/Gold Stone 1.png",
+      "sha256": "df483cb036e04f1fcae32b269e2a33bdca2e4da0a5c067c4f0d44aa70140a658"
+    },
+    {
+      "file": "Terrain/Resources/Meat/Sheep/Sheep_Idle.png",
+      "sha256": "ba3b743bdd5d851c0ebf195bc4e168729601d5598c0f4d9a1e39d5e0c778e14e"
+    },
+    {
+      "file": "Terrain/Resources/Wood/Trees/Tree1.png",
+      "sha256": "ee3f285f992842987df5aae0e07a364a7a535e78d605f6d469115559e87df7e5"
+    },
+    {
+      "file": "Terrain/Resources/Wood/Trees/Tree2.png",
+      "sha256": "62de877a4732bee98e170c1a4aac44c3bd39929205923176a4acbec812d2630a"
+    },
+    {
+      "file": "Terrain/Resources/Wood/Trees/Tree3.png",
+      "sha256": "e2317a54bb801e52f4c2fbfd4d9d91611036d7b001fe623a92b55539feddaae2"
+    },
+    {
+      "file": "Terrain/Tileset/Tilemap_color1.png",
+      "sha256": "3ae8f00b92b4ecd46b63b14ad4117fdda42afcf485f340724db033f0e229be8e"
+    },
+    {
+      "file": "Terrain/Tileset/Tilemap_color3.png",
+      "sha256": "558588391e6dd91c444e6a0ce4b2f8ee0ee13e50baeb8289837a42e58b2c8f1a"
+    },
+    {
+      "file": "Terrain/Tileset/Tilemap_color4.png",
+      "sha256": "944f8fe48d87f60234a7eac9648e444bbecdabaabd0b478758ea45c882603503"
+    },
+    {
+      "file": "Terrain/Tileset/Water Background color.png",
+      "sha256": "5ef30a00bbff22590eabb5acabb8aca6cc415557e7ab5f60db07714f01a4dba1"
+    },
+    {
+      "file": "Terrain/Tileset/Water Foam.png",
+      "sha256": "aba91e12e08d108ce43446a269c9fb7e05b55580872152d675f8c78f72835e37"
+    },
+    {
+      "file": "UI Elements/UI Elements/Papers/RegularPaper.png",
+      "sha256": "4a91bbde509af741580e514961ed25dd309695536046536b600ab63bec080a1e"
+    },
+    {
+      "file": "UI Elements/UI Elements/Wood Table/WoodTable.png",
+      "sha256": "d2abdb31e7fdc3cc2bcad7988c03aaab28aa73a2cb5f869b615c157595034a79"
+    },
+    {
+      "file": "Units/Black Units/Warrior/Warrior_Attack1.png",
+      "sha256": "4b7250c8442ac67054814b31e251923aca85fb1df047428d3777650bf0fa277f"
+    },
+    {
+      "file": "Units/Black Units/Warrior/Warrior_Idle.png",
+      "sha256": "eddcb6067e793a2da13fe9b5f71afc767ba676c684253528e4d508b9f501f10a"
+    },
+    {
+      "file": "Units/Black Units/Warrior/Warrior_Run.png",
+      "sha256": "06f1912d32230c8913fd29091a3332c1642eb7916f205023a9cb064f0604df8a"
+    },
+    {
+      "file": "Units/Blue Units/Monk/Heal_Effect.png",
+      "sha256": "2635dd7445d573e878b578ecce858484b4d2889268819ec35657cf416f8aaf33"
+    },
+    {
+      "file": "Units/Blue Units/Monk/Idle.png",
+      "sha256": "a72cc63be3151c3af61e8f8c86129b8a0c563c8731e04ae89a27e616bb6cb962"
+    },
+    {
+      "file": "Units/Blue Units/Warrior/Warrior_Idle.png",
+      "sha256": "e612b408908c938999025fa05c45d81b23a31d8b68a6934072adfccf1d5d716c"
+    },
+    {
+      "file": "Units/Red Units/Warrior/Warrior_Attack1.png",
+      "sha256": "05df9fa665b8c216b3852b00250a84e55d2bdffdb39349ae152f2c8766d73bb1"
+    },
+    {
+      "file": "Units/Red Units/Warrior/Warrior_Idle.png",
+      "sha256": "104bb0c113efa967b306047d29166ca7d4925366d613dd46e5b33ac44fbb1ac4"
+    },
+    {
+      "file": "Units/Red Units/Warrior/Warrior_Run.png",
+      "sha256": "74b9d13a4b57f75a048cb42af35ef5c0a20791f67a9b03f9e93c72790dbe2948"
+    }
+  ]
+}

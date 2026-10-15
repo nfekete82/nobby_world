@@ -7,7 +7,7 @@ import {readWorld,compileWorlds,projectRoot} from '../scripts/world-data.mjs'
 
 function fixture(body,options=''){
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),'nobby-map-')),file=path.join(dir,'test.tmx')
-  fs.writeFileSync(file,`<map orientation="orthogonal" width="25" height="20" tilewidth="32" tileheight="32" ${options}><properties><property name="nobbyWorld" type="bool" value="true"/></properties><objectgroup><object id="1" class="start" x="30" y="40"><point/></object>${body}</objectgroup></map>`)
+  fs.writeFileSync(file,`<map orientation="orthogonal" width="25" height="20" tilewidth="64" tileheight="64" ${options}><properties><property name="nobbyWorld" type="bool" value="true"/></properties><objectgroup><object id="1" class="start" x="30" y="40"><point/></object>${body}</objectgroup></map>`)
   return {file,cleanup:()=>fs.rmSync(dir,{recursive:true})}
 }
 function withMap(body,fn,options){const f=fixture(body,options);try{fn(f.file)}finally{f.cleanup()}}
@@ -33,7 +33,7 @@ test('invalid enemy kind, noninteger level and invalid HP are rejected',()=>{
 test('duplicate starts, duplicate ids and out-of-bounds objects are rejected',()=>{
   withMap('<object id="2" class="start" x="40" y="50"><point/></object>',file=>assert.throws(()=>readWorld(file),/nur ein Startpunkt/))
   withMap('<object id="2" class="npc" x="40" y="50"/><object id="2" class="monster" x="80" y="50"/>',file=>assert.throws(()=>readWorld(file),/doppelte/))
-  withMap('<object id="2" class="npc" x="900" y="50"/>',file=>assert.throws(()=>readWorld(file)))
+  withMap('<object id="2" class="npc" x="9000" y="50"/>',file=>assert.throws(()=>readWorld(file)))
 })
 test('external templates and infinite maps are rejected',()=>{
   withMap('<object id="2" template="/private/tmp/not-a-nobby-template.tx" x="100" y="100"/>',file=>assert.throws(()=>readWorld(file),/außerhalb/))

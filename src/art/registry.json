@@ -1,0 +1,2480 @@
+{
+  "version": 1,
+  "tileSize": 64,
+  "pixelScale": 1,
+  "actorHitbox": [
+    32,
+    24
+  ],
+  "palette": {
+    "outline": "#293544",
+    "grass": "#8ba86e",
+    "water": "#448f97",
+    "earth": "#d2ad65",
+    "cream": "#eee2c3",
+    "blue": "#487fa8"
+  },
+  "assets": {
+    "hero": {
+      "kind": "actor",
+      "frame": [
+        192,
+        192
+      ],
+      "foot": [
+        96,
+        132
+      ],
+      "hitbox": [
+        32,
+        24
+      ],
+      "directional": true,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/custom/nobby-idle.png",
+          "frames": 6,
+          "fps": 1.5,
+          "visibleBounds": [
+            [
+              75,
+              63,
+              126,
+              132
+            ],
+            [
+              70,
+              63,
+              121,
+              132
+            ],
+            [
+              77,
+              63,
+              128,
+              132
+            ],
+            [
+              70,
+              63,
+              121,
+              132
+            ],
+            [
+              73,
+              63,
+              124,
+              132
+            ],
+            [
+              73,
+              63,
+              124,
+              132
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/custom/nobby-run.png",
+          "frames": 4,
+          "fps": 10,
+          "visibleBounds": [
+            [
+              64,
+              63,
+              123,
+              132
+            ],
+            [
+              69,
+              61,
+              131,
+              132
+            ],
+            [
+              67,
+              61,
+              128,
+              132
+            ],
+            [
+              63,
+              61,
+              125,
+              132
+            ]
+          ]
+        },
+        "attack": {
+          "image": "tiny-swords/custom/nobby-attack.png",
+          "frames": 11,
+          "fps": 28,
+          "visibleBounds": [
+            [
+              74,
+              63,
+              124,
+              132
+            ],
+            [
+              73,
+              65,
+              130,
+              132
+            ],
+            [
+              58,
+              64,
+              124,
+              132
+            ],
+            [
+              54,
+              64,
+              139,
+              132
+            ],
+            [
+              64,
+              63,
+              154,
+              132
+            ],
+            [
+              64,
+              62,
+              155,
+              132
+            ],
+            [
+              63,
+              64,
+              145,
+              132
+            ],
+            [
+              68,
+              63,
+              124,
+              132
+            ],
+            [
+              65,
+              64,
+              127,
+              132
+            ],
+            [
+              68,
+              65,
+              124,
+              132
+            ],
+            [
+              73,
+              63,
+              122,
+              132
+            ]
+          ]
+        },
+        "heal": {
+          "image": "tiny-swords/custom/nobby-cast.png",
+          "frames": 11,
+          "fps": 16,
+          "visibleBounds": [
+            [
+              72,
+              63,
+              124,
+              132
+            ],
+            [
+              68,
+              64,
+              135,
+              132
+            ],
+            [
+              57,
+              64,
+              137,
+              132
+            ],
+            [
+              57,
+              62,
+              140,
+              132
+            ],
+            [
+              48,
+              62,
+              138,
+              132
+            ],
+            [
+              48,
+              62,
+              143,
+              132
+            ],
+            [
+              46,
+              60,
+              143,
+              132
+            ],
+            [
+              56,
+              62,
+              136,
+              132
+            ],
+            [
+              56,
+              62,
+              135,
+              132
+            ],
+            [
+              65,
+              62,
+              137,
+              132
+            ],
+            [
+              73,
+              63,
+              124,
+              132
+            ]
+          ]
+        }
+      }
+    },
+    "female": {
+      "kind": "actor",
+      "frame": [
+        192,
+        192
+      ],
+      "foot": [
+        96,
+        132
+      ],
+      "hitbox": [
+        32,
+        24
+      ],
+      "directional": true,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/custom/mira-idle.png",
+          "frames": 6,
+          "fps": 1.5,
+          "visibleBounds": [
+            [
+              74,
+              63,
+              128,
+              132
+            ],
+            [
+              61,
+              63,
+              116,
+              132
+            ],
+            [
+              73,
+              63,
+              128,
+              132
+            ],
+            [
+              67,
+              63,
+              122,
+              132
+            ],
+            [
+              71,
+              63,
+              126,
+              132
+            ],
+            [
+              69,
+              63,
+              124,
+              132
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/custom/mira-idle.png",
+          "frames": 6,
+          "fps": 4,
+          "visibleBounds": [
+            [
+              74,
+              63,
+              128,
+              132
+            ],
+            [
+              61,
+              63,
+              116,
+              132
+            ],
+            [
+              73,
+              63,
+              128,
+              132
+            ],
+            [
+              67,
+              63,
+              122,
+              132
+            ],
+            [
+              71,
+              63,
+              126,
+              132
+            ],
+            [
+              69,
+              63,
+              124,
+              132
+            ]
+          ]
+        }
+      }
+    },
+    "enemy-warrior": {
+      "kind": "actor",
+      "frame": [
+        192,
+        192
+      ],
+      "foot": [
+        96,
+        132
+      ],
+      "hitbox": [
+        32,
+        24
+      ],
+      "directional": true,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/Units/Red Units/Warrior/Warrior_Idle.png",
+          "frames": 8,
+          "fps": 4,
+          "visibleBounds": [
+            [
+              62,
+              48,
+              140,
+              131
+            ],
+            [
+              62,
+              48,
+              140,
+              131
+            ],
+            [
+              62,
+              49,
+              140,
+              132
+            ],
+            [
+              60,
+              51,
+              140,
+              133
+            ],
+            [
+              59,
+              52,
+              141,
+              134
+            ],
+            [
+              60,
+              52,
+              142,
+              134
+            ],
+            [
+              60,
+              50,
+              141,
+              133
+            ],
+            [
+              61,
+              49,
+              140,
+              132
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/Units/Red Units/Warrior/Warrior_Run.png",
+          "frames": 6,
+          "fps": 12,
+          "visibleBounds": [
+            [
+              62,
+              53,
+              137,
+              132
+            ],
+            [
+              65,
+              46,
+              131,
+              126
+            ],
+            [
+              65,
+              46,
+              131,
+              129
+            ],
+            [
+              62,
+              52,
+              137,
+              133
+            ],
+            [
+              53,
+              46,
+              145,
+              127
+            ],
+            [
+              54,
+              48,
+              141,
+              129
+            ]
+          ]
+        },
+        "attack": {
+          "image": "tiny-swords/Units/Red Units/Warrior/Warrior_Attack1.png",
+          "frames": 4,
+          "fps": 14,
+          "visibleBounds": [
+            [
+              57,
+              47,
+              121,
+              128
+            ],
+            [
+              54,
+              44,
+              120,
+              128
+            ],
+            [
+              43,
+              50,
+              162,
+              153
+            ],
+            [
+              43,
+              55,
+              156,
+              155
+            ]
+          ]
+        }
+      }
+    },
+    "enemy-berserker": {
+      "kind": "actor",
+      "frame": [
+        192,
+        192
+      ],
+      "foot": [
+        96,
+        132
+      ],
+      "hitbox": [
+        32,
+        24
+      ],
+      "directional": true,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/Units/Black Units/Warrior/Warrior_Idle.png",
+          "frames": 8,
+          "fps": 4,
+          "visibleBounds": [
+            [
+              62,
+              48,
+              140,
+              131
+            ],
+            [
+              62,
+              48,
+              140,
+              131
+            ],
+            [
+              62,
+              49,
+              140,
+              132
+            ],
+            [
+              60,
+              51,
+              140,
+              133
+            ],
+            [
+              59,
+              52,
+              141,
+              134
+            ],
+            [
+              60,
+              52,
+              142,
+              134
+            ],
+            [
+              60,
+              50,
+              141,
+              133
+            ],
+            [
+              61,
+              49,
+              140,
+              132
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/Units/Black Units/Warrior/Warrior_Run.png",
+          "frames": 6,
+          "fps": 12,
+          "visibleBounds": [
+            [
+              62,
+              53,
+              137,
+              132
+            ],
+            [
+              65,
+              46,
+              131,
+              126
+            ],
+            [
+              65,
+              46,
+              131,
+              129
+            ],
+            [
+              62,
+              52,
+              137,
+              133
+            ],
+            [
+              53,
+              46,
+              145,
+              127
+            ],
+            [
+              54,
+              48,
+              141,
+              129
+            ]
+          ]
+        },
+        "attack": {
+          "image": "tiny-swords/Units/Black Units/Warrior/Warrior_Attack1.png",
+          "frames": 4,
+          "fps": 14,
+          "visibleBounds": [
+            [
+              57,
+              47,
+              121,
+              128
+            ],
+            [
+              54,
+              44,
+              120,
+              128
+            ],
+            [
+              43,
+              50,
+              162,
+              153
+            ],
+            [
+              43,
+              55,
+              156,
+              155
+            ]
+          ]
+        }
+      }
+    },
+    "tree-oak": {
+      "kind": "prop",
+      "frame": [
+        192,
+        256
+      ],
+      "foot": [
+        96,
+        234
+      ],
+      "hitbox": [
+        40,
+        24
+      ],
+      "solid": true,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/Terrain/Resources/Wood/Trees/Tree1.png",
+          "frames": 8,
+          "fps": 2.5,
+          "visibleBounds": [
+            [
+              37,
+              51,
+              155,
+              233
+            ],
+            [
+              38,
+              51,
+              156,
+              233
+            ],
+            [
+              39,
+              51,
+              157,
+              233
+            ],
+            [
+              39,
+              51,
+              157,
+              233
+            ],
+            [
+              38,
+              51,
+              156,
+              233
+            ],
+            [
+              38,
+              51,
+              156,
+              233
+            ],
+            [
+              37,
+              51,
+              155,
+              233
+            ],
+            [
+              37,
+              51,
+              155,
+              233
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/Terrain/Resources/Wood/Trees/Tree1.png",
+          "frames": 8,
+          "fps": 2.5,
+          "visibleBounds": [
+            [
+              37,
+              51,
+              155,
+              233
+            ],
+            [
+              38,
+              51,
+              156,
+              233
+            ],
+            [
+              39,
+              51,
+              157,
+              233
+            ],
+            [
+              39,
+              51,
+              157,
+              233
+            ],
+            [
+              38,
+              51,
+              156,
+              233
+            ],
+            [
+              38,
+              51,
+              156,
+              233
+            ],
+            [
+              37,
+              51,
+              155,
+              233
+            ],
+            [
+              37,
+              51,
+              155,
+              233
+            ]
+          ]
+        }
+      }
+    },
+    "tree-birch": {
+      "kind": "prop",
+      "frame": [
+        192,
+        256
+      ],
+      "foot": [
+        96,
+        234
+      ],
+      "hitbox": [
+        40,
+        24
+      ],
+      "solid": true,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/Terrain/Resources/Wood/Trees/Tree2.png",
+          "frames": 8,
+          "fps": 2.5,
+          "visibleBounds": [
+            [
+              43,
+              5,
+              148,
+              239
+            ],
+            [
+              44,
+              5,
+              148,
+              239
+            ],
+            [
+              45,
+              5,
+              149,
+              239
+            ],
+            [
+              45,
+              5,
+              150,
+              239
+            ],
+            [
+              44,
+              5,
+              149,
+              239
+            ],
+            [
+              44,
+              5,
+              148,
+              239
+            ],
+            [
+              43,
+              5,
+              148,
+              239
+            ],
+            [
+              43,
+              5,
+              147,
+              239
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/Terrain/Resources/Wood/Trees/Tree2.png",
+          "frames": 8,
+          "fps": 2.5,
+          "visibleBounds": [
+            [
+              43,
+              5,
+              148,
+              239
+            ],
+            [
+              44,
+              5,
+              148,
+              239
+            ],
+            [
+              45,
+              5,
+              149,
+              239
+            ],
+            [
+              45,
+              5,
+              150,
+              239
+            ],
+            [
+              44,
+              5,
+              149,
+              239
+            ],
+            [
+              44,
+              5,
+              148,
+              239
+            ],
+            [
+              43,
+              5,
+              148,
+              239
+            ],
+            [
+              43,
+              5,
+              147,
+              239
+            ]
+          ]
+        }
+      }
+    },
+    "tree-small": {
+      "kind": "prop",
+      "frame": [
+        192,
+        192
+      ],
+      "foot": [
+        96,
+        164
+      ],
+      "hitbox": [
+        32,
+        20
+      ],
+      "solid": true,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/Terrain/Resources/Wood/Trees/Tree3.png",
+          "frames": 8,
+          "fps": 2.5,
+          "visibleBounds": [
+            [
+              51,
+              24,
+              140,
+              163
+            ],
+            [
+              52,
+              23,
+              140,
+              163
+            ],
+            [
+              52,
+              24,
+              140,
+              163
+            ],
+            [
+              52,
+              25,
+              140,
+              163
+            ],
+            [
+              51,
+              24,
+              141,
+              163
+            ],
+            [
+              51,
+              24,
+              140,
+              163
+            ],
+            [
+              50,
+              24,
+              139,
+              163
+            ],
+            [
+              49,
+              24,
+              140,
+              163
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/Terrain/Resources/Wood/Trees/Tree3.png",
+          "frames": 8,
+          "fps": 2.5,
+          "visibleBounds": [
+            [
+              51,
+              24,
+              140,
+              163
+            ],
+            [
+              52,
+              23,
+              140,
+              163
+            ],
+            [
+              52,
+              24,
+              140,
+              163
+            ],
+            [
+              52,
+              25,
+              140,
+              163
+            ],
+            [
+              51,
+              24,
+              141,
+              163
+            ],
+            [
+              51,
+              24,
+              140,
+              163
+            ],
+            [
+              50,
+              24,
+              139,
+              163
+            ],
+            [
+              49,
+              24,
+              140,
+              163
+            ]
+          ]
+        }
+      }
+    },
+    "bush": {
+      "kind": "prop",
+      "frame": [
+        128,
+        128
+      ],
+      "foot": [
+        64,
+        99
+      ],
+      "hitbox": [
+        40,
+        20
+      ],
+      "solid": false,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/Terrain/Decorations/Bushes/Bushe1.png",
+          "frames": 8,
+          "fps": 2.5,
+          "visibleBounds": [
+            [
+              33,
+              33,
+              94,
+              74
+            ],
+            [
+              33,
+              33,
+              94,
+              74
+            ],
+            [
+              33,
+              33,
+              94,
+              74
+            ],
+            [
+              33,
+              33,
+              94,
+              74
+            ],
+            [
+              33,
+              33,
+              94,
+              74
+            ],
+            [
+              33,
+              33,
+              94,
+              74
+            ],
+            [
+              33,
+              33,
+              94,
+              74
+            ],
+            [
+              33,
+              33,
+              94,
+              74
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/Terrain/Decorations/Bushes/Bushe1.png",
+          "frames": 8,
+          "fps": 2.5,
+          "visibleBounds": [
+            [
+              33,
+              33,
+              94,
+              74
+            ],
+            [
+              33,
+              33,
+              94,
+              74
+            ],
+            [
+              33,
+              33,
+              94,
+              74
+            ],
+            [
+              33,
+              33,
+              94,
+              74
+            ],
+            [
+              33,
+              33,
+              94,
+              74
+            ],
+            [
+              33,
+              33,
+              94,
+              74
+            ],
+            [
+              33,
+              33,
+              94,
+              74
+            ],
+            [
+              33,
+              33,
+              94,
+              74
+            ]
+          ]
+        }
+      }
+    },
+    "rock": {
+      "kind": "prop",
+      "frame": [
+        64,
+        64
+      ],
+      "foot": [
+        32,
+        55
+      ],
+      "hitbox": [
+        36,
+        22
+      ],
+      "solid": true,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/Terrain/Decorations/Rocks/Rock1.png",
+          "frames": 1,
+          "fps": 6,
+          "visibleBounds": [
+            [
+              16,
+              25,
+              44,
+              48
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/Terrain/Decorations/Rocks/Rock1.png",
+          "frames": 1,
+          "fps": 6,
+          "visibleBounds": [
+            [
+              16,
+              25,
+              44,
+              48
+            ]
+          ]
+        }
+      }
+    },
+    "ore": {
+      "kind": "prop",
+      "frame": [
+        128,
+        128
+      ],
+      "foot": [
+        64,
+        102
+      ],
+      "hitbox": [
+        54,
+        30
+      ],
+      "solid": true,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/Terrain/Resources/Gold/Gold Stones/Gold Stone 1.png",
+          "frames": 1,
+          "fps": 6,
+          "visibleBounds": [
+            [
+              51,
+              50,
+              77,
+              74
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/Terrain/Resources/Gold/Gold Stones/Gold Stone 1.png",
+          "frames": 1,
+          "fps": 6,
+          "visibleBounds": [
+            [
+              51,
+              50,
+              77,
+              74
+            ]
+          ]
+        }
+      }
+    },
+    "sheep": {
+      "kind": "prop",
+      "frame": [
+        128,
+        128
+      ],
+      "foot": [
+        64,
+        96
+      ],
+      "hitbox": [
+        32,
+        20
+      ],
+      "solid": false,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/Terrain/Resources/Meat/Sheep/Sheep_Idle.png",
+          "frames": 6,
+          "fps": 4,
+          "visibleBounds": [
+            [
+              41,
+              40,
+              85,
+              79
+            ],
+            [
+              41,
+              40,
+              85,
+              79
+            ],
+            [
+              41,
+              40,
+              85,
+              79
+            ],
+            [
+              41,
+              40,
+              85,
+              79
+            ],
+            [
+              41,
+              40,
+              85,
+              79
+            ],
+            [
+              41,
+              40,
+              85,
+              79
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/Terrain/Resources/Meat/Sheep/Sheep_Idle.png",
+          "frames": 6,
+          "fps": 4,
+          "visibleBounds": [
+            [
+              41,
+              40,
+              85,
+              79
+            ],
+            [
+              41,
+              40,
+              85,
+              79
+            ],
+            [
+              41,
+              40,
+              85,
+              79
+            ],
+            [
+              41,
+              40,
+              85,
+              79
+            ],
+            [
+              41,
+              40,
+              85,
+              79
+            ],
+            [
+              41,
+              40,
+              85,
+              79
+            ]
+          ]
+        }
+      }
+    },
+    "house": {
+      "kind": "prop",
+      "frame": [
+        128,
+        192
+      ],
+      "foot": [
+        64,
+        170
+      ],
+      "hitbox": [
+        88,
+        44
+      ],
+      "solid": true,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/Buildings/Blue Buildings/House1.png",
+          "frames": 1,
+          "fps": 6,
+          "visibleBounds": [
+            [
+              8,
+              16,
+              119,
+              164
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/Buildings/Blue Buildings/House1.png",
+          "frames": 1,
+          "fps": 6,
+          "visibleBounds": [
+            [
+              8,
+              16,
+              119,
+              164
+            ]
+          ]
+        }
+      }
+    },
+    "house-large": {
+      "kind": "prop",
+      "frame": [
+        128,
+        192
+      ],
+      "foot": [
+        64,
+        170
+      ],
+      "hitbox": [
+        92,
+        46
+      ],
+      "solid": true,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/Buildings/Blue Buildings/House2.png",
+          "frames": 1,
+          "fps": 6,
+          "visibleBounds": [
+            [
+              0,
+              23,
+              127,
+              172
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/Buildings/Blue Buildings/House2.png",
+          "frames": 1,
+          "fps": 6,
+          "visibleBounds": [
+            [
+              0,
+              23,
+              127,
+              172
+            ]
+          ]
+        }
+      }
+    },
+    "barracks": {
+      "kind": "prop",
+      "frame": [
+        192,
+        256
+      ],
+      "foot": [
+        96,
+        226
+      ],
+      "hitbox": [
+        140,
+        64
+      ],
+      "solid": true,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/Buildings/Blue Buildings/Barracks.png",
+          "frames": 1,
+          "fps": 6,
+          "visibleBounds": [
+            [
+              4,
+              58,
+              187,
+              233
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/Buildings/Blue Buildings/Barracks.png",
+          "frames": 1,
+          "fps": 6,
+          "visibleBounds": [
+            [
+              4,
+              58,
+              187,
+              233
+            ]
+          ]
+        }
+      }
+    },
+    "monastery": {
+      "kind": "prop",
+      "frame": [
+        192,
+        320
+      ],
+      "foot": [
+        96,
+        288
+      ],
+      "hitbox": [
+        130,
+        62
+      ],
+      "solid": true,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/Buildings/Blue Buildings/Monastery.png",
+          "frames": 1,
+          "fps": 6,
+          "visibleBounds": [
+            [
+              16,
+              45,
+              175,
+              300
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/Buildings/Blue Buildings/Monastery.png",
+          "frames": 1,
+          "fps": 6,
+          "visibleBounds": [
+            [
+              16,
+              45,
+              175,
+              300
+            ]
+          ]
+        }
+      }
+    },
+    "tower": {
+      "kind": "prop",
+      "frame": [
+        128,
+        256
+      ],
+      "foot": [
+        64,
+        230
+      ],
+      "hitbox": [
+        76,
+        42
+      ],
+      "solid": true,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/Buildings/Blue Buildings/Tower.png",
+          "frames": 1,
+          "fps": 6,
+          "visibleBounds": [
+            [
+              4,
+              46,
+              123,
+              221
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/Buildings/Blue Buildings/Tower.png",
+          "frames": 1,
+          "fps": 6,
+          "visibleBounds": [
+            [
+              4,
+              46,
+              123,
+              221
+            ]
+          ]
+        }
+      }
+    },
+    "castle": {
+      "kind": "prop",
+      "frame": [
+        320,
+        256
+      ],
+      "foot": [
+        160,
+        224
+      ],
+      "hitbox": [
+        240,
+        66
+      ],
+      "solid": true,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/Buildings/Blue Buildings/Castle.png",
+          "frames": 1,
+          "fps": 6,
+          "visibleBounds": [
+            [
+              4,
+              41,
+              315,
+              248
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/Buildings/Blue Buildings/Castle.png",
+          "frames": 1,
+          "fps": 6,
+          "visibleBounds": [
+            [
+              4,
+              41,
+              315,
+              248
+            ]
+          ]
+        }
+      }
+    },
+    "portal-stone": {
+      "kind": "prop",
+      "frame": [
+        64,
+        64
+      ],
+      "foot": [
+        32,
+        55
+      ],
+      "hitbox": [
+        28,
+        24
+      ],
+      "solid": false,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/Terrain/Decorations/Rocks/Rock2.png",
+          "frames": 1,
+          "fps": 6,
+          "visibleBounds": [
+            [
+              9,
+              17,
+              54,
+              49
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/Terrain/Decorations/Rocks/Rock2.png",
+          "frames": 1,
+          "fps": 6,
+          "visibleBounds": [
+            [
+              9,
+              17,
+              54,
+              49
+            ]
+          ]
+        }
+      }
+    },
+    "portal-marker": {
+      "kind": "prop",
+      "frame": [
+        192,
+        192
+      ],
+      "foot": [
+        96,
+        132
+      ],
+      "hitbox": [
+        28,
+        24
+      ],
+      "solid": false,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/Units/Blue Units/Monk/Heal_Effect.png",
+          "frames": 11,
+          "fps": 8,
+          "visibleBounds": [
+            [
+              47,
+              50,
+              134,
+              131
+            ],
+            [
+              47,
+              38,
+              137,
+              144
+            ],
+            [
+              47,
+              28,
+              141,
+              144
+            ],
+            [
+              47,
+              25,
+              142,
+              145
+            ],
+            [
+              47,
+              22,
+              143,
+              145
+            ],
+            [
+              47,
+              18,
+              144,
+              145
+            ],
+            [
+              47,
+              18,
+              144,
+              145
+            ],
+            [
+              49,
+              23,
+              144,
+              145
+            ],
+            [
+              50,
+              31,
+              144,
+              144
+            ],
+            [
+              59,
+              29,
+              144,
+              137
+            ],
+            [
+              59,
+              28,
+              143,
+              124
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/Units/Blue Units/Monk/Heal_Effect.png",
+          "frames": 11,
+          "fps": 8,
+          "visibleBounds": [
+            [
+              47,
+              50,
+              134,
+              131
+            ],
+            [
+              47,
+              38,
+              137,
+              144
+            ],
+            [
+              47,
+              28,
+              141,
+              144
+            ],
+            [
+              47,
+              25,
+              142,
+              145
+            ],
+            [
+              47,
+              22,
+              143,
+              145
+            ],
+            [
+              47,
+              18,
+              144,
+              145
+            ],
+            [
+              47,
+              18,
+              144,
+              145
+            ],
+            [
+              49,
+              23,
+              144,
+              145
+            ],
+            [
+              50,
+              31,
+              144,
+              144
+            ],
+            [
+              59,
+              29,
+              144,
+              137
+            ],
+            [
+              59,
+              28,
+              143,
+              124
+            ]
+          ]
+        }
+      }
+    },
+    "foam": {
+      "kind": "prop",
+      "frame": [
+        192,
+        192
+      ],
+      "foot": [
+        96,
+        96
+      ],
+      "hitbox": [
+        1,
+        1
+      ],
+      "solid": false,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/Terrain/Tileset/Water Foam.png",
+          "frames": 16,
+          "fps": 5,
+          "visibleBounds": [
+            [
+              54,
+              58,
+              137,
+              141
+            ],
+            [
+              54,
+              58,
+              137,
+              140
+            ],
+            [
+              54,
+              63,
+              131,
+              139
+            ],
+            [
+              61,
+              67,
+              131,
+              140
+            ],
+            [
+              59,
+              66,
+              130,
+              141
+            ],
+            [
+              59,
+              65,
+              130,
+              142
+            ],
+            [
+              60,
+              64,
+              131,
+              143
+            ],
+            [
+              59,
+              62,
+              133,
+              142
+            ],
+            [
+              58,
+              62,
+              134,
+              145
+            ],
+            [
+              56,
+              61,
+              134,
+              145
+            ],
+            [
+              55,
+              61,
+              136,
+              146
+            ],
+            [
+              55,
+              60,
+              135,
+              148
+            ],
+            [
+              52,
+              59,
+              136,
+              148
+            ],
+            [
+              52,
+              59,
+              137,
+              146
+            ],
+            [
+              54,
+              59,
+              137,
+              144
+            ],
+            [
+              53,
+              58,
+              137,
+              143
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/Terrain/Tileset/Water Foam.png",
+          "frames": 16,
+          "fps": 5,
+          "visibleBounds": [
+            [
+              54,
+              58,
+              137,
+              141
+            ],
+            [
+              54,
+              58,
+              137,
+              140
+            ],
+            [
+              54,
+              63,
+              131,
+              139
+            ],
+            [
+              61,
+              67,
+              131,
+              140
+            ],
+            [
+              59,
+              66,
+              130,
+              141
+            ],
+            [
+              59,
+              65,
+              130,
+              142
+            ],
+            [
+              60,
+              64,
+              131,
+              143
+            ],
+            [
+              59,
+              62,
+              133,
+              142
+            ],
+            [
+              58,
+              62,
+              134,
+              145
+            ],
+            [
+              56,
+              61,
+              134,
+              145
+            ],
+            [
+              55,
+              61,
+              136,
+              146
+            ],
+            [
+              55,
+              60,
+              135,
+              148
+            ],
+            [
+              52,
+              59,
+              136,
+              148
+            ],
+            [
+              52,
+              59,
+              137,
+              146
+            ],
+            [
+              54,
+              59,
+              137,
+              144
+            ],
+            [
+              53,
+              58,
+              137,
+              143
+            ]
+          ]
+        }
+      }
+    },
+    "water-rock": {
+      "kind": "prop",
+      "frame": [
+        64,
+        64
+      ],
+      "foot": [
+        32,
+        52
+      ],
+      "hitbox": [
+        1,
+        1
+      ],
+      "solid": false,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/Terrain/Decorations/Rocks in the Water/Water Rocks_01.png",
+          "frames": 16,
+          "fps": 5,
+          "visibleBounds": [
+            [
+              17,
+              25,
+              45,
+              47
+            ],
+            [
+              16,
+              25,
+              45,
+              47
+            ],
+            [
+              15,
+              25,
+              46,
+              49
+            ],
+            [
+              15,
+              25,
+              46,
+              50
+            ],
+            [
+              14,
+              25,
+              47,
+              50
+            ],
+            [
+              14,
+              25,
+              48,
+              52
+            ],
+            [
+              12,
+              25,
+              49,
+              52
+            ],
+            [
+              11,
+              25,
+              49,
+              52
+            ],
+            [
+              9,
+              25,
+              49,
+              52
+            ],
+            [
+              9,
+              25,
+              49,
+              53
+            ],
+            [
+              9,
+              25,
+              48,
+              51
+            ],
+            [
+              9,
+              25,
+              47,
+              50
+            ],
+            [
+              14,
+              25,
+              46,
+              49
+            ],
+            [
+              15,
+              25,
+              45,
+              48
+            ],
+            [
+              16,
+              25,
+              45,
+              49
+            ],
+            [
+              17,
+              25,
+              44,
+              48
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/Terrain/Decorations/Rocks in the Water/Water Rocks_01.png",
+          "frames": 16,
+          "fps": 5,
+          "visibleBounds": [
+            [
+              17,
+              25,
+              45,
+              47
+            ],
+            [
+              16,
+              25,
+              45,
+              47
+            ],
+            [
+              15,
+              25,
+              46,
+              49
+            ],
+            [
+              15,
+              25,
+              46,
+              50
+            ],
+            [
+              14,
+              25,
+              47,
+              50
+            ],
+            [
+              14,
+              25,
+              48,
+              52
+            ],
+            [
+              12,
+              25,
+              49,
+              52
+            ],
+            [
+              11,
+              25,
+              49,
+              52
+            ],
+            [
+              9,
+              25,
+              49,
+              52
+            ],
+            [
+              9,
+              25,
+              49,
+              53
+            ],
+            [
+              9,
+              25,
+              48,
+              51
+            ],
+            [
+              9,
+              25,
+              47,
+              50
+            ],
+            [
+              14,
+              25,
+              46,
+              49
+            ],
+            [
+              15,
+              25,
+              45,
+              48
+            ],
+            [
+              16,
+              25,
+              45,
+              49
+            ],
+            [
+              17,
+              25,
+              44,
+              48
+            ]
+          ]
+        }
+      }
+    }
+  },
+  "generation": {
+    "nobby-idle": {
+      "source": "art/generated-source/nobby-idle.png",
+      "scale": 0.3888888888888889,
+      "footPixels": [
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ]
+      ]
+    },
+    "nobby-run": {
+      "source": "art/generated-source/nobby-run.png",
+      "scale": 0.21604938271604937,
+      "footPixels": [
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ]
+      ]
+    },
+    "nobby-cast": {
+      "source": "art/generated-source/nobby-cast.png",
+      "scale": 0.5072463768115942,
+      "footPixels": [
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ]
+      ]
+    },
+    "nobby-attack": {
+      "source": "art/generated-source/nobby-attack.png",
+      "scale": 0.4666666666666667,
+      "footPixels": [
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ]
+      ]
+    },
+    "mira-idle": {
+      "source": "art/generated-source/mira-idle.png",
+      "scale": 0.3349282296650718,
+      "footPixels": [
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ]
+      ]
+    }
+  }
+}

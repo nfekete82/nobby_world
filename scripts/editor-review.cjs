@@ -4,13 +4,13 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
  const page=await browser.newPage({viewport:{width:1280,height:800}}),errors=[],missing=[];
  page.on('pageerror',e=>errors.push(e.message));page.on('response',r=>{if(r.status()>=400)missing.push(r.url())});
  // Test-only inspection hook, injected into the dev response, never shipped.
- await page.route('**/src/standalone.ts',async route=>{
-  const response=await route.fetch();let body=await response.text();
-  body=body.replace('mergeConfig }','mergeConfig, inject }').replace('provideRpg, startGame }','provideRpg, startGame, RpgClientEngine }').replace('startGame(','window.__ready=startGame(');
-  await route.fulfill({response,body:body+'\nwindow.__ready.then(context=>{window.__editor={engine:inject(context,RpgClientEngine),get server(){return context.get("server")}}});'});
+ await page.route('**/src/modules/main/display.ts*',async route=>{
+  const response=await route.fetch();const body=(await response.text()).replace('onStep(engine) {','onStart(engine) { window.__editor={engine,get server(){return engine.context.get("server")}}; }, onStep(engine) {');
+  assert.ok(body.includes('window.__editor'),'test-only engine inspection hook applied');
+  await route.fulfill({response,body});
  });
  await page.goto('http://localhost:5173/');
- await page.waitForFunction(()=>window.__editor&&Object.keys(window.__editor.engine.sceneMap.events()).length===4,{},{timeout:15000});
+ await page.waitForFunction(()=>window.__editor&&Object.keys(window.__editor.engine.sceneMap.events()).length>4,{},{timeout:15000});
  await page.waitForTimeout(500);
  const state=await page.evaluate(()=>{
   const r=window.__editor,read=v=>typeof v==='function'?v():v;
@@ -27,10 +27,11 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
  for(let i=0;i<8;i++){if(await page.evaluate(()=>Object.values(window.__editor.server.subRoom.players())[0].gold>0))break;await page.keyboard.press('ArrowRight',{delay:180});await page.keyboard.press('Space',{delay:100});await page.waitForTimeout(250)}
  assert.ok(await page.evaluate(()=>Object.values(window.__editor.server.subRoom.players())[0].gold>0),'defeated enemy grants gold');
  async function usePortal(target){
-  await page.evaluate(async()=>{const p=Object.values(window.__editor.server.subRoom.players())[0];await p.teleport({x:420,y:438});p.changeDirection('down')});
-  await page.waitForTimeout(250);await page.keyboard.press('ArrowDown',{delay:120});await page.keyboard.press('Space',{delay:150});
+  const worlds=JSON.parse(fs.readFileSync('src/generated/worlds.json','utf8')),world=worlds.find(w=>'map-'+w.id===state.room),targetWorld=worlds.find(w=>w.id===target);
+  await page.evaluate(async()=>{const room=window.__editor.server.subRoom,p=Object.values(room.players())[0],portal=room.events()['object-5'];await p.teleport({x:portal.x(),y:portal.y()-40});p.changeDirection('down')});
+  await page.waitForTimeout(250);await page.keyboard.press('ArrowDown',{delay:100});await page.keyboard.press('Space',{delay:150});
   await page.waitForFunction(target=>window.__editor.server.getCurrentRoomId()==='map-'+target,target,{timeout:10000});
-  await page.waitForFunction(()=>{const p=Object.values(window.__editor.server.subRoom.players())[0];return p&&Math.abs(p.x()-300)<4&&Math.abs(p.y()-300)<4},{},{timeout:10000});
+  await page.waitForFunction(start=>{const p=Object.values(window.__editor.server.subRoom.players())[0];return p&&Math.abs(p.x()-start.x)<4&&Math.abs(p.y()-start.y)<4},targetWorld.start,{timeout:10000});
   await page.waitForTimeout(700);
  }
  await usePortal('wald');await page.screenshot({path:'artifacts/editor/second-world.png'});await usePortal('simplemap');

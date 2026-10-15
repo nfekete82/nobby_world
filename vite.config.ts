@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import { rpgjs, tiledMapFolderPlugin } from '@rpgjs/vite';
 import startServer from './src/server';
 import { compileWorlds } from './scripts/world-data.mjs';
+import { editorApi } from './scripts/web-editor-api.mjs';
 
 compileWorlds();
 
@@ -13,6 +14,7 @@ export default defineConfig({
     {
       name: 'nobby-local-worlds',
       configureServer(server) {
+        server.middlewares.use(editorApi);
         const reload=(file: string)=>{
           if(!file.endsWith('.tmx')&&!file.endsWith('.tx'))return;
           try { compileWorlds(); server.ws.send({type:'full-reload'}); }
