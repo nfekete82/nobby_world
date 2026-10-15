@@ -49,3 +49,16 @@ test('clicking the monster head and torso targets the enemy, not the terrain',()
  assert.equal(enemyAt({x:316,y:285},candidates),null,'above sprite bounds')
  assert.equal(enemyAt({x:316,y:340},[{...enemy,hp:0}]),null,'defeated enemy')
 })
+
+test('real island spawn has clear casting positions within 300 pixels',()=>{
+ const world=worlds.find(w=>w.id==='simplemap')
+ const map=unpackNavigation(world.navigation)
+ const origin=world.start
+ const candidates=[[208,0],[-208,0],[0,-208],[0,208]]
+ let valid=0
+ for(const [dx,dy] of candidates){
+  const to={x:origin.x+dx,y:origin.y+dy}
+  if(canCast({from:origin,to,nav:map,mana:100})==='ok')valid++
+ }
+ assert.ok(valid>=2,'actual map has no reachable initial casting corridor')
+})
