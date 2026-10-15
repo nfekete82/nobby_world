@@ -65,3 +65,26 @@ test('RPG-JS owns rewards, while attribute changes use synced persisted properti
  assert.match(hud,/engine.processAction\('nobby:allocate-stat',\{stat:button.dataset.stat\}\)/)
  assert.match(hud,/player\._exp\?\.\(\)/)
 })
+
+test('required XP grows strictly with every level (RPG-JS default curve)',()=>{
+ const curve={basis:30,extra:20,accelerationA:30,accelerationB:30}
+ const required=Array.from({length:50},(_,index)=>
+   expThreshold(index+2,curve)-expThreshold(index+1,curve))
+ assert.deepEqual(required.slice(0,5),[50,112,204,329,485])
+ assert.ok(required.every((needed,index)=>needed>0&&(index===0||needed>required[index-1])))
+})
+test('character screen shows XP within the current level and missing XP',()=>{
+ const hud=fs.readFileSync('src/ui/hud.ts','utf8')
+ assert.match(hud,/const earned=Math.max\(0,currentExp-floor\),needed=Math.max\(1,next-floor\)/)
+ assert.match(hud,/Noch .* EP bis Stufe/)
+ assert.match(hud,/nobby-stats-xp/)
+})
+test('OrbStack live editor is optional, persistent and local-only',()=>{
+ const compose=fs.readFileSync('compose.yaml','utf8')
+ assert.match(compose,/editor:/)
+ assert.match(compose,/profiles: \["editor"\]/)
+ assert.match(compose,/restart: unless-stopped/g)
+ assert.match(compose,/127\.0\.0\.1:5173:5173/)
+ assert.match(compose,/\.\/:\/app/)
+ assert.match(compose,/--host 0\.0\.0\.0 --port 5173 --strictPort/)
+})

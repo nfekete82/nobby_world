@@ -23,8 +23,36 @@ npm start
 docker compose up -d --build --force-recreate
 ```
 
-Die Docker-Version ist ein fertiger Build und übernimmt Änderungen nach einem
-Neubau. Das Spiel benötigt im Einzelspielermodus keinen externen Server.
+Die Docker-Version auf Port 8088 ist ein fertiger Build und übernimmt Änderungen
+nach einem Neubau. Das Spiel benötigt im Einzelspielermodus keinen externen Server.
+
+### OrbStack · einmal einrichten, danach ohne Terminal spielen und Karten bearbeiten
+
+OrbStack führt bereits den Spielcontainer mit `restart: unless-stopped` aus.
+Für Kartenänderungen und automatische Live-Aktualisierung ist jetzt zusätzlich
+ein **Editor-Container** vorgesehen. Einmalig im Projektverzeichnis:
+
+```sh
+docker compose --profile editor up -d editor
+```
+
+Danach einfach **http://localhost:5173** öffnen. Auf diesem Port läuft das
+Spiel inklusive Esc-Karteneditor, **direktem Speichern in `src/tiled/`**, 
+Hot-Reload und Backup. Die macOS-Projektdateien sind in den Container eingebunden;
+Abhängigkeiten liegen separat in einem OrbStack-/Docker-Volume und werden nur
+bei Änderung der `package-lock.json` neu installiert.
+
+Der Container wird nach Docker-Neustarts automatisch wiederhergestellt, solange
+du ihn nicht manuell stoppst; dafür muss OrbStack laufen (optional **Start on login**
+in den OrbStack-Einstellungen aktivieren). Der Editor ist aus Sicherheitsgründen
+nur auf `127.0.0.1:5173` am Mac veröffentlicht. Prüfen mit
+`docker compose --profile editor ps`, bei Bedarf Logs mit
+`docker compose --profile editor logs -f editor`.
+
+**Unterschied:** `localhost:5173` ist immer die Live-Entwicklerversion;
+`localhost:8088` ist der separate, gebaute Release-Container. Für neue Versionen
+auf 8088 einmal `docker compose up -d --build game` ausführen, für Arbeiten im
+Karteneditor ist das nicht nötig.
 
 | Eingabe | Aktion |
 | --- | --- |
@@ -174,9 +202,10 @@ Er unterstützt:
 - Rückgängig, TMX exportieren und Speichern; alle Änderungen bleiben im
   von Tiled bearbeitbaren TMX-Format
 
-**Direkt in die Projektdateien speichern:** die lokale Entwickler-Vorschau
-starten (in einem Terminal: `npm run dev -- --host 127.0.0.1 --port 5173 --strictPort`),
-dann http://127.0.0.1:5173 öffnen und **Esc → Karteneditor**.
+**Direkt in die Projektdateien speichern:** Den oben beschriebenen OrbStack-
+Editor einmalig starten und anschließend http://localhost:5173 öffnen.
+Alternativ ohne Docker: `npm run dev -- --host 127.0.0.1 --port 5173 --strictPort`.
+Dann **Esc → Karteneditor** öffnen.
 Die Vite-API erlaubt Änderungen nur von der lokalen Vorschau, prüft die
 Dateiversion, erstellt vor jeder Änderung ein Backup unter
 `art/map-backups/web-editor-*.tmx` und validiert die Karten. Bei einem
@@ -218,3 +247,22 @@ entfernen. Zum Übernehmen **Speichern** (Vorschau auf Port 5173) oder
 und sämtliche Tilesets wieder her. Aktuelle technische Grenzen:
 128 Kacheln pro Seite und höchstens 6.250 Kacheln insgesamt, um das
 RPG-JS-Navigationslimit (100.000 Zellen) nicht zu überschreiten.
+
+### Erfahrungspunkte und Levelaufstieg
+
+RPG-JS verteilt besiegten Gegnern automatisch **15 EP × Gegnerstufe** und
+berechnet daraus Levelaufstiege. Die pro Stufe benötigten EP steigen mit der
+bestehenden RPG-JS-Erfahrungskurve:
+
+| Von → nach Stufe | EP für diesen Aufstieg |
+| --- | ---: |
+| 1 → 2 | 50 |
+| 2 → 3 | 112 |
+| 3 → 4 | 204 |
+| 4 → 5 | 329 |
+| 5 → 6 | 485 |
+
+Die EP-Leiste zeigt den aktuellen Fortschritt innerhalb der Stufe, das
+Charakterfenster (**C**) zusätzlich die noch fehlenden EP. Jeder Aufstieg
+gibt 3 frei verteilbare Attributpunkte. Das Spiel berechnet weiterhin EP,
+Stufen und die verfügbaren Punkte auf dem autoritativen Server.

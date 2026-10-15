@@ -85,7 +85,9 @@ class MapEditor {
  private viewport=elt<HTMLElement>('div','we-viewport')
  private stage=elt<HTMLElement>('div','we-stage')
  private staticNotice=elt<HTMLElement>('div','we-static-notice',
-  'Direktes Speichern ist über npm run dev (Port 5173) möglich. In der Docker-Version bitte TMX exportieren.')
+  import.meta.env.DEV
+   ? 'Live-Editor aktiv (localhost:5173): Änderungen werden direkt in die TMX-Projektdateien gespeichert.'
+   : 'Fertige Spielversion: direkte Kartenbearbeitung nicht verfügbar. Bitte TMX exportieren oder den OrbStack-Editor auf localhost:5173 öffnen.')
  constructor(private engine:any){
   this.root.setAttribute('role','dialog');this.root.setAttribute('aria-modal','true')
   this.root.setAttribute('aria-label','Nobby World Karteneditor')

@@ -12,3 +12,36 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+
+  # Optional, persistent live editor: OrbStack serves the Mac project directly.
+  # One-time setup: docker compose --profile editor up -d editor
+  editor:
+    image: node:24-alpine
+    profiles: ["editor"]
+    restart: unless-stopped
+    init: true
+    working_dir: /app
+    ports:
+      - "127.0.0.1:5173:5173"
+    volumes:
+      - ./:/app
+      - nobby_world_editor_modules:/app/node_modules
+    command:
+      - sh
+      - -ec
+      - |
+        lock_hash="$$(sha256sum package-lock.json | cut -d ' ' -f 1)"
+        if [ "$$(cat node_modules/.nobby-lock 2>/dev/null || true)" != "$$lock_hash" ]; then
+          npm ci
+          printf '%s\\n' "$$lock_hash" > node_modules/.nobby-lock
+        fi
+        exec npm run dev -- --host 0.0.0.0 --port 5173 --strictPort
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:5173/').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 20s
+      timeout: 5s
+      retries: 4
+      start_period: 90s
+
+volumes:
+  nobby_world_editor_modules:

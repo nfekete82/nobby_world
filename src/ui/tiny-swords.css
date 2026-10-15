@@ -118,3 +118,5 @@ canvas,img,.nobby-portrait,#nobby-hud *,.rpg-ui-main-menu-layout,.rpg-ui-dialog,
 .nobby-stats-note{font-size:11px;line-height:1.5;margin:12px 0 0;color:#75634c}
 @media(max-width:760px){.nobby-stats-panel{top:132px;left:8px;max-height:calc(100vh - 170px)}.nobby-actions button{padding:3px 5px;gap:5px}}
 @media(max-height:540px){.nobby-stats-panel{top:8px;max-height:calc(100vh - 65px)}}
+
+.nobby-stats-xp{margin:-6px 0 12px;font-size:12px;color:#675642;line-height:1.5}
