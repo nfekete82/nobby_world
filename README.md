@@ -380,3 +380,20 @@ Branches enthält keine zusätzlichen Änderungen an den beiden bereits
 eingecheckten TMX-Karten; `git pull --ff-only` kann den Code daher unabhängig
 von deiner 100×40-Karte aktualisieren. Wenn Git wegen anderer Dateien
 blockiert, zuerst Kopien davon außerhalb des Repos anlegen.
+
+### Lebendige Schafe auf der Wiese
+
+Bereits platzierte und neu im Karteneditor hinzugefügte `sheep`-Objekte
+sind jetzt servergesteuerte, friedliche Tiere. Sie laufen jeweils einzelne
+64px-Schritte, nur auf echten Gras-/Waldkacheln, höchstens vier Kacheln
+von ihrem ursprünglichen Standort entfernt. Dazwischen warten sie 2–4
+Sekunden mit eigener, abgesenkter Fressanimation. Die Tiere überschreiten
+keine Wassersperren, Gebäude oder Wege und wechseln nicht auf Wüste,
+Felsen oder Schnee. Andere Props bleiben starr.
+
+RPGJS `infiniteMoveRoute()` verwaltet die Abläufe auf dem Server ohne
+eigene `setInterval`-Timer pro Tier. Kollisionslogik ist nicht verändert;
+Schafe selbst sind weiterhin durchquerbar. Alle Kartenmasken werden beim
+Kompilieren aus den tatsächlich gespeicherten TMX-Ebenen generiert.
+`scripts/sheep-art.mjs` erzeugt das 6-Frame-Fressspritesheet aus der
+vorhandenen Schafgrafik in einem ignorierten Ausgabeverzeichnis.

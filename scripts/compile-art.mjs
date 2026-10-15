@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { PNG } from 'pngjs'
 import { ensureBiomeProps } from './biome-props.mjs'
+import { ensureSheepGraze, SHEEP_GRAZE_FRAMES, SHEEP_GRAZE_FPS } from './sheep-art.mjs'
 
 const root=process.cwd(),base='public/tiny-swords/'
 const read=file=>PNG.sync.read(fs.readFileSync(file))
@@ -126,6 +127,7 @@ fs.copyFileSync(base+'Terrain/Tileset/Water Foam.png','src/tiled/tiny-swords/foa
 for(const [name,file]of [['grass','Terrain/Tileset/Tilemap_color1.png'],['forest','Terrain/Tileset/Tilemap_color3.png'],['meadow','Terrain/Tileset/Tilemap_color4.png'],['water','Terrain/Tileset/Water Background color.png'],['path','compiled/path.png'],['bridge','compiled/bridge.png']])fs.copyFileSync(base+file,`src/tiled/tiny-swords/${name}.png`)
 
 ensureBiomeProps()
+ensureSheepGraze()
 const assets={}
 function actor(id,states,foot=[96,132],hitbox=[32,24]){assets[id]={kind:'actor',frame:[192,192],foot,hitbox,directional:true,animations:states}}
 const anim=(image,frames,fps)=>({image:'tiny-swords/'+image,frames,fps})
@@ -141,6 +143,7 @@ prop('bush','Terrain/Decorations/Bushes/Bushe1.png',[128,128],8,[64,99],[40,20],
 prop('rock','Terrain/Decorations/Rocks/Rock1.png',[64,64],1,[32,55],[36,22])
 prop('ore','Terrain/Resources/Gold/Gold Stones/Gold Stone 1.png',[128,128],1,[64,102],[54,30])
 prop('sheep','Terrain/Resources/Meat/Sheep/Sheep_Idle.png',[128,128],6,[64,96],[32,20],false,4)
+assets.sheep.animations.graze=anim('biomes/sheep-graze.png',SHEEP_GRAZE_FRAMES,SHEEP_GRAZE_FPS)
 for(const [id,file,frame,foot,hitbox]of [
  ['house','House1.png',[128,192],[64,170],[88,44]],['house-large','House2.png',[128,192],[64,170],[92,46]],
  ['barracks','Barracks.png',[192,256],[96,226],[140,64]],['monastery','Monastery.png',[192,320],[96,288],[130,62]],

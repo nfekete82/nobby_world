@@ -40,7 +40,10 @@ export function sheepEvent(object:any, world:any):EventDefinition{
     // The grazing animation takes place while the engine's route is waiting.
     // Any overlapping animation is transient and reverts to idle afterward.
     if(typeof animal.setAnimation==='function')
-     void animal.setAnimation('graze',1,{durationMs:Math.round(action.duration*1000)})
+     {
+      const animation=animal.setAnimation('graze',1,{durationMs:Math.round(action.duration*1000)})
+      if(animation&&typeof animation.catch==='function')void animation.catch(()=>{})
+     }
     return Move.wait(action.duration)
    }])
   }
