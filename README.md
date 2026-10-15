@@ -410,3 +410,24 @@ vorhandenen Schafgrafik in einem ignorierten Ausgabeverzeichnis.
 Er öffnet die echte Startwelt, wartet auf die serverseitigen Schaf-Events,
 beobachtet ihre Positionen ca. 22 Sekunden und prüft den Gras- und
 Bewegungsradius. Der Test ändert keine Karten und legt keine Objekte an.
+
+## Consistent pixel-art graphics (Codex)
+
+Art production for this project follows `AGENTS.md` and the master
+[style guide](docs/ART_STYLE.md). `art/style-references.json` records original
+Pixel Frog / Tiny Swords master sprites and approved Nobby/biome extensions.
+New graphics are based on those references, with a fixed 64px terrain grid,
+native actor/prop frames, dark slate outlines and nearest-neighbor scaling.
+
+```sh
+npm ci
+npm run art:style:check     # existing map/spritesheet preflight + art contract
+npm run art:references      # self-contained visual gallery
+open artifacts/art-direction/style-reference.html
+npm test
+npm run build
+```
+
+Automated checks validate originals/metadata; inspect the HTML gallery and
+real gameplay screenshots for actual *visual* consistency. The reference
+sheet is generated locally (not tracked); no proprietary asset pack is duplicated.
