@@ -20,6 +20,7 @@ const ensureDevServer=require('./ensure-dev-server.cjs')
   await page.locator('#rpg canvas').first().click({position:{x:20,y:20}})
   await page.keyboard.press('Escape',{delay:160})
   const menu=page.locator('.rpg-ui-main-menu-layout')
+  await menu.waitFor({state:'visible',timeout:3000}).catch(()=>{})
   if(!(await menu.isVisible())){
    // The HUD menu button dispatches the identical RPG-JS action; using this
    // fallback avoids flakes caused by an unfocused headless browser window.
