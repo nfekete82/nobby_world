@@ -39,3 +39,11 @@ test('invalid routes are safely ignored',()=>{
  assert.deepEqual(findRoute(nav,{x:NaN,y:0},{x:32,y:0}),[])
  assert.throws(()=>unpackNavigation({cell:16,cols:4,rows:4,blocked:'00'}),/bitmap/)
 })
+
+test('equal-length paths keep turns minimal for clean walk animations',()=>{
+ const wall=Array.from({length:8},(_,y)=>[4,y]).filter(([,y])=>y!==6)
+ const nav=grid(12,9,wall)
+ const points=findRoute(nav,{x:16,y:16},{x:160,y:16})
+ // Start -> east -> south -> east -> north, rather than tile-by-tile zigzags.
+ assert.ok(points.length<=4,'path has excessive direction changes: '+JSON.stringify(points))
+})
