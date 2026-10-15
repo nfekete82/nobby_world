@@ -1,6 +1,7 @@
 import art from '../art/registry.json'
 import './web-editor.css'
 import {expandLayerGrid,expansionFill,validateMapExpansion} from './map-resize.mjs'
+import {OBJECT_CATEGORIES,TILE_CATEGORIES,layerLabel,layerHelp,objectCategory,tilesetCategory,layerForTileCategory} from './editor-taxonomy.mjs'
 
 type Sheet={first:number,count:number,cols:number,img:HTMLImageElement,source:string,title:string}
 type PaintLayer={node:Element,name:string,gids:number[]}
@@ -62,6 +63,9 @@ class MapEditor {
  private offsetX=0
  private offsetY=0
  private layerIndex=0
+ private activeCategory='Alle'
+ private pendingRefresh=false
+ private saving=false
  private chosenGid=57
  private chosenAsset='tree-oak'
  private selected:Element|null=null
@@ -81,6 +85,8 @@ class MapEditor {
  private resizeHeight=elt<HTMLInputElement>('input')
  private zoomText=elt<HTMLElement>('span','we-zoom-status','100 %')
  private layerPicker=elt<HTMLSelectElement>('select')
+ private layerHelpText=elt<HTMLElement>('div','we-layer-help')
+ private categoryTabs=elt<HTMLElement>('div','we-categories')
  private paletteTabs=elt<HTMLElement>('div','we-tabs')
  private viewport=elt<HTMLElement>('div','we-viewport')
  private stage=elt<HTMLElement>('div','we-stage')
@@ -101,12 +107,12 @@ class MapEditor {
   for(const [id,label] of [['select','↖ Objekte'],['object','🌲 Platzieren'],['tile','🖌 Kacheln'],['erase','⌫ Löschen']]){
    const el=button(label,()=>this.setTool(id));el.dataset.tool=id;toolbar.append(el)
   }
-  this.layerPicker.addEventListener('change',()=>{this.layerIndex=Number(this.layerPicker.value);this.redraw()})
+  this.layerPicker.addEventListener('change',()=>{this.layerIndex=Number(this.layerPicker.value);this.updateLayerHelp();this.redraw()})
   toolbar.append(field('Ebene',this.layerPicker),
    button('−',()=>this.zoomAt(.8),'we-zoom-button'),
    this.zoomText,button('+',()=>this.zoomAt(1.25),'we-zoom-button'),
    button('⤢ Einpassen',()=>this.fitMap()),
-   button('▣ Karte erweitern',()=>this.toggleMapSize(),'we-resize-toggle'))
+   button('▣ Karte erweitern',()=>this.toggleMapSize(),'we-resize-toggle'),this.layerHelpText)
   const pane=elt('main','we-body')
   this.stage.append(this.canvas);this.viewport.append(this.stage)
   const sidebar=elt('aside','we-sidebar')
@@ -131,7 +137,7 @@ class MapEditor {
    field('Breite in Kacheln',this.resizeWidth),
    field('Höhe in Kacheln',this.resizeHeight),
    button('Fläche erweitern',()=>this.expandMap(),'we-primary'))
-  sidebar.append(this.resizePanel,this.objectArea,this.detail,this.paletteTabs,this.palette,toolHelp,this.staticNotice)
+  sidebar.append(this.resizePanel,this.categoryTabs,this.objectArea,this.detail,this.paletteTabs,this.palette,toolHelp,this.staticNotice)
   pane.append(this.viewport,sidebar)
   this.message.setAttribute('role','status')
   const footer=elt('footer','we-footer')
@@ -164,12 +170,49 @@ class MapEditor {
  }
  private status(text:string){this.message.textContent=text}
  private setTool(tool:string){
+  if((tool==='tile')!==(this.tool==='tile'))this.activeCategory='Alle'
   this.tool=tool
   this.root.querySelectorAll<HTMLButtonElement>('[data-tool]').forEach(b=>b.classList.toggle('we-active',b.dataset.tool===tool))
   this.palette.hidden=tool!=='tile';this.paletteTabs.hidden=tool!=='tile'
   this.objectArea.hidden=tool!=='select'&&tool!=='object'
   this.detail.hidden=tool!=='select'
-  this.redraw()
+  this.renderCategories();this.filterGallery();this.filterTilesets();this.redraw()
+ }
+ private renderCategories(){
+  this.categoryTabs.replaceChildren()
+  const tileMode=this.tool==='tile'
+  this.categoryTabs.append(elt('strong','we-category-title',tileMode?'Kacheln nach Bereich':'Objekte nach Kategorie'))
+  for(const name of tileMode?TILE_CATEGORIES:OBJECT_CATEGORIES){
+   const choice=button(name,()=>{
+    this.activeCategory=name
+    if(tileMode){
+     const preferred=layerForTileCategory(name)
+     const index=this.layer.findIndex(layer=>layer.name===preferred)
+     if(index>=0){this.layerIndex=index;this.layerPicker.value=String(index);this.updateLayerHelp()}
+    }
+    this.renderCategories();this.filterGallery();this.filterTilesets();this.redraw()
+   },'we-category')
+   choice.classList.toggle('we-active',this.activeCategory===name)
+   choice.setAttribute('aria-pressed',String(this.activeCategory===name))
+   this.categoryTabs.append(choice)
+  }
+ }
+ private updateLayerHelp(){
+  const layer=this.layer[this.layerIndex]
+  this.layerHelpText.textContent=layer?layerHelp(layer.name):'Wähle eine Ebene, um ihre Funktion zu sehen.'
+ }
+ private filterTilesets(){
+  if(this.tool!=='tile'||!this.sheet.length)return
+  let first=-1
+  this.paletteTabs.querySelectorAll<HTMLButtonElement>('button').forEach((b,index)=>{
+   const visible=this.activeCategory==='Alle'||tilesetCategory(this.sheet[index].source)===this.activeCategory
+   b.hidden=!visible
+   if(visible&&first<0)first=index
+  })
+  const current=this.sheet.findIndex(s=>this.chosenGid>=s.first&&this.chosenGid<s.first+s.count)
+  if(first>=0&&(current<0||
+   (this.activeCategory!=='Alle'&&tilesetCategory(this.sheet[current].source)!==this.activeCategory)))
+   this.showSheet(first)
  }
  private async load(){
   try{
@@ -213,10 +256,11 @@ class MapEditor {
   })
   this.layerPicker.replaceChildren()
   this.layer.forEach((l,n)=>{
-   const o=elt<HTMLOptionElement>('option','',l.name);o.value=String(n);this.layerPicker.append(o)
+   const o=elt<HTMLOptionElement>('option','',layerLabel(l.name));o.value=String(n);this.layerPicker.append(o)
   })
   this.layerIndex=Math.min(this.layerIndex,this.layer.length-1)
   this.layerPicker.value=String(this.layerIndex)
+  this.updateLayerHelp()
  }
  private async preloadSprites(){
   const images=new Set<string>()
@@ -244,20 +288,21 @@ class MapEditor {
   })
   this.showSheet(this.sheet.findIndex(s=>this.chosenGid>=s.first&&this.chosenGid<s.first+s.count))
   this.buildGallery()
+  this.renderCategories()
+  this.filterTilesets()
  }
 
  private objectEntries(){
   const props=Object.entries(art.assets)
    .filter(([_,a])=>a.kind==='prop')
-   .map(([id,a])=>({id,label:id.replaceAll('-',' '),asset:a,group:
-     /tree|bush|rock|sheep/.test(id)?'Natur & Tiere':'Häuser & Gebäude'}))
+   .map(([id,a])=>({id,label:id.replaceAll('-',' '),asset:a,group:objectCategory(id)}))
   const actors=[
-   {id:'npc:mira',label:'Mira (NPC)',asset:art.assets.female,group:'Figuren & Portale'},
-   {id:'monster:ritter',label:'Ritter (Gegner)',asset:art.assets['enemy-warrior'],group:'Figuren & Portale'},
-   {id:'monster:berserker',label:'Berserker (Gegner)',asset:art.assets['enemy-berserker'],group:'Figuren & Portale'},
-   {id:'portal:map',label:'Kartenportal',asset:art.assets['portal-marker'],group:'Figuren & Portale'}
+   {id:'npc:mira',label:'Mira (NPC)',asset:art.assets.female,group:'NPCs'},
+   {id:'monster:ritter',label:'Ritter (Gegner)',asset:art.assets['enemy-warrior'],group:'Gegner'},
+   {id:'monster:berserker',label:'Berserker (Gegner)',asset:art.assets['enemy-berserker'],group:'Gegner'},
+   {id:'portal:map',label:'Kartenportal',asset:art.assets['portal-marker'],group:'Portale'}
   ]
-  return [...props,...actors]
+  return [...props,...actors].sort((a,b)=>OBJECT_CATEGORIES.indexOf(a.group)-OBJECT_CATEGORIES.indexOf(b.group))
  }
  private buildGallery(){
   this.gallery.replaceChildren()
@@ -268,7 +313,7 @@ class MapEditor {
     this.gallery.append(elt('h4','we-object-group',group))
    }
    const b=elt<HTMLButtonElement>('button','we-object-card')
-   b.type='button';b.dataset.asset=entry.id
+   b.type='button';b.dataset.asset=entry.id;b.dataset.category=entry.group
    b.title=entry.label+' platzieren'
    const thumb=elt<HTMLCanvasElement>('canvas','we-object-thumb')
    thumb.width=92;thumb.height=78
@@ -313,7 +358,8 @@ class MapEditor {
   let matching=0
   for(const el of this.gallery.children){
    if(!(el instanceof HTMLButtonElement))continue
-   el.hidden=!el.textContent?.toLocaleLowerCase('de').includes(query)
+   el.hidden=(this.activeCategory!=='Alle'&&el.dataset.category!==this.activeCategory)||
+    !el.textContent?.toLocaleLowerCase('de').includes(query)
    if(!el.hidden)matching++
   }
   for(const header of this.gallery.querySelectorAll<HTMLElement>('.we-object-group')){
@@ -366,8 +412,8 @@ class MapEditor {
   this.canvas.width=this.w;this.canvas.height=this.h
   for(const layer of this.layer)this.updateLayerNode(layer)
   this.resizePanel.hidden=true
-  this.redraw();this.updateStage()
-  this.status('Karte auf '+newW+' × '+newH+' Kacheln erweitert · Neue Fläche ist Wasser. Zum Übernehmen speichern.')
+  this.fitMap();this.redraw()
+  this.status('Karte auf '+newW+' × '+newH+' Kacheln erweitert. Neue Fläche ist gesperrtes Wasser. Bitte speichern.')
  }
  private showSheet(idx:number){
   const sheet=this.sheet[Math.max(0,idx)]||this.sheet[0];if(!sheet)return
@@ -408,6 +454,12 @@ class MapEditor {
      ctx.restore()
     }else ctx.drawImage(sheet.img,(tile%sheet.cols)*64,Math.floor(tile/sheet.cols)*64,64,64,x,y,64,64)
    })
+  }
+  if(this.layer[this.layerIndex]?.name==='Wasser und Klippen · Kollision'&&this.tool==='tile'){
+   const current=this.layer[this.layerIndex]
+   ctx.fillStyle='rgba(220,55,45,.35)'
+   for(let i=0;i<current.gids.length;i++)if(current.gids[i]!==0)
+    ctx.fillRect((i%(this.w/64))*64,Math.floor(i/(this.w/64))*64,64,64)
   }
   for(const obj of this.objects().sort((a,b)=>(a.y+a.h)-(b.y+b.h))){
    const asset=(art.assets as any)[obj.asset]
