@@ -24,7 +24,8 @@
     "test:click": "node scripts/click-move-review.cjs",
     "test:spell": "node scripts/spell-review.cjs",
     "pretest": "node scripts/world-data.mjs",
-    "preart:check": "node scripts/world-data.mjs"
+    "preart:check": "node scripts/world-data.mjs",
+    "test:web-editor": "node scripts/web-editor-review.cjs"
   },
   "keywords": [],
   "author": "",
