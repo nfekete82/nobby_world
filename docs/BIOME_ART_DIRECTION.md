@@ -1,32 +1,63 @@
-# Ein gemeinsamer Stil für alle Biome
+# Nobby World · Wüsten- und Biome-Art
 
-Die Originalgrafiken des lizenzierten **Tiny Swords**-Packs bleiben unverändert.
-Neue Wüsten- und Schneeobjekte werden im selben native-resolution Pixel-Look
-aufgebaut: schieferblaue Pixelkonturen, Licht von links oben, mehrere
-Schattenflächen, organische Silhouetten, kleine gebündelte Highlights und
-transparentes Umfeld. **Keine glatten SVG-/Vektorobjekte im Level.**
+## Verbindliche Optik
 
-## Was neu ist
+Die Waldregion verwendet Pixel Frog Tiny Swords. Für neue Biome gelten:
+dunkle, kantige Konturen; Beleuchtung links oben; zusammenhängende
+Pixelcluster statt simpler geometrischer Primitive; matte Schatten und
+natürliche Farben. Das Raster bleibt 64x64 px, mit nearest-neighbor.
 
-- Kakteen: abgerundete Arme, unregelmäßige Schattierung, Rippen, kleine Dornen.
-- Sandsteinhäuser: Dachziegel, Holzrahmen, Putzstruktur, abgesetzte Sockel.
-- Zelt / Tempel: textile Falten bzw. Säulen, Schatten und Steinmuster.
-- Felsen: polygonale, verschattete Flächen statt Ovale.
-- Schneetanne: verzweigte, gezackte Äste und Schneekappen statt Dreiecksstapeln.
-- Neue Deko: Agave, Wüstenstrauch und Feigenkaktus direkt im Ingame-Editor.
+## Originalillustrationen (im Git-Repository enthalten)
 
-Der Generator liegt in `scripts/biome-props-style.mjs`; er wird von
-`scripts/biome-props.mjs` verwaltet. Die Bilder entstehen als transparente,
-binär-alphakanalige PNGs unter `public/tiny-swords/biomes/`.
-Die Dateien sind generierte Build-Artefakte und werden bei lokalem Start,
-`npm run art:prepare` und `npm run build` automatisch aus dem Quellcode
-neu erstellt. Das Resultat ist reproduzierbar, ohne Netzwerk oder Bildgenerator.
+Die Art-Sheet-Motive wurden in neun eigenständige transparente PNGs
+umgewandelt und sind **als echte Binärdateien eingecheckt**:
 
-**Raster:** Gelände 64×64, Kakteen 64×128, Gebäude 128×192 und Tanne
-128×192 px. Framegröße, Objekt-IDs, registrierte Fußpunkte und Kollisionen
-bleiben erhalten; die Karten selbst werden nicht überschrieben.
+- `public/tiny-swords/illustrated/desert-cactus.png`
+- `public/tiny-swords/illustrated/desert-cactus-small.png`
+- `public/tiny-swords/illustrated/desert-agave.png`
+- `public/tiny-swords/illustrated/desert-prickly-pear.png`
+- `public/tiny-swords/illustrated/desert-house.png`
+- `public/tiny-swords/illustrated/desert-tent.png` – großer Marktstand
+- `public/tiny-swords/illustrated/desert-temple.png` – zweistöckiges Wüstenhaus
+- `public/tiny-swords/illustrated/desert-shrub.png`
+- `public/tiny-swords/illustrated/desert-rock.png`
 
-## Prüfen
+Alle haben binäres Alpha und einen transparenten Hintergrund. Farb-Halos
+aus der ursprünglichen Bildtafel wurden beim Ausschneiden verworfen.
+Die Motive sind aus einer KI-Illustration isoliert und besitzen daher
+nicht automatisch perfekte Kachelkanten; sie werden als **Objekte**,
+nicht als Gelände-Autotiles verwendet.
+
+`scripts/biome-props.mjs` übernimmt diese Quelldateien beim Start, Test,
+Art-Prepare und Build in `public/tiny-swords/biomes/`.
+Die Quell-Dateien werden nie durch prozedurale Generatoren überschrieben.
+Für fehlende Illustrationen bleibt ein deterministischer Fallback
+(Pixel-Frog-Gebäude bzw. `scripts/biome-props-style.mjs`).
+
+**Manuelles Herunterladen ist nicht notwendig.**
+Das normale `git pull` enthält alle neun PNGs. Der Docker-Build kopiert
+`public/`, baut die PNG-Ausgaben und verpackt sie mit dem Spiel.
+
+## Sprite- und Footprint-Abmessungen
+
+- Kaktus: 64x128, Feigenkaktus und Pflanzen: 64x64
+- Wüstenhaus: 192x192
+- Marktstand (`desert-tent`): 320x192
+- Zweistöckiges Haus (`desert-temple`): 256x192
+
+Die bestehenden Objekt-IDs bleiben aus Kompatibilitätsgründen unverändert,
+auch wenn die gezeichneten Gebäude nun andere Motive besitzen. Physikalische
+Hitboxen bleiben konservativ und werden nicht aus der Bildbreite abgeleitet.
+
+## Wasser und Wege
+
+Die bisher sandfarbene Wüsten-Tilepalette wurde zwischenzeitlich auf
+eine grünliche Wiesenpalette geändert. Das Wasser-Tileset erhält über
+`scripts/moss-water.mjs` eine matte, moosgrüne Tönung.
+Wasserkollisionen, Brücken und vorhandene TMX-Karten werden dadurch nicht
+umgeschrieben. Die Gras-Schattenkanten bleiben aus Tiny Swords erhalten.
+
+## Überprüfen
 
 ```sh
 npm ci
@@ -34,31 +65,8 @@ npm test
 npm run build
 ```
 
-Der Test `test/biome-sprite-style.test.mjs` prüft native Abmessungen,
-transparente Ränder, mehrere sichtbare Schattierungsfarben und deterministisches
-Rendern. Im Ingame-Karteneditor unter **Wüste → Objekte** sind neue Pflanzen
-einschließlich der Feigenkakteen auswählbar.
-
-Die visuelle Referenz ist das bestehende Tiny-Swords-Waldset; neue Requisiten
-nehmen dessen Konturstärken, Farben und Perspektive auf, ohne das Original
-zu überschreiben.
-
-## Green Woodland Revision
-
-Die bisher prozedural erzeugten Wüstenhäuser sehen trotz Schattierung anders
-aus als die originalen Bäume. Deshalb werden `desert-house`,
-`desert-tent` und `desert-temple` jetzt **direkt aus dem originalen
-Pixel-Frog-Tiny-Swords-Haus-1, Haus-2 und Monastery** kompiliert. Die
-Originalpixelformen, Dächer und Schattierungen bleiben erhalten; nur blaue
-Dachflächen werden zu Moosgrün umgefärbt. Das Tempelgebäude besitzt dadurch
-native **192×320 px** und eine passende Hitbox. Bestehende Objekt-IDs bleiben
-unverändert. Der Name `desert-tent` bleibt aus Save-Kompatibilität bestehen;
-visuell ist es jetzt ein Dorfhaus aus dem gleichen Originalpack.
-
-Der Bereich `Wüste` nutzt jetzt einen warmen **grünen Wiesenfarbton**, keine
-beige Sandfläche mehr. Die Editor-Biom-Namen bleiben für Kompatibilität
-erhalten. Wasser bleibt Wasser, damit Ufer, Brücken und Kollisionen nicht
-durch eine rein visuelle Grünfärbung unlogisch werden.
-
-Source of truth: `scripts/green-native-buildings.mjs`,
-`scripts/biome-props.mjs`, `scripts/biome-art.mjs`.
+`test/biome-sprite-style.test.mjs` prüft nun ausdrücklich, dass alle neun
+Original-Illustrationen auf der Platte existieren und in der Runtime-Kopie
+**pixelgenau** erhalten bleiben. Der Compiler aktualisiert die Registry bei
+`npm run art:prepare`; reguläre Builds aktualisieren die Bilder beim
+Zusammenstellen der Welt.
