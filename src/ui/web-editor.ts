@@ -62,11 +62,11 @@ class MapEditor {
  private zoom=.55
  private offsetX=0
  private offsetY=0
- private layerIndex=0
+ private layerIndex=2
  private activeCategory='Alle'
  private pendingRefresh=false
  private saving=false
- private chosenGid=57
+ private chosenGid=2
  private chosenAsset='tree-oak'
  private selected:Element|null=null
  private history:string[]=[]
