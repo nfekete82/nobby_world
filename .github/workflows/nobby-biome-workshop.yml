@@ -1,6 +1,9 @@
 name: Nobby World biome workshop
 
 on:
+  pull_request:
+    branches:
+      - feat/player-level-progression
   push:
     branches:
       - feat/player-level-progression
@@ -31,3 +34,7 @@ jobs:
         env:
           CI: 'true'
         run: npm run test:web-editor
+      - name: Exercise classes, summons, combat, biomes and touch
+        env:
+          CI: 'true'
+        run: npm run test:expansion

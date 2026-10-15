@@ -43,7 +43,10 @@ test('generated cactus, houses, temple and snow pine are real nonempty transpare
   assert.equal(asset.kind,'prop')
   assert.equal(asset.solid,!['desert-agave','desert-shrub'].includes(name))
   assert.deepEqual(asset.frame,[w,h])
-  assert.equal(asset.animations.stand.image,'tiny-swords/biomes/'+name+'.png')
+  assert.ok(fs.existsSync('public/'+asset.animations.stand.image))
+  const sheet=PNG.sync.read(fs.readFileSync('public/'+asset.animations.stand.image))
+  assert.equal(sheet.width,w*asset.animations.stand.frames)
+  assert.equal(sheet.height,h)
  }
 })
 

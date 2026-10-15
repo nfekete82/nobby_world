@@ -59,10 +59,10 @@ test('RPG-JS owns rewards, while attribute changes use synced persisted properti
  const hud=fs.readFileSync('src/ui/hud.ts','utf8')
  assert.match(events,/rewards: \{ exp: 15 \* object.level, gold: 5 \* object.level \}/)
  assert.match(player,/onLevelUp\(player:RpgPlayer,levels:number\)/)
- assert.match(player,/onLoad\(player:RpgPlayer\)/)
+ assert.match(player,/onLoad\(player:RpgPlayer,snapshot:any\)/)
  assert.match(player,/\$permanent: true/)
  assert.match(player,/allocatePoint\(player,data\?\.stat\)/)
- assert.match(hud,/engine.processAction\('nobby:allocate-stat',\{stat:button.dataset.stat\}\)/)
+ assert.match(hud,/activeEngine.processAction\('nobby:allocate-stat',\{stat:button.dataset.stat\}\)/)
  assert.match(hud,/player\._exp\?\.\(\)/)
 })
 

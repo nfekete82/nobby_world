@@ -13,17 +13,17 @@ export function spritesheets(){
         const textures=Object.fromEntries(Object.entries(asset.animations).map(([name,state])=>{
           const frames=name==='stand'&&stableIdle?stableIdle:Array.from({length:state.frames},(_,i)=>i)
           return [name,{
-            image:state.image,framesWidth:state.frames,framesHeight:1,
+            image:state.image,framesWidth:state.frames,framesHeight:(state as any).rows??1,
             animations:({direction}: {direction:string})=>[
                 [...frames.map((frameX,index)=>({
-                    time:index*60/state.fps,frameX,frameY:0,
+                    time:index*60/state.fps,frameX,frameY:(state as any).rows===2&&direction==='up'?1:0,
                     scale:asset.directional&&direction==='left'?[-1,1]:[1,1]
                 })),{time:frames.length*60/state.fps}]
             ]
           }]
         }))
         return {id,image:asset.animations.stand.image,framesWidth:asset.animations.stand.frames,
-            framesHeight:1,anchor:[footX/width,footY/height],x:boxW/2,y:boxH,
+            framesHeight:(asset.animations.stand as any).rows??1,anchor:[footX/width,footY/height],x:boxW/2,y:boxH,
             trimTransparentBounds:true,textures}
     })
 }

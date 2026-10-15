@@ -22,3 +22,10 @@
 Pipoya starter graphics and the old SVG portal have been removed from the running
 project. Historical screenshots deliberately retain the previous appearance.
 The original 3D game remains in its separate Git archive branch.
+
+Shaman, skeleton companions, scorpion, serpent, polar bear and animated desert,
+winter and jungle scenery were created with built-in OpenAI ImageGen against
+project style references. Source atlases and deterministic native sprite packing
+are included in `art/generated-source/expansion/` and `scripts/expansion-art.mjs`.
+The supplied portrait was used only as a character reference, not bundled.
+See `docs/EXPANSION_ART_PROMPTS.md` for the prompt set and provenance.

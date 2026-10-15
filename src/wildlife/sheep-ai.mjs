@@ -19,7 +19,7 @@ export function makePastureMask(width,height,layers,tilesets){
  for(let i=0;i<width*height;i++){
   const gid=(Number(grass.gids[i])>>>0)&GID_MASK
   if(!ranges.some(r=>gid>=r.start&&gid<r.end))continue
-  if(['Wüste','Felsboden','Schnee','Wege','Brücke','Wasser und Klippen · Kollision']
+  if(['Wüste','Felsboden','Schnee','Dschungel','Wege','Brücke','Wasser und Klippen · Kollision']
    .some(name=>get(name,i)!==0))continue
   allowed[i>>3]|=1<<(i&7)
  }

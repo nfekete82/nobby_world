@@ -3,8 +3,10 @@ import path from 'node:path'
 import { PNG } from 'pngjs'
 import { ensureBiomeProps } from './biome-props.mjs'
 import { ensureSheepGraze, SHEEP_GRAZE_FRAMES, SHEEP_GRAZE_FPS } from './sheep-art.mjs'
+import { compileExpansionArt } from './expansion-art.mjs'
 
 const root=process.cwd(),base='public/tiny-swords/'
+const previousRegistry=fs.existsSync('src/art/registry.json')?JSON.parse(fs.readFileSync('src/art/registry.json','utf8')):null
 const read=file=>PNG.sync.read(fs.readFileSync(file))
 const write=(file,png)=>{fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,PNG.sync.write(png))}
 const copy=(s,d,sx,sy,w,h,dx=0,dy=0)=>PNG.bitblt(s,d,sx,sy,w,h,dx,dy)
@@ -34,6 +36,17 @@ function quantize(r,g,b){const key=(r<<16)|(g<<8)|b;if(memo.has(key))return memo
  for(const c of palette){const d=(r-c[0])**2+(g-c[1])**2+(b-c[2])**2;if(d<score){best=c;score=d}}memo.set(key,best);return best
 }
 function normalize(name,count,height=70){
+ const shipped=base+`custom/${name}.png`
+ // Shipped Nobby/Mira sheets are authoritative. Extending the art compiler
+ // must not silently redraw the original mage from older generation sources.
+ if(fs.existsSync(shipped)&&!process.argv.includes('--regenerate-characters')){
+  const native=read(shipped)
+  if(native.width!==count*192||native.height!==192)throw Error(`${name}: invalid shipped character dimensions`)
+  return previousRegistry?.generation?.[name]??{
+   source:`art/generated-source/${name}.png`,preserved:true,
+   footPixels:Array.from({length:count},()=>[96,132])
+  }
+ }
  const p=read(`art/generated-source/${name}.png`),cell=Math.floor(p.width/count),bodies=Array.from({length:count},(_,i)=>bodyBounds(p,i*cell,cell))
  if(bodies.some(b=>b.length!==4))throw Error(`${name}: empty generated frame`)
  // Every sequence begins at rest. Its first body's height fixes the scale;
@@ -169,5 +182,5 @@ for(const asset of Object.values(assets))for(const state of Object.values(asset.
  state.visibleBounds=Array.from({length:state.frames},(_,i)=>bounds(p,i*fw,0,fw,fh))
 }
 fs.mkdirSync('src/art',{recursive:true})
-fs.writeFileSync('src/art/registry.json',JSON.stringify({version:1,tileSize:64,pixelScale:1,actorHitbox:[32,24],palette:{outline:'#293544',grass:'#8ba86e',water:'#448f97',earth:'#d2ad65',cream:'#eee2c3',blue:'#487fa8'},assets,generation},null,2)+'\n')
+fs.writeFileSync('src/art/registry.json',JSON.stringify(compileExpansionArt({version:1,tileSize:64,pixelScale:1,actorHitbox:[32,24],palette:{outline:'#293544',grass:'#8ba86e',water:'#448f97',earth:'#d2ad65',cream:'#eee2c3',blue:'#487fa8'},assets,generation}),null,2)+'\n')
 console.log(`Art registry: ${Object.keys(assets).length} assets, fixed native frames, binary alpha, compiled pack UI and terrain.`)

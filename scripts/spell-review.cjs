@@ -25,7 +25,8 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
    assert.notEqual(body,original,'browser instrumentation not installed');
    await route.fulfill({response,body});
   });
-  await page.goto('http://127.0.0.1:5173/');
+  await page.goto(('http://127.0.0.1:'+(process.env.NOBBY_TEST_PORT||5173)+'/'));
+ await require('./ensure-dev-server.cjs').chooseMage(page);
   await page.waitForFunction(()=>window.__spellReview?.engine?.getCurrentPlayer()&&
    !document.querySelector('#nobby-hud')?.hidden,{},{timeout:20000});
   const world=worlds.find(w=>w.id==='simplemap'),nav=unpackNavigation(world.navigation);

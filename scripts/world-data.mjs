@@ -54,7 +54,7 @@ export function readWorld(file){
       const o={id:`object-${a.id}`,kind,name:a.name||kind,x,y}
       if(world.objects.some(existing=>existing.id===o.id))throw Error(`${id}: doppelte Objekt-ID ${a.id}`)
       if(kind==='monster'){
-        o.enemy=p.enemy||'ritter';if(!['ritter','berserker'].includes(o.enemy))throw Error(`${id}/${a.id}: unbekannter Gegnertyp ${o.enemy}`)
+        o.enemy=p.enemy||'ritter';if(!['ritter','berserker','scorpion','serpent','polar-bear'].includes(o.enemy))throw Error(`${id}/${a.id}: unbekannter Gegnertyp ${o.enemy}`)
         o.level=number(p.level,1,1,100,`${id}/${a.id} Stufe`)
         if(!Number.isInteger(o.level))throw Error(`${id}/${a.id}: Stufe muss ganzzahlig sein`)
         o.hp=number(p.hp,0,0,100000,`${id}/${a.id} HP`)
@@ -118,7 +118,7 @@ function buildNavigation(world,map,directory){
   return {cell,cols,rows,blocked:Buffer.from(bits).toString('hex')}
 }
 
-export function compileWorlds({writeOutput=true}={}){
+export function compileWorlds({writeOutput=true,sourceDirectory=path.join(projectRoot,'src/tiled')}={}){
   // Generate derived Tiled images before Vite and validation resolve their TSX paths.
   ensureDarkerGrass()
   preparePathArt()
@@ -126,7 +126,7 @@ export function compileWorlds({writeOutput=true}={}){
   ensureMossWater()
   ensureBiomeProps()
   ensureSheepGraze()
-  const directory=path.join(projectRoot,'src/tiled')
+  const directory=sourceDirectory
   const worlds=fs.readdirSync(directory).filter(f=>f.endsWith('.tmx')).sort().map(f=>readWorld(path.join(directory,f))).filter(Boolean)
   for(const w of worlds){
     const map=read(path.join(directory,w.id+'.tmx')).map
@@ -136,7 +136,7 @@ export function compileWorlds({writeOutput=true}={}){
     const width=Math.round(w.width/art.tileSize),height=Math.round(w.height/art.tileSize)
     const paintLayers=list(map.layer).map(l=>({
       name:attrs(l).name,
-      gids:String(l.data?._text??'').trim().split(/\\s*,\\s*/).map(Number)
+      gids:String(l.data?._text??'').trim().split(/\s*,\s*/).map(Number)
     }))
     const sheets=list(map.tileset).map(t=>{
       const source=attrs(t).source

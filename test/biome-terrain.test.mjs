@@ -25,7 +25,7 @@ test('biome sprites reuse the existing Tiny Swords tiles and preserve pixel alph
  }
 })
 
-test('both Tiled maps include empty biome layers in correct render order',()=>{
+test('both Tiled maps preserve editable biome layers and valid GIDs in correct render order',()=>{
  const definitions=[['Wüste','desert.tsx',228],['Felsboden','rocky.tsx',282],['Schnee','snow.tsx',336]]
  for(const name of ['simplemap','wald']){
   const map=xml.xml2js(fs.readFileSync('src/tiled/'+name+'.tmx','utf8'),{compact:true}).map
@@ -43,7 +43,7 @@ test('both Tiled maps include empty biome layers in correct render order',()=>{
    assert.equal(Number(layer._attributes.height),height)
    const gids=String(layer.data._text).trim().split(/\s*,\s*/)
    assert.equal(gids.length,width*height)
-   assert.ok(gids.every(value=>value==='0'))
+   assert.ok(gids.every(value=>value==='0'||Number(value)>=gid&&Number(value)<gid+54))
    assert.ok(tilesets.some(item=>item._attributes.source===file&&Number(item._attributes.firstgid)===gid))
   }
  }

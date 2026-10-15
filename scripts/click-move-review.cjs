@@ -18,7 +18,8 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
    assert.notEqual(body,original,'test-only browser engine hook not applied');
    await route.fulfill({response,body});
   });
-  await page.goto('http://127.0.0.1:5173/');
+  await page.goto(('http://127.0.0.1:'+(process.env.NOBBY_TEST_PORT||5173)+'/'));
+ await require('./ensure-dev-server.cjs').chooseMage(page);
   await page.waitForFunction(()=>window.__clickReview?.engine?.getCurrentPlayer()&&
    document.querySelector('#nobby-hud')?.hidden===false,{},{timeout:20000});
   await page.evaluate(()=>{

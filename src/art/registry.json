@@ -2353,28 +2353,64 @@
       "directional": false,
       "animations": {
         "stand": {
-          "image": "tiny-swords/biomes/desert-cactus.png",
-          "frames": 1,
-          "fps": 1,
+          "image": "tiny-swords/expansion/desert-cactus-stand.png",
+          "frames": 4,
+          "fps": 2.5,
           "visibleBounds": [
             [
-              0,
-              0,
-              63,
-              127
+              8,
+              44,
+              57,
+              113
+            ],
+            [
+              7,
+              44,
+              58,
+              113
+            ],
+            [
+              8,
+              44,
+              57,
+              113
+            ],
+            [
+              7,
+              45,
+              57,
+              113
             ]
           ]
         },
         "walk": {
-          "image": "tiny-swords/biomes/desert-cactus.png",
-          "frames": 1,
-          "fps": 1,
+          "image": "tiny-swords/expansion/desert-cactus-stand.png",
+          "frames": 4,
+          "fps": 2.5,
           "visibleBounds": [
             [
-              0,
-              0,
-              63,
-              127
+              8,
+              44,
+              57,
+              113
+            ],
+            [
+              7,
+              44,
+              58,
+              113
+            ],
+            [
+              8,
+              44,
+              57,
+              113
+            ],
+            [
+              7,
+              45,
+              57,
+              113
             ]
           ]
         }
@@ -2398,28 +2434,64 @@
       "directional": false,
       "animations": {
         "stand": {
-          "image": "tiny-swords/biomes/desert-cactus-small.png",
-          "frames": 1,
-          "fps": 1,
+          "image": "tiny-swords/expansion/desert-cactus-small-stand.png",
+          "frames": 4,
+          "fps": 2.5,
           "visibleBounds": [
             [
-              0,
-              0,
-              63,
-              127
+              7,
+              50,
+              57,
+              113
+            ],
+            [
+              7,
+              50,
+              58,
+              113
+            ],
+            [
+              7,
+              50,
+              57,
+              113
+            ],
+            [
+              7,
+              50,
+              58,
+              113
             ]
           ]
         },
         "walk": {
-          "image": "tiny-swords/biomes/desert-cactus-small.png",
-          "frames": 1,
-          "fps": 1,
+          "image": "tiny-swords/expansion/desert-cactus-small-stand.png",
+          "frames": 4,
+          "fps": 2.5,
           "visibleBounds": [
             [
-              0,
-              0,
-              63,
-              127
+              7,
+              50,
+              57,
+              113
+            ],
+            [
+              7,
+              50,
+              58,
+              113
+            ],
+            [
+              7,
+              50,
+              57,
+              113
+            ],
+            [
+              7,
+              50,
+              58,
+              113
             ]
           ]
         }
@@ -2623,28 +2695,64 @@
       "directional": false,
       "animations": {
         "stand": {
-          "image": "tiny-swords/biomes/snow-pine.png",
-          "frames": 1,
-          "fps": 1,
+          "image": "tiny-swords/expansion/snow-pine-stand.png",
+          "frames": 4,
+          "fps": 2.5,
           "visibleBounds": [
             [
-              0,
-              0,
-              127,
-              191
+              8,
+              14,
+              120,
+              172
+            ],
+            [
+              8,
+              18,
+              120,
+              172
+            ],
+            [
+              7,
+              26,
+              122,
+              172
+            ],
+            [
+              9,
+              20,
+              120,
+              172
             ]
           ]
         },
         "walk": {
-          "image": "tiny-swords/biomes/snow-pine.png",
-          "frames": 1,
-          "fps": 1,
+          "image": "tiny-swords/expansion/snow-pine-stand.png",
+          "frames": 4,
+          "fps": 2.5,
           "visibleBounds": [
             [
-              0,
-              0,
-              127,
-              191
+              8,
+              14,
+              120,
+              172
+            ],
+            [
+              8,
+              18,
+              120,
+              172
+            ],
+            [
+              7,
+              26,
+              122,
+              172
+            ],
+            [
+              9,
+              20,
+              120,
+              172
             ]
           ]
         }
@@ -2673,10 +2781,10 @@
           "fps": 1,
           "visibleBounds": [
             [
-              5,
-              11,
-              59,
-              58
+              9,
+              13,
+              56,
+              56
             ]
           ]
         },
@@ -2686,10 +2794,10 @@
           "fps": 1,
           "visibleBounds": [
             [
-              5,
-              11,
-              59,
-              58
+              9,
+              13,
+              56,
+              56
             ]
           ]
         }
@@ -2758,28 +2866,1815 @@
       "directional": false,
       "animations": {
         "stand": {
-          "image": "tiny-swords/biomes/desert-prickly-pear.png",
-          "frames": 1,
-          "fps": 1,
+          "image": "tiny-swords/expansion/desert-prickly-pear-stand.png",
+          "frames": 4,
+          "fps": 2.5,
           "visibleBounds": [
             [
-              5,
+              9,
               11,
-              59,
-              58
+              55,
+              56
+            ],
+            [
+              10,
+              11,
+              54,
+              56
+            ],
+            [
+              9,
+              11,
+              55,
+              56
+            ],
+            [
+              9,
+              11,
+              55,
+              56
             ]
           ]
         },
         "walk": {
-          "image": "tiny-swords/biomes/desert-prickly-pear.png",
-          "frames": 1,
-          "fps": 1,
+          "image": "tiny-swords/expansion/desert-prickly-pear-stand.png",
+          "frames": 4,
+          "fps": 2.5,
           "visibleBounds": [
             [
-              5,
+              9,
               11,
+              55,
+              56
+            ],
+            [
+              10,
+              11,
+              54,
+              56
+            ],
+            [
+              9,
+              11,
+              55,
+              56
+            ],
+            [
+              9,
+              11,
+              55,
+              56
+            ]
+          ]
+        }
+      }
+    },
+    "shaman": {
+      "kind": "actor",
+      "frame": [
+        192,
+        192
+      ],
+      "foot": [
+        96,
+        132
+      ],
+      "hitbox": [
+        32,
+        24
+      ],
+      "directional": true,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/expansion/shaman-stand.png",
+          "frames": 6,
+          "fps": 4,
+          "visibleBounds": [
+            [
+              64,
+              64,
+              129,
+              132
+            ],
+            [
+              62,
+              65,
+              130,
+              132
+            ],
+            [
+              66,
+              63,
+              127,
+              132
+            ],
+            [
+              67,
+              64,
+              125,
+              132
+            ],
+            [
+              65,
+              63,
+              127,
+              132
+            ],
+            [
+              65,
+              65,
+              128,
+              132
+            ]
+          ],
+          "rows": 2
+        },
+        "walk": {
+          "image": "tiny-swords/expansion/shaman-walk.png",
+          "frames": 6,
+          "fps": 10,
+          "visibleBounds": [
+            [
+              61,
+              61,
+              131,
+              132
+            ],
+            [
+              62,
+              60,
+              131,
+              132
+            ],
+            [
               59,
-              58
+              63,
+              134,
+              132
+            ],
+            [
+              60,
+              62,
+              132,
+              132
+            ],
+            [
+              57,
+              62,
+              135,
+              132
+            ],
+            [
+              58,
+              62,
+              134,
+              132
+            ]
+          ],
+          "rows": 2
+        },
+        "attack": {
+          "image": "tiny-swords/expansion/shaman-attack.png",
+          "frames": 6,
+          "fps": 16,
+          "visibleBounds": [
+            [
+              68,
+              56,
+              124,
+              132
+            ],
+            [
+              56,
+              59,
+              137,
+              132
+            ],
+            [
+              57,
+              57,
+              136,
+              132
+            ],
+            [
+              55,
+              58,
+              137,
+              132
+            ],
+            [
+              56,
+              65,
+              136,
+              132
+            ],
+            [
+              68,
+              63,
+              124,
+              132
+            ]
+          ],
+          "rows": 2
+        },
+        "heal": {
+          "image": "tiny-swords/expansion/shaman-heal.png",
+          "frames": 6,
+          "fps": 9,
+          "visibleBounds": [
+            [
+              65,
+              57,
+              128,
+              132
+            ],
+            [
+              62,
+              58,
+              130,
+              132
+            ],
+            [
+              58,
+              52,
+              134,
+              132
+            ],
+            [
+              58,
+              50,
+              135,
+              132
+            ],
+            [
+              55,
+              53,
+              137,
+              132
+            ],
+            [
+              65,
+              67,
+              128,
+              132
+            ]
+          ],
+          "rows": 2
+        },
+        "hit": {
+          "image": "tiny-swords/expansion/shaman-hit.png",
+          "frames": 2,
+          "fps": 10,
+          "visibleBounds": [
+            [
+              66,
+              66,
+              126,
+              132
+            ],
+            [
+              69,
+              72,
+              124,
+              132
+            ]
+          ],
+          "rows": 2
+        },
+        "death": {
+          "image": "tiny-swords/expansion/shaman-death.png",
+          "frames": 4,
+          "fps": 8,
+          "visibleBounds": [
+            [
+              63,
+              68,
+              129,
+              132
+            ],
+            [
+              62,
+              86,
+              130,
+              132
+            ],
+            [
+              60,
+              85,
+              133,
+              132
+            ],
+            [
+              62,
+              91,
+              130,
+              132
+            ]
+          ],
+          "rows": 2
+        }
+      }
+    },
+    "skeleton": {
+      "kind": "actor",
+      "frame": [
+        192,
+        192
+      ],
+      "foot": [
+        96,
+        132
+      ],
+      "hitbox": [
+        32,
+        24
+      ],
+      "directional": true,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/expansion/skeleton-stand.png",
+          "frames": 6,
+          "fps": 4,
+          "visibleBounds": [
+            [
+              70,
+              68,
+              123,
+              132
+            ],
+            [
+              65,
+              70,
+              127,
+              132
+            ],
+            [
+              62,
+              70,
+              130,
+              132
+            ],
+            [
+              64,
+              67,
+              128,
+              132
+            ],
+            [
+              64,
+              70,
+              128,
+              132
+            ],
+            [
+              64,
+              68,
+              128,
+              132
+            ]
+          ],
+          "rows": 2
+        },
+        "walk": {
+          "image": "tiny-swords/expansion/skeleton-walk.png",
+          "frames": 6,
+          "fps": 10,
+          "visibleBounds": [
+            [
+              67,
+              68,
+              125,
+              132
+            ],
+            [
+              64,
+              67,
+              128,
+              132
+            ],
+            [
+              62,
+              68,
+              131,
+              132
+            ],
+            [
+              64,
+              69,
+              129,
+              132
+            ],
+            [
+              63,
+              67,
+              130,
+              132
+            ],
+            [
+              63,
+              67,
+              129,
+              132
+            ]
+          ],
+          "rows": 2
+        },
+        "attack": {
+          "image": "tiny-swords/expansion/skeleton-attack.png",
+          "frames": 6,
+          "fps": 16,
+          "visibleBounds": [
+            [
+              69,
+              61,
+              124,
+              132
+            ],
+            [
+              63,
+              76,
+              130,
+              132
+            ],
+            [
+              59,
+              76,
+              133,
+              132
+            ],
+            [
+              55,
+              72,
+              137,
+              132
+            ],
+            [
+              53,
+              71,
+              140,
+              132
+            ],
+            [
+              56,
+              67,
+              136,
+              132
+            ]
+          ]
+        },
+        "spawn": {
+          "image": "tiny-swords/expansion/skeleton-spawn.png",
+          "frames": 6,
+          "fps": 9,
+          "visibleBounds": [
+            [
+              60,
+              70,
+              132,
+              132
+            ],
+            [
+              56,
+              63,
+              136,
+              132
+            ],
+            [
+              53,
+              62,
+              140,
+              132
+            ],
+            [
+              54,
+              65,
+              139,
+              132
+            ],
+            [
+              50,
+              66,
+              143,
+              132
+            ],
+            [
+              58,
+              69,
+              135,
+              132
+            ]
+          ]
+        },
+        "hit": {
+          "image": "tiny-swords/expansion/skeleton-hit.png",
+          "frames": 2,
+          "fps": 10,
+          "visibleBounds": [
+            [
+              65,
+              71,
+              127,
+              132
+            ],
+            [
+              65,
+              71,
+              128,
+              132
+            ]
+          ]
+        },
+        "death": {
+          "image": "tiny-swords/expansion/skeleton-death.png",
+          "frames": 4,
+          "fps": 8,
+          "visibleBounds": [
+            [
+              62,
+              71,
+              131,
+              132
+            ],
+            [
+              58,
+              74,
+              134,
+              132
+            ],
+            [
+              54,
+              85,
+              139,
+              132
+            ],
+            [
+              57,
+              95,
+              136,
+              132
+            ]
+          ]
+        }
+      }
+    },
+    "desert-scorpion": {
+      "kind": "actor",
+      "frame": [
+        192,
+        192
+      ],
+      "foot": [
+        96,
+        132
+      ],
+      "hitbox": [
+        32,
+        24
+      ],
+      "directional": true,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/expansion/desert-scorpion-stand.png",
+          "frames": 6,
+          "fps": 4,
+          "visibleBounds": [
+            [
+              71,
+              77,
+              121,
+              132
+            ],
+            [
+              70,
+              77,
+              122,
+              132
+            ],
+            [
+              68,
+              77,
+              124,
+              132
+            ],
+            [
+              68,
+              77,
+              124,
+              132
+            ],
+            [
+              70,
+              76,
+              123,
+              132
+            ],
+            [
+              70,
+              76,
+              122,
+              132
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/expansion/desert-scorpion-walk.png",
+          "frames": 6,
+          "fps": 10,
+          "visibleBounds": [
+            [
+              68,
+              75,
+              124,
+              132
+            ],
+            [
+              67,
+              76,
+              125,
+              132
+            ],
+            [
+              67,
+              77,
+              126,
+              132
+            ],
+            [
+              66,
+              77,
+              126,
+              132
+            ],
+            [
+              66,
+              77,
+              126,
+              132
+            ],
+            [
+              69,
+              77,
+              124,
+              132
+            ]
+          ]
+        },
+        "attack": {
+          "image": "tiny-swords/expansion/desert-scorpion-attack.png",
+          "frames": 6,
+          "fps": 14,
+          "visibleBounds": [
+            [
+              68,
+              76,
+              124,
+              132
+            ],
+            [
+              65,
+              78,
+              128,
+              132
+            ],
+            [
+              69,
+              72,
+              123,
+              132
+            ],
+            [
+              69,
+              68,
+              123,
+              132
+            ],
+            [
+              68,
+              76,
+              124,
+              132
+            ],
+            [
+              68,
+              75,
+              124,
+              132
+            ]
+          ]
+        },
+        "hit": {
+          "image": "tiny-swords/expansion/desert-scorpion-hit.png",
+          "frames": 2,
+          "fps": 10,
+          "visibleBounds": [
+            [
+              71,
+              82,
+              122,
+              132
+            ],
+            [
+              71,
+              82,
+              121,
+              132
+            ]
+          ]
+        },
+        "death": {
+          "image": "tiny-swords/expansion/desert-scorpion-death.png",
+          "frames": 4,
+          "fps": 8,
+          "visibleBounds": [
+            [
+              70,
+              86,
+              123,
+              132
+            ],
+            [
+              65,
+              94,
+              127,
+              132
+            ],
+            [
+              66,
+              99,
+              126,
+              132
+            ],
+            [
+              68,
+              101,
+              124,
+              132
+            ]
+          ]
+        }
+      }
+    },
+    "desert-serpent": {
+      "kind": "actor",
+      "frame": [
+        192,
+        192
+      ],
+      "foot": [
+        96,
+        132
+      ],
+      "hitbox": [
+        32,
+        24
+      ],
+      "directional": true,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/expansion/desert-serpent-stand.png",
+          "frames": 6,
+          "fps": 4,
+          "visibleBounds": [
+            [
+              59,
+              60,
+              133,
+              132
+            ],
+            [
+              59,
+              59,
+              134,
+              132
+            ],
+            [
+              60,
+              60,
+              133,
+              132
+            ],
+            [
+              60,
+              60,
+              132,
+              132
+            ],
+            [
+              60,
+              60,
+              132,
+              132
+            ],
+            [
+              58,
+              60,
+              135,
+              132
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/expansion/desert-serpent-walk.png",
+          "frames": 6,
+          "fps": 10,
+          "visibleBounds": [
+            [
+              57,
+              65,
+              135,
+              132
+            ],
+            [
+              56,
+              63,
+              136,
+              132
+            ],
+            [
+              58,
+              65,
+              134,
+              132
+            ],
+            [
+              57,
+              64,
+              135,
+              132
+            ],
+            [
+              58,
+              64,
+              135,
+              132
+            ],
+            [
+              58,
+              64,
+              134,
+              132
+            ]
+          ]
+        },
+        "attack": {
+          "image": "tiny-swords/expansion/desert-serpent-attack.png",
+          "frames": 6,
+          "fps": 14,
+          "visibleBounds": [
+            [
+              57,
+              65,
+              135,
+              132
+            ],
+            [
+              56,
+              69,
+              136,
+              132
+            ],
+            [
+              55,
+              64,
+              138,
+              132
+            ],
+            [
+              56,
+              71,
+              137,
+              132
+            ],
+            [
+              56,
+              61,
+              136,
+              132
+            ],
+            [
+              61,
+              65,
+              131,
+              131
+            ]
+          ]
+        },
+        "hit": {
+          "image": "tiny-swords/expansion/desert-serpent-hit.png",
+          "frames": 2,
+          "fps": 10,
+          "visibleBounds": [
+            [
+              62,
+              62,
+              130,
+              132
+            ],
+            [
+              61,
+              64,
+              131,
+              132
+            ]
+          ]
+        },
+        "death": {
+          "image": "tiny-swords/expansion/desert-serpent-death.png",
+          "frames": 4,
+          "fps": 8,
+          "visibleBounds": [
+            [
+              58,
+              81,
+              134,
+              132
+            ],
+            [
+              55,
+              92,
+              137,
+              132
+            ],
+            [
+              55,
+              96,
+              137,
+              132
+            ],
+            [
+              58,
+              101,
+              135,
+              132
+            ]
+          ]
+        }
+      }
+    },
+    "snow-polar-bear": {
+      "kind": "actor",
+      "frame": [
+        192,
+        192
+      ],
+      "foot": [
+        96,
+        132
+      ],
+      "hitbox": [
+        32,
+        24
+      ],
+      "directional": true,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/expansion/snow-polar-bear-stand.png",
+          "frames": 6,
+          "fps": 4,
+          "visibleBounds": [
+            [
+              50,
+              51,
+              142,
+              132
+            ],
+            [
+              51,
+              52,
+              142,
+              132
+            ],
+            [
+              51,
+              51,
+              142,
+              132
+            ],
+            [
+              50,
+              51,
+              143,
+              132
+            ],
+            [
+              50,
+              51,
+              142,
+              132
+            ],
+            [
+              51,
+              51,
+              141,
+              132
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/expansion/snow-polar-bear-walk.png",
+          "frames": 6,
+          "fps": 10,
+          "visibleBounds": [
+            [
+              45,
+              54,
+              148,
+              132
+            ],
+            [
+              44,
+              55,
+              148,
+              132
+            ],
+            [
+              45,
+              54,
+              147,
+              132
+            ],
+            [
+              46,
+              59,
+              147,
+              132
+            ],
+            [
+              46,
+              55,
+              147,
+              132
+            ],
+            [
+              46,
+              58,
+              146,
+              132
+            ]
+          ]
+        },
+        "attack": {
+          "image": "tiny-swords/expansion/snow-polar-bear-attack.png",
+          "frames": 6,
+          "fps": 14,
+          "visibleBounds": [
+            [
+              47,
+              35,
+              146,
+              132
+            ],
+            [
+              43,
+              31,
+              149,
+              132
+            ],
+            [
+              43,
+              26,
+              149,
+              132
+            ],
+            [
+              41,
+              22,
+              152,
+              132
+            ],
+            [
+              43,
+              36,
+              150,
+              132
+            ],
+            [
+              45,
+              30,
+              147,
+              132
+            ]
+          ]
+        },
+        "hit": {
+          "image": "tiny-swords/expansion/snow-polar-bear-hit.png",
+          "frames": 2,
+          "fps": 10,
+          "visibleBounds": [
+            [
+              47,
+              49,
+              145,
+              132
+            ],
+            [
+              49,
+              54,
+              143,
+              132
+            ]
+          ]
+        },
+        "death": {
+          "image": "tiny-swords/expansion/snow-polar-bear-death.png",
+          "frames": 4,
+          "fps": 8,
+          "visibleBounds": [
+            [
+              47,
+              59,
+              145,
+              132
+            ],
+            [
+              45,
+              63,
+              147,
+              132
+            ],
+            [
+              47,
+              71,
+              146,
+              132
+            ],
+            [
+              43,
+              75,
+              149,
+              132
+            ]
+          ]
+        }
+      }
+    },
+    "jungle-palm": {
+      "kind": "prop",
+      "frame": [
+        192,
+        256
+      ],
+      "foot": [
+        96,
+        234
+      ],
+      "hitbox": [
+        40,
+        24
+      ],
+      "solid": true,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/expansion/jungle-palm-stand.png",
+          "frames": 4,
+          "fps": 2.5,
+          "visibleBounds": [
+            [
+              12,
+              11,
+              180,
+              234
+            ],
+            [
+              12,
+              12,
+              181,
+              234
+            ],
+            [
+              15,
+              15,
+              177,
+              234
+            ],
+            [
+              21,
+              12,
+              172,
+              234
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/expansion/jungle-palm-stand.png",
+          "frames": 4,
+          "fps": 2.5,
+          "visibleBounds": [
+            [
+              12,
+              11,
+              180,
+              234
+            ],
+            [
+              12,
+              12,
+              181,
+              234
+            ],
+            [
+              15,
+              15,
+              177,
+              234
+            ],
+            [
+              21,
+              12,
+              172,
+              234
+            ]
+          ]
+        }
+      }
+    },
+    "jungle-tree": {
+      "kind": "prop",
+      "frame": [
+        192,
+        256
+      ],
+      "foot": [
+        96,
+        234
+      ],
+      "hitbox": [
+        40,
+        24
+      ],
+      "solid": true,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/expansion/jungle-tree-stand.png",
+          "frames": 4,
+          "fps": 2.5,
+          "visibleBounds": [
+            [
+              9,
+              18,
+              184,
+              234
+            ],
+            [
+              7,
+              21,
+              186,
+              234
+            ],
+            [
+              8,
+              21,
+              185,
+              234
+            ],
+            [
+              11,
+              22,
+              182,
+              234
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/expansion/jungle-tree-stand.png",
+          "frames": 4,
+          "fps": 2.5,
+          "visibleBounds": [
+            [
+              9,
+              18,
+              184,
+              234
+            ],
+            [
+              7,
+              21,
+              186,
+              234
+            ],
+            [
+              8,
+              21,
+              185,
+              234
+            ],
+            [
+              11,
+              22,
+              182,
+              234
+            ]
+          ]
+        }
+      }
+    },
+    "jungle-fern": {
+      "kind": "prop",
+      "frame": [
+        128,
+        128
+      ],
+      "foot": [
+        64,
+        100
+      ],
+      "hitbox": [
+        30,
+        18
+      ],
+      "solid": false,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/expansion/jungle-fern-stand.png",
+          "frames": 4,
+          "fps": 2.5,
+          "visibleBounds": [
+            [
+              8,
+              13,
+              121,
+              100
+            ],
+            [
+              10,
+              16,
+              118,
+              100
+            ],
+            [
+              9,
+              18,
+              119,
+              100
+            ],
+            [
+              7,
+              13,
+              122,
+              100
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/expansion/jungle-fern-stand.png",
+          "frames": 4,
+          "fps": 2.5,
+          "visibleBounds": [
+            [
+              8,
+              13,
+              121,
+              100
+            ],
+            [
+              10,
+              16,
+              118,
+              100
+            ],
+            [
+              9,
+              18,
+              119,
+              100
+            ],
+            [
+              7,
+              13,
+              122,
+              100
+            ]
+          ]
+        }
+      }
+    },
+    "snow-fir": {
+      "kind": "prop",
+      "frame": [
+        192,
+        256
+      ],
+      "foot": [
+        96,
+        234
+      ],
+      "hitbox": [
+        40,
+        24
+      ],
+      "solid": true,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/expansion/snow-fir-stand.png",
+          "frames": 4,
+          "fps": 2.5,
+          "visibleBounds": [
+            [
+              17,
+              11,
+              175,
+              234
+            ],
+            [
+              17,
+              17,
+              176,
+              234
+            ],
+            [
+              15,
+              27,
+              178,
+              234
+            ],
+            [
+              17,
+              19,
+              175,
+              234
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/expansion/snow-fir-stand.png",
+          "frames": 4,
+          "fps": 2.5,
+          "visibleBounds": [
+            [
+              17,
+              11,
+              175,
+              234
+            ],
+            [
+              17,
+              17,
+              176,
+              234
+            ],
+            [
+              15,
+              27,
+              178,
+              234
+            ],
+            [
+              17,
+              19,
+              175,
+              234
+            ]
+          ]
+        }
+      }
+    },
+    "snow-crystals": {
+      "kind": "prop",
+      "frame": [
+        128,
+        128
+      ],
+      "foot": [
+        64,
+        104
+      ],
+      "hitbox": [
+        42,
+        24
+      ],
+      "solid": true,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/expansion/snow-crystals-stand.png",
+          "frames": 4,
+          "fps": 2.5,
+          "visibleBounds": [
+            [
+              18,
+              11,
+              110,
+              104
+            ],
+            [
+              18,
+              11,
+              110,
+              104
+            ],
+            [
+              19,
+              11,
+              109,
+              104
+            ],
+            [
+              19,
+              14,
+              109,
+              104
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/expansion/snow-crystals-stand.png",
+          "frames": 4,
+          "fps": 2.5,
+          "visibleBounds": [
+            [
+              18,
+              11,
+              110,
+              104
+            ],
+            [
+              18,
+              11,
+              110,
+              104
+            ],
+            [
+              19,
+              11,
+              109,
+              104
+            ],
+            [
+              19,
+              14,
+              109,
+              104
+            ]
+          ]
+        }
+      }
+    },
+    "snow-shrub": {
+      "kind": "prop",
+      "frame": [
+        128,
+        128
+      ],
+      "foot": [
+        64,
+        100
+      ],
+      "hitbox": [
+        28,
+        16
+      ],
+      "solid": false,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/expansion/snow-shrub-stand.png",
+          "frames": 4,
+          "fps": 2.5,
+          "visibleBounds": [
+            [
+              10,
+              17,
+              118,
+              100
+            ],
+            [
+              7,
+              17,
+              122,
+              100
+            ],
+            [
+              9,
+              17,
+              120,
+              100
+            ],
+            [
+              10,
+              16,
+              118,
+              100
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/expansion/snow-shrub-stand.png",
+          "frames": 4,
+          "fps": 2.5,
+          "visibleBounds": [
+            [
+              10,
+              17,
+              118,
+              100
+            ],
+            [
+              7,
+              17,
+              122,
+              100
+            ],
+            [
+              9,
+              17,
+              120,
+              100
+            ],
+            [
+              10,
+              16,
+              118,
+              100
+            ]
+          ]
+        }
+      }
+    },
+    "desert-snake": {
+      "kind": "prop",
+      "frame": [
+        128,
+        128
+      ],
+      "foot": [
+        64,
+        88
+      ],
+      "hitbox": [
+        32,
+        20
+      ],
+      "solid": false,
+      "directional": true,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/expansion/desert-snake-stand.png",
+          "frames": 6,
+          "fps": 4,
+          "visibleBounds": [
+            [
+              42,
+              45,
+              86,
+              88
+            ],
+            [
+              42,
+              45,
+              87,
+              88
+            ],
+            [
+              43,
+              45,
+              86,
+              88
+            ],
+            [
+              43,
+              45,
+              86,
+              88
+            ],
+            [
+              43,
+              45,
+              86,
+              88
+            ],
+            [
+              42,
+              45,
+              87,
+              88
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/expansion/desert-snake-walk.png",
+          "frames": 6,
+          "fps": 10,
+          "visibleBounds": [
+            [
+              41,
+              48,
+              87,
+              88
+            ],
+            [
+              40,
+              47,
+              88,
+              88
+            ],
+            [
+              42,
+              48,
+              87,
+              88
+            ],
+            [
+              41,
+              48,
+              87,
+              88
+            ],
+            [
+              42,
+              48,
+              87,
+              88
+            ],
+            [
+              42,
+              48,
+              87,
+              88
+            ]
+          ]
+        }
+      }
+    },
+    "desert-palm": {
+      "kind": "prop",
+      "frame": [
+        192,
+        256
+      ],
+      "foot": [
+        96,
+        234
+      ],
+      "hitbox": [
+        40,
+        24
+      ],
+      "solid": true,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/expansion/jungle-palm-stand.png",
+          "frames": 4,
+          "fps": 2.5,
+          "visibleBounds": [
+            [
+              12,
+              11,
+              180,
+              234
+            ],
+            [
+              12,
+              12,
+              181,
+              234
+            ],
+            [
+              15,
+              15,
+              177,
+              234
+            ],
+            [
+              21,
+              12,
+              172,
+              234
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/expansion/jungle-palm-stand.png",
+          "frames": 4,
+          "fps": 2.5,
+          "visibleBounds": [
+            [
+              12,
+              11,
+              180,
+              234
+            ],
+            [
+              12,
+              12,
+              181,
+              234
+            ],
+            [
+              15,
+              15,
+              177,
+              234
+            ],
+            [
+              21,
+              12,
+              172,
+              234
             ]
           ]
         }
@@ -2942,6 +4837,156 @@
     "mira-idle": {
       "source": "art/generated-source/mira-idle.png",
       "scale": 0.3349282296650718,
+      "footPixels": [
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ]
+      ]
+    },
+    "shaman": {
+      "source": "art/generated-source/expansion/shaman.png",
+      "scale": 0.4294478527607362,
+      "footPixels": [
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ]
+      ]
+    },
+    "skeleton": {
+      "source": "art/generated-source/expansion/skeleton.png",
+      "scale": 0.4429530201342282,
+      "footPixels": [
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ]
+      ]
+    },
+    "desert-scorpion": {
+      "source": "art/generated-source/expansion/desert-scorpion.png",
+      "scale": 0.28217821782178215,
+      "footPixels": [
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ]
+      ]
+    },
+    "desert-serpent": {
+      "source": "art/generated-source/expansion/desert-serpent.png",
+      "scale": 0.3394495412844037,
+      "footPixels": [
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ],
+        [
+          96,
+          132
+        ]
+      ]
+    },
+    "snow-polar-bear": {
+      "source": "art/generated-source/expansion/snow-polar-bear.png",
+      "scale": 0.44324324324324327,
       "footPixels": [
         [
           96,

@@ -6,6 +6,11 @@ import {compileWorlds} from '../scripts/world-data.mjs'
 import {makeSheepGrazingFrames,ensureSheepGraze,SHEEP_GRAZE_FRAMES,SHEEP_GRAZE_DIP} from '../scripts/sheep-art.mjs'
 import {makePastureMask,unpackPasture,pastureHas,sheepStep,seedSheep} from '../src/wildlife/sheep-ai.mjs'
 const L=(name,gids)=>({name,gids})
+test('compiled authored grass layers produce a nonempty grazing mask',()=>{
+ for(const world of compileWorlds().filter(w=>w.objects.some(o=>o.asset==='sheep'))){
+  assert.ok(Buffer.from(world.pasture.bits,'hex').some(byte=>byte!==0),world.id+' has an empty grass mask')
+ }
+})
 
 test('grazing is possible only on actual, collision-free grass, never on roads or desert',()=>{
  const grass=[12,12,12,12,0,12,12,12,12]
@@ -104,6 +109,6 @@ test('grazing sprites preserve frame geometry and render a visible head-dip cycl
  const event=fs.readFileSync('src/modules/main/sheep-event.ts','utf8')
  assert.match(event,/infiniteMoveRoute/)
  assert.match(event,/Move\.wait/)
- assert.match(event,/setAnimation\('graze'/)
+ assert.match(event,/setGraphicAnimation\('graze'/)
  assert.doesNotMatch(event,/setInterval\(/)
 })

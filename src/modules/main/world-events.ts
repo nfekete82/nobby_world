@@ -4,6 +4,8 @@ import worlds from '../../generated/worlds.json'
 import { combatOptions } from './combat'
 import { ART } from '../../art/sprites'
 import { sheepEvent } from './sheep-event'
+import { enemyGraphic } from '../../art/enemies.mjs'
+import { desertSnakeEvent } from './desert-snake-event'
 
 export function worldEvent(object: any, world?: any): EventDefinition {
     if (object.kind === 'monster') return {
@@ -12,17 +14,19 @@ export function worldEvent(object: any, world?: any): EventDefinition {
             // Stable authored ID survives RPG-JS dynamic event creation.
             // Used only server-side to resolve and authorize spell targets.
             ;(this as any).nobbyWorldObjectId=object.id
-            const graphic=object.enemy==='berserker'?'enemy-berserker':'enemy-warrior'
+            const graphic=enemyGraphic(object.enemy)
             this.setGraphic(graphic)
             this.setHitbox(...ART.actorHitbox as [number,number])
             this.setParameter(MAXHP, object.hp || 65 + (object.level - 1) * 25)
             this.paramsModifier = { atk: {value:8 + object.level * 3}, pdef: {value:2 + object.level} }
             this.allRecovery()
             new BattleAi(this, {
+                faction:'enemies',targets:['players'],
                 enemyType: object.enemy === 'berserker' ? EnemyType.Berserker : EnemyType.Aggressive,
                 dodgeChance: 0, visionRange: object.vision, attackRange: 60, attackCooldown: 1050, fleeThreshold: 0,
                 attackPatterns: [AttackPattern.Melee],
-                animations: { ...combatOptions.animations, attack: { graphic, animationName: 'attack' } },
+                animations: { ...combatOptions.animations, attack: { graphic, animationName: 'attack' },
+                    ...(ART.assets[graphic]?.animations?.death?{hurt:{graphic,animationName:'hit'},die:{graphic,animationName:'death'}}:{}) },
                 rewards: { exp: 15 * object.level, gold: 5 * object.level },
                 presentation: {
                     name: `${object.name} · St. ${object.level}`,
@@ -37,6 +41,7 @@ export function worldEvent(object: any, world?: any): EventDefinition {
         async onAction(player) { await player.showText(object.text) }
     }
     if(object.kind==='prop'&&object.asset==='sheep')return sheepEvent(object,world)
+    if(object.kind==='prop'&&object.asset==='desert-snake')return desertSnakeEvent(object,world)
     if(object.kind==='prop')return {
         name:object.name,
         // Physics bodies normally have mass 100; even a non-moving event can

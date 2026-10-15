@@ -37,7 +37,7 @@ export function preflight() {
     if (footX < 0 || footY < 0 || footX > fw || footY > fh) throw Error(`Invalid foot anchor: ${id}`)
     for (const [state, definition] of Object.entries(asset.animations)) {
       if (!Number.isInteger(definition.frames) || definition.frames < 1 || definition.fps <= 0) throw Error(`Invalid animation: ${id}/${state}`)
-      dimensions(within(path.join(root, 'public'), definition.image), [fw * definition.frames, fh])
+      dimensions(within(path.join(root, 'public'), definition.image), [fw * definition.frames, fh * (definition.rows ?? 1)])
       if (definition.visibleBounds?.length !== definition.frames) throw Error(`Frame metadata mismatch: ${id}/${state}`)
       for (const box of definition.visibleBounds) {
         if (box.length !== 4 || box[0] < 0 || box[1] < 0 || box[2] >= fw || box[3] >= fh || box[0] > box[2] || box[1] > box[3])

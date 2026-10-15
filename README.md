@@ -2,11 +2,17 @@
 
 **Entwicklungsstand: v0.2.0-dev.0** · lokaler Art-Direction-Review. Noch kein finales Release.
 
-Ein vollständig lokales 2D-RPG auf RPG-JS 5.0: zwei größere, in Tiled bearbeitbare
+Ein vollständig lokales 2D-RPG auf RPG-JS 5.0: fünf in Tiled bearbeitbare
 Welten mit Nobby, Mira, Nahkampfgegnern, Kartenportalen und nativen Speicherständen.
 Grafikbasis ist der bereitgestellte **Tiny Swords Free Pack von Pixel Frog**.
 Nobby behält braunes Haar, Bart und seine blaue Robe; Mira blondes Haar und Grün.
 Die früheren Pipoya-Grafiken wurden aus dem laufenden Spiel entfernt.
+
+## Charaktere und neue Biome
+
+Beim ersten Start stehen Magier und Schamane zur Wahl. Der Schamane beschwört mit **R** oder Touch bis zu drei kämpfende Skelette für je **10 Mana**. Ein Reisestein nahe dem Inselstart führt zu Goldsand-Oase, Frostpranken-Pass und Smaragd-Dschungel. Neue Gegner, animierte Vegetation und transparente Agaven sind auch im Karteneditor verfügbar. Bestehende Spielstände laden als Magier; manuelle Karten werden nicht migriert.
+
+[Bedienung, Architektur, Speicherstände und Docker-Start](docs/SHAMAN_AND_BIOMES.md) · [Grafikquellen und Promptset](docs/EXPANSION_ART_PROMPTS.md) · [Abnahme](docs/SHAMAN_ACCEPTANCE.md)
 
 ## Spielen
 
