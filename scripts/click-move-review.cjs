@@ -20,6 +20,10 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
   await page.goto('http://127.0.0.1:5173/');
   await page.waitForFunction(()=>window.__clickReview?.engine?.getCurrentPlayer()&&
    document.querySelector('#nobby-hud')?.hidden===false,{},{timeout:20000});
+  await page.evaluate(()=>{
+    window.__nobbyClickEvents=[];
+    window.addEventListener('nobby:move-target',event=>window.__nobbyClickEvents.push(event.detail));
+  });
   const before=await page.evaluate(()=>{
    const e=window.__clickReview.engine,p=e.getCurrentPlayer();
    const find=node=>{if(node?.toWorld&&node?.toScreen)return node;
@@ -32,9 +36,24 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
    const spot=v.toScreen(dest.x+16,dest.y+12);
    return {current,dest,click:{x:rect.left+spot.x,y:rect.top+spot.y}};
   });
+  const hit=await page.evaluate(({x,y})=>{
+    const canvas=window.__clickReview.engine.renderer.canvas;
+    return {insideCanvas:document.elementFromPoint(x,y)===canvas,at:{x,y}};
+  },before.click);
+  assert.equal(hit.insideCanvas,true,'test point is not on game canvas: '+JSON.stringify(hit));
   await page.mouse.click(before.click.x,before.click.y);
+  await page.waitForFunction(()=>window.__nobbyClickEvents.length>0,{},{timeout:4000})
+    .catch(()=>{throw new Error('Left click never reached click-to-move handler')});
+  const accepted=await page.evaluate(()=>window.__nobbyClickEvents.at(-1));
+  assert.ok(accepted.waypoints>0,'A* did not accept a route: '+JSON.stringify(accepted));
   await page.waitForFunction(x=>window.__clickReview.engine.getCurrentPlayer().x()>=x+24,
-   before.current.x,{timeout:12000});
+   before.current.x,{timeout:12000}).catch(async()=>{
+    const actual=await page.evaluate(()=>{
+      const e=window.__clickReview.engine,p=e.getCurrentPlayer();
+      return {client:{x:p.x(),y:p.y()},accepted:window.__nobbyClickEvents};
+    });
+    throw new Error('Click route accepted but player did not move: '+JSON.stringify(actual));
+   });
   await page.waitForTimeout(800);
   const after=await page.evaluate(()=>{
    const e=window.__clickReview.engine,p=e.getCurrentPlayer();
@@ -45,7 +64,7 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
   assert.ok(Math.abs(after.x-before.dest.x)<36,'player did not approach click');
   assert.deepEqual(errors,[]);
   assert.deepEqual(missing,[]);
-  console.log('Click-to-move browser review passed.',{from:before.current,to:after,target:before.dest});
+  console.log('Click-to-move browser review passed.',{from:before.current,to:after,target:before.dest,route:accepted});
  }finally{
   if(browser)await browser.close();
   await stop();
