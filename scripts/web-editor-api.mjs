@@ -31,6 +31,11 @@ export function editorWrite({id,original,updated},rootDir=root) {
  // A failed parse must never damage the saved map.
  const temp=filename+'.nobby-editor-tmp'
  try{
+  // Create a recoverable original before altering the actual Tiled map.
+  const backup=path.join(rootDir,'art','map-backups')
+  fs.mkdirSync(backup,{recursive:true})
+  const stamp=new Date().toISOString().replace(/[:.]/g,'-')
+  fs.writeFileSync(path.join(backup,'web-editor-'+id+'-'+stamp+'.tmx'),current)
   fs.writeFileSync(temp,updated,'utf8')
   fs.renameSync(temp,filename)
   try{compileWorlds()}catch(error){
@@ -38,10 +43,6 @@ export function editorWrite({id,original,updated},rootDir=root) {
    try{compileWorlds()}catch{}
    throw error
   }
-  const backup=path.join(rootDir,'art','map-backups')
-  fs.mkdirSync(backup,{recursive:true})
-  const stamp=new Date().toISOString().replace(/[:.]/g,'-')
-  fs.writeFileSync(path.join(backup,'web-editor-'+id+'-'+stamp+'.tmx'),current)
   return {status:200,body:{ok:true}}
  }catch(error){
   if(fs.existsSync(temp))fs.unlinkSync(temp)
