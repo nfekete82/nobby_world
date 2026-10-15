@@ -2948,7 +2948,7 @@
         "stand": {
           "image": "tiny-swords/expansion/shaman-stand.png",
           "frames": 6,
-          "fps": 4,
+          "fps": 1.5,
           "visibleBounds": [
             [
               64,

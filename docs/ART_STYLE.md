@@ -73,3 +73,16 @@ npm run test:expansion
 ```
 
 `art:style:check` combines the existing production preflight with a reference/renderer/original-pack guard. CI runs it on PRs. It catches wrong spritesheets, misplaced assets, invalid PNGs and modified native masters. `npm run art:references` generates a locally viewable side-by-side asset gallery. **Visual inspection of the gallery plus in-game screenshots is still mandatory:** no test can reliably assert matching art direction, shape language or aesthetic quality.
+
+## Shaman and actor animation stability
+
+The shaman, mage, Mira, and allied skeleton use the approved stable standing
+poses in `src/art/animation-policy.mjs`. Standing animations must not include
+running/jumping silhouettes. Shaman idle runs at **1.5 FPS** (source compiler
+and registry agree), not the old 4 FPS. Compiled actor sheets retain their
+full **192×192** cells and fixed **[96,132] foot**, so **do not set
+`trimTransparentBounds: true` for actors**: per-frame trimming can cause jitter.
+Props continue to use their historical trim behavior. Walking, fighting,
+casting, summoning and death animations always retain all authored frames.
+When new actor art is introduced, review *both* front and rear frames and
+check idle/stride/junction transitions in the actual game, not just static PNGs.
