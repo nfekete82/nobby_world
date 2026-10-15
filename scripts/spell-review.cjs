@@ -45,6 +45,24 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
     });
     throw new Error('Player map spawn not ready: '+JSON.stringify(value));
   });
+  // Live authoritative idle-mana test: server starts at 80 SP and should
+  // restore at roughly 5 SP/s while nobby stands still on safe terrain.
+  const regenStart=await page.evaluate(()=>{
+   const p=Object.values(window.__spellReview.server.subRoom.players())[0];
+   p.sp=80;
+   return Date.now();
+  });
+  await page.waitForFunction(()=>{
+   const p=Object.values(window.__spellReview.server.subRoom.players())[0];
+   return p?.sp>=85;
+  },{},{timeout:5000});
+  const regenResult=await page.evaluate(()=>{
+   const p=Object.values(window.__spellReview.server.subRoom.players())[0];
+   return {sp:p.sp,at:Date.now()};
+  });
+  assert.ok(regenResult.sp>=85&&regenResult.sp<=96,'server idle mana regen amount invalid');
+  assert.ok(regenResult.at-regenStart>=800,'mana should not regenerate instantly');
+
   const foe=world.objects.find(o=>o.kind==='monster');
   assert.ok(foe,'no authored enemy available');
   await page.evaluate(()=>{
@@ -129,7 +147,9 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
   // Signe synchronization to deliver the server's restored mana.
   await page.waitForFunction(()=>{
    const p=window.__spellReview.engine.getCurrentPlayer();
-   return p?.spSignal?.()===100;
+   const s=Object.values(window.__spellReview.server.subRoom.players())[0];
+   return p?.spSignal?.()>=100&&Number.isFinite(s?.sp)&&
+     Math.abs(p.spSignal()-s.sp)<=2;
   },{},{timeout:4000}).catch(async()=>{
    const resources=await page.evaluate(()=>{
     const c=window.__spellReview.engine.getCurrentPlayer();
@@ -152,7 +172,7 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
    return {hp:enemy.hp,mana:p.sp,
      actualId:enemy.id,from:{x:p.x(),y:p.y()},to:{x:enemy.x(),y:enemy.y()}};
   },foe.id);
-  assert.equal(before.mana,100);
+  assert.ok(before.mana>=100,'server mana should have been restored for spell test');
   await page.mouse.click(click.x,click.y);
   await page.waitForFunction(()=>window.__spellCast.length>0,{},{timeout:5000}).catch(async()=>{
    const diagnostics=await page.evaluate(({click,targetId})=>{
@@ -204,7 +224,11 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
      ai:target?.battleAi?.getState?.(),aggro:target?.battleAi?.getTarget?.()?.id,
      visionRange:target?.battleAi?.visionRange,playerId:p.id};
   },foe.id);
-  assert.equal(after.mana,before.mana-ARCANE_MANA,'mana spent by authoritative server');
+  // Mana may legitimately regenerate while the homing bolt travels.
+  // Verify that the spell charged its cost while allowing a few regen ticks.
+  const netCost=before.mana-after.mana;
+  assert.ok(netCost>2&&netCost<=ARCANE_MANA+.05,
+   'spell must consume 12 SP before idle mana can refill it: '+netCost);
   assert.ok(after.hp<before.hp,'ActionBattle damage actually hit the enemy');
   assert.equal(before.hp-after.hp,10,'Arkankugel must deal a balanced 10 HP, not old 18 HP');
   const impact=await page.evaluate(()=>{
