@@ -56,11 +56,11 @@ const ensureDevServer = require('./ensure-dev-server.cjs');
  const position=()=>page.evaluate(()=>{const p=Object.values(window.__editor.server.subRoom.players())[0];return{x:p.x(),y:p.y()}})
  const hold=async(key,ms)=>{await page.keyboard.down(key);await page.waitForTimeout(ms);await page.keyboard.up(key);await page.waitForTimeout(100)}
  await page.goto('http://127.0.0.1:5173/');await ready();assert.equal(await page.getByRole('button',{name:'✦ Heilen H'}).isDisabled(),true,'full-health heal should be disabled');await shot('village');
- await page.keyboard.press('Escape',{delay:150});await page.getByText('Nobby',{exact:true}).first().waitFor();await shot('menu');
+ await page.keyboard.press('Escape',{delay:150});await page.getByText('nobby',{exact:true}).first().waitFor();await shot('menu');
  for(const tab of ['Items','Skills','Equip','Options']){await page.getByText(tab,{exact:true}).first().click();await page.waitForTimeout(300);await shot(tab.toLowerCase())}
  await page.getByText('Save',{exact:true}).click();await page.locator('[data-slot-index="0"]').waitFor();await shot('save');
  await page.reload();await ready();
- await teleport(784,1176);await hold('ArrowDown',100);await page.keyboard.press('Space',{delay:150});await page.getByText('Willkommen, Nobby! Hier beginnt unsere neue Welt.',{exact:true}).waitFor();await shot('dialog');await page.keyboard.press('Space',{delay:150});await page.waitForFunction(()=>window.__editor.engine.guiService.gui()['rpg-dialog'].display()===false,{},{timeout:5000});await page.waitForTimeout(300);
+ await teleport(784,1176);await hold('ArrowDown',100);await page.keyboard.press('Space',{delay:150});await page.getByText('Willkommen, nobby! Hier beginnt unsere neue Welt.',{exact:true}).waitFor();await shot('dialog');await page.keyboard.press('Space',{delay:150});await page.waitForFunction(()=>window.__editor.engine.guiService.gui()['rpg-dialog'].display()===false,{},{timeout:5000});await page.waitForTimeout(300);
  checks.push('native status/items/skills/equipment/options/save screens and German NPC dialogue render with pack frames');
  await freshScene(); // Each collision scenario starts without movement/GUI prediction history.
  await teleport(1380,800);const waterBefore=await position();await hold('ArrowRight',1000);const waterAfter=await position();assert.ok(waterAfter.x>waterBefore.x&&waterAfter.x<=1441,'river blocks walking');checks.push('river collision blocks walking');
