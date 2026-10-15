@@ -443,17 +443,29 @@ class MapEditor {
  }
 }
 let active=false
-export function ensureEditorMenu(engine:any){
+let latestEngine:any
+let menuObserverInstalled=false
+function addEditorMenuEntry(){
  const menu=document.querySelector<HTMLElement>('.rpg-ui-main-menu-layout')
  if(!menu||menu.querySelector('.we-launch'))return
  menu.append(button('🗺 Karteneditor',()=>{
-  if(active)return
+  if(active||!latestEngine)return
   active=true
-  new MapEditor(engine)
-  // Prevent duplicate overlays when the native menu is reopened.
+  new MapEditor(latestEngine)
   const observer=new MutationObserver(()=>{
    if(!document.querySelector('.we-overlay')){active=false;observer.disconnect()}
   })
   observer.observe(document.body,{childList:true})
  },'we-launch'))
+}
+export function ensureEditorMenu(engine:any){
+ latestEngine=engine
+ if(!menuObserverInstalled){
+  menuObserverInstalled=true
+  // Native RPG-JS menus can mount after onStep pauses. The observer ensures
+  // the extra action is inserted even in that paused state.
+  const observer=new MutationObserver(addEditorMenuEntry)
+  observer.observe(document.body,{childList:true,subtree:true})
+ }
+ addEditorMenuEntry()
 }
