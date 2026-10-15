@@ -153,7 +153,22 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
   }));
   assert.equal(chord.bound,true,'Native up+right combo must be registered');
   assert.ok(chord.inputs.includes('up')&&chord.inputs.includes('right'),
-    'Diagonal chord must drive both movement axes: '+JSON.stringify(chord));
+    'Diagonal arrow chord must drive both axes: '+JSON.stringify(chord));
+
+  // WASD is remappable in RPG-JS; its keyboard engine otherwise treats W+D
+  // as two independent cardinal commands. Verify the game fixes that too.
+  await page.evaluate(()=>{window.__RPGJS_MOBILE_DEBUG_EVENTS__=[];});
+  await page.keyboard.down('w');
+  await page.keyboard.down('d');
+  await page.waitForTimeout(450);
+  await page.keyboard.up('d');
+  await page.keyboard.up('w');
+  const wasdInputs=await page.evaluate(()=>
+    (window.__RPGJS_MOBILE_DEBUG_EVENTS__||[])
+      .filter(e=>e.type==='movement:input').map(e=>e.input)
+  );
+  assert.ok(wasdInputs.includes('up')&&wasdInputs.includes('right'),
+    'Diagonal WASD chord must drive both movement axes: '+JSON.stringify(wasdInputs));
   assert.deepEqual(errors,[]);
   assert.deepEqual(missing,[]);
   console.log('Click-to-move browser review passed.',{from:before.current,to:after,target:before.dest,route:accepted,controls:await page.evaluate(()=>window.__nobbyControlEvents),chord});
