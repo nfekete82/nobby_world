@@ -141,3 +141,14 @@ Häuser, Türme, Bäume und sonstige Dekorationen sind im RPG-JS-Physiksystem
 Die Wiesen-Tilesets `grass` und `forest` sind um **20 %** abgedunkelt.
 Die abgeleiteten Dateien werden bei Änderungen an `scripts/darken-grass.mjs`
 automatisch neu erstellt, ohne die Originale zu überschreiben.
+
+### Waldwege mit natürlicher Abwechslung
+
+Die ursprüngliche `src/tiled/tiny-swords/path.png` bleibt als unveränderte
+Quelle erhalten. `scripts/path-art.mjs` erstellt die beiden Bildvarianten
+`path-earthy.png` (moosig-erdig abgedunkelte weiß-blaue Ränder) und
+`path-details.png` (zehn 64px-Varianten mit kleinen Steinen, Zweigen und Laub).
+Das Tiled-Tileset `path-details.tsx` verwendet GIDs 218–227, die beiden
+vorhandenen Karten mischen sie dezent unter normale Wegfelder. Keine
+Kollisionen, Wegekonturen oder Raster ändern sich. `npm test`,
+`npm run art:check` und der Docker-Build erzeugen die Dateien automatisch.
