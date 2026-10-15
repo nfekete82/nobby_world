@@ -1,7 +1,8 @@
 import art from '../art/registry.json'
 import './web-editor.css'
 import {expandLayerGrid,expansionFill,validateMapExpansion} from './map-resize.mjs'
-import {OBJECT_CATEGORIES,TILE_CATEGORIES,layerLabel,layerHelp,objectCategory,tilesetCategory,layerForTileCategory,layerForTileset} from './editor-taxonomy.mjs'
+import {walkabilityChanges,repairPaintedWalkways} from './terrain-rules.mjs'
+import {OBJECT_CATEGORIES,TILE_CATEGORIES,layerLabel,layerHelp,objectCategory,tilesetCategory,layerForTileCategory,layerForTileset,BIOMES,BIOME_TILE_CATEGORIES,BIOME_OBJECT_CATEGORIES,objectBiome,tilesetBiome,visibleInBiome} from './editor-taxonomy.mjs'
 
 type Sheet={first:number,count:number,cols:number,img:HTMLImageElement,source:string,title:string}
 type PaintLayer={node:Element,name:string,gids:number[]}
@@ -64,6 +65,9 @@ class MapEditor {
  private offsetY=0
  private layerIndex=2
  private activeCategory='Alle'
+ private biome='Wald'
+ private autoWalkable=true
+ private biomeTabs=elt<HTMLElement>('div','we-biomes')
  private pendingRefresh=false
  private saving=false
  private chosenGid=2
@@ -114,6 +118,11 @@ class MapEditor {
    this.zoomText,button('+',()=>this.zoomAt(1.25),'we-zoom-button'),
    button('⤢ Einpassen',()=>this.fitMap()),
    button('▣ Karte erweitern',()=>this.toggleMapSize(),'we-resize-toggle'),this.layerHelpText)
+  const walkCheck=elt<HTMLInputElement>('input');walkCheck.type='checkbox';walkCheck.checked=true
+  walkCheck.addEventListener('change',()=>this.autoWalkable=walkCheck.checked)
+  const walkLabel=elt<HTMLLabelElement>('label','we-walkable')
+  walkLabel.append(walkCheck,elt('span','','Beim Malen Boden/Wege begehbar machen'))
+  const walkRepair=button('🧭 Vorhandene Wege entsperren',()=>this.repairWalkways(),'we-repair')
   const pane=elt('main','we-body')
   this.stage.append(this.canvas);this.viewport.append(this.stage)
   const sidebar=elt('aside','we-sidebar')
@@ -138,7 +147,7 @@ class MapEditor {
    field('Breite in Kacheln',this.resizeWidth),
    field('Höhe in Kacheln',this.resizeHeight),
    button('Fläche erweitern',()=>this.expandMap(),'we-primary'))
-  sidebar.append(this.resizePanel,this.categoryTabs,this.objectArea,this.detail,this.paletteTabs,this.palette,toolHelp,this.staticNotice)
+  sidebar.append(this.resizePanel,this.biomeTabs,this.categoryTabs,this.objectArea,this.detail,this.paletteTabs,this.palette,walkLabel,walkRepair,toolHelp,this.staticNotice)
   pane.append(this.viewport,sidebar)
   this.message.setAttribute('role','status')
   const footer=elt('footer','we-footer')
@@ -159,6 +168,7 @@ class MapEditor {
   this.canvas.addEventListener('pointerup',()=>this.endPointer())
   this.canvas.addEventListener('pointercancel',()=>this.endPointer())
   this.canvas.addEventListener('lostpointercapture',()=>this.endPointer())
+  this.renderBiomes()
   this.setTool('select')
   document.body.append(this.root)
   void this.load()
@@ -181,11 +191,25 @@ class MapEditor {
   this.layerHelpText.hidden=tool!=='tile'&&tool!=='erase'
   this.renderCategories();this.filterGallery();this.filterTilesets();this.redraw()
  }
+ private renderBiomes(){
+  this.biomeTabs.replaceChildren(elt('strong','','Gegend wählen'))
+  for(const name of BIOMES){
+   const control=button(name,()=>{
+    this.biome=name;this.activeCategory='Alle'
+    this.renderBiomes();this.renderCategories();this.filterGallery();this.filterTilesets()
+    this.status('Biom: '+name+' · Flächen und Objekte passend zur Gegend.')
+   },'we-biome')
+   control.classList.toggle('we-active',this.biome===name)
+   control.setAttribute('aria-pressed',String(this.biome===name))
+   this.biomeTabs.append(control)
+  }
+ }
  private renderCategories(){
   this.categoryTabs.replaceChildren()
   const tileMode=this.tool==='tile'||this.tool==='erase'
   this.categoryTabs.append(elt('strong','we-category-title',tileMode?'Kacheln nach Bereich':'Objekte nach Kategorie'))
-  for(const name of tileMode?TILE_CATEGORIES:OBJECT_CATEGORIES){
+  const choices=tileMode?BIOME_TILE_CATEGORIES[this.biome as keyof typeof BIOME_TILE_CATEGORIES]:BIOME_OBJECT_CATEGORIES[this.biome as keyof typeof BIOME_OBJECT_CATEGORIES]
+  for(const name of choices){
    const choice=button(name,()=>{
     this.activeCategory=name
     if(tileMode){
@@ -208,7 +232,8 @@ class MapEditor {
   if((this.tool!=='tile'&&this.tool!=='erase')||!this.sheet.length)return
   let first=-1
   this.paletteTabs.querySelectorAll<HTMLButtonElement>('button').forEach((b,index)=>{
-   const visible=this.activeCategory==='Alle'||tilesetCategory(this.sheet[index].source)===this.activeCategory
+   const visible=visibleInBiome(tilesetBiome(this.sheet[index].source),this.biome)&&
+     (this.activeCategory==='Alle'||tilesetCategory(this.sheet[index].source)===this.activeCategory)
    b.hidden=!visible
    if(visible&&first<0)first=index
   })
@@ -306,12 +331,12 @@ class MapEditor {
  private objectEntries(){
   const props=Object.entries(art.assets)
    .filter(([_,a])=>a.kind==='prop')
-   .map(([id,a])=>({id,label:id.replaceAll('-',' '),asset:a,group:objectCategory(id)}))
+   .map(([id,a])=>({id,label:id.replaceAll('-',' '),asset:a,group:objectCategory(id),biome:objectBiome(id)}))
   const actors=[
-   {id:'npc:mira',label:'Mira (NPC)',asset:art.assets.female,group:'NPCs'},
-   {id:'monster:ritter',label:'Ritter (Gegner)',asset:art.assets['enemy-warrior'],group:'Gegner'},
-   {id:'monster:berserker',label:'Berserker (Gegner)',asset:art.assets['enemy-berserker'],group:'Gegner'},
-   {id:'portal:map',label:'Kartenportal',asset:art.assets['portal-marker'],group:'Portale'}
+   {id:'npc:mira',label:'Mira (NPC)',asset:art.assets.female,group:'NPCs',biome:'Alle'},
+   {id:'monster:ritter',label:'Ritter (Gegner)',asset:art.assets['enemy-warrior'],group:'Gegner',biome:'Alle'},
+   {id:'monster:berserker',label:'Berserker (Gegner)',asset:art.assets['enemy-berserker'],group:'Gegner',biome:'Alle'},
+   {id:'portal:map',label:'Kartenportal',asset:art.assets['portal-marker'],group:'Portale',biome:'Alle'}
   ]
   return [...props,...actors].sort((a,b)=>OBJECT_CATEGORIES.indexOf(a.group)-OBJECT_CATEGORIES.indexOf(b.group))
  }
@@ -324,7 +349,7 @@ class MapEditor {
     this.gallery.append(elt('h4','we-object-group',group))
    }
    const b=elt<HTMLButtonElement>('button','we-object-card')
-   b.type='button';b.dataset.asset=entry.id;b.dataset.category=entry.group
+   b.type='button';b.dataset.asset=entry.id;b.dataset.category=entry.group;b.dataset.biome=entry.biome
    b.title=entry.label+' platzieren'
    const thumb=elt<HTMLCanvasElement>('canvas','we-object-thumb')
    thumb.width=92;thumb.height=78
@@ -369,7 +394,8 @@ class MapEditor {
   let matching=0
   for(const el of this.gallery.children){
    if(!(el instanceof HTMLButtonElement))continue
-   el.hidden=(this.activeCategory!=='Alle'&&el.dataset.category!==this.activeCategory)||
+   el.hidden=!visibleInBiome(el.dataset.biome||'Wald',this.biome)||
+    (this.activeCategory!=='Alle'&&el.dataset.category!==this.activeCategory)||
     !el.textContent?.toLocaleLowerCase('de').includes(query)
    if(!el.hidden)matching++
   }
@@ -523,14 +549,30 @@ class MapEditor {
   for(let y=0;y<this.h/64;y++)lines.push(layer.gids.slice(y*width,(y+1)*width).join(','))
   layer.node.querySelector('data')!.textContent='\n'+lines.join(',\n')+'\n'
  }
+ private repairWalkways(){
+  const changes=repairPaintedWalkways(this.layer)
+  if(!changes.length){this.status('Keine gesperrten Wege oder Biomflächen gefunden.');return}
+  this.saveHistory()
+  const collision=this.layer.find(l=>l.name==='Wasser und Klippen · Kollision')!
+  for(const change of changes)collision.gids[change.index]=change.gid
+  this.updateLayerNode(collision);this.redraw()
+  this.status(changes.length+' Wege-/Biom-Kacheln entsperrt. Zum Übernehmen speichern.')
+ }
  private paint(p:{x:number,y:number},erase=false){
   const x=Math.floor(p.x/64),y=Math.floor(p.y/64),i=y*(this.w/64)+x
   if(this.paintLast===i)return
   this.paintLast=i
   const layer=this.layer[this.layerIndex],gid=erase?0:this.chosenGid
-  if(!layer||layer.gids[i]===gid)return
+  if(!layer)return
+  const changes=erase?[]:walkabilityChanges(this.layer,i,layer.name,gid,this.autoWalkable)
+  if(layer.gids[i]===gid&&!changes.length)return
   this.saveHistory()
-  layer.gids[i]=gid;this.updateLayerNode(layer);this.redraw()
+  if(layer.gids[i]!==gid){layer.gids[i]=gid;this.updateLayerNode(layer)}
+  for(const change of changes){
+   const collision=this.layer.find(l=>l.name===change.name)
+   if(collision){collision.gids[change.index]=change.gid;this.updateLayerNode(collision)}
+  }
+  this.redraw()
  }
  private selectAt(p:{x:number,y:number}){
   const objs=this.objects()

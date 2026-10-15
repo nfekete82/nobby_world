@@ -109,3 +109,12 @@
  .we-categories{margin:2px 0 9px}
  .we-overlay .we-category{padding:4px 6px;font-size:11px}
 }
+
+/* Biome-first editor navigation with independent Tiled layers */
+.we-biomes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;
+ margin:7px 0 13px;padding:9px;background:#dfd1af;border:1px solid #a88f62}
+.we-biomes strong{grid-column:1/-1;font-size:13px}
+.we-overlay .we-biome{font-size:13px;padding:8px 3px}
+.we-walkable{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;margin:12px 0 7px}
+.we-walkable input{width:18px;height:18px;flex-shrink:0}
+.we-overlay .we-repair{font-size:12px;padding:8px;width:100%;text-align:center}
