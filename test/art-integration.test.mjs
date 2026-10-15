@@ -95,12 +95,12 @@ test('generated click navigation matches both Tiled maps and allows each start',
 
 test('idle and ambient animation cadence is calm without slowing responsive combat',()=>{
  const expected={
-  hero:{stand:2,walk:10,attack:28,heal:16},
-  female:{stand:2,walk:5},
-  'enemy-warrior':{stand:5,walk:12,attack:14},
-  'enemy-berserker':{stand:5,walk:12,attack:14},
-  'tree-oak':{stand:3},'tree-birch':{stand:3},'tree-small':{stand:3},bush:{stand:3},
-  sheep:{stand:5},foam:{stand:6},'water-rock':{stand:6},'portal-marker':{stand:9}
+  hero:{stand:1.5,walk:10,attack:28,heal:16},
+  female:{stand:1.5,walk:4},
+  'enemy-warrior':{stand:4,walk:12,attack:14},
+  'enemy-berserker':{stand:4,walk:12,attack:14},
+  'tree-oak':{stand:2.5},'tree-birch':{stand:2.5},'tree-small':{stand:2.5},bush:{stand:2.5},
+  sheep:{stand:4},foam:{stand:5},'water-rock':{stand:5},'portal-marker':{stand:8}
  }
  for(const [id,animations] of Object.entries(expected)){
   for(const [name,fps] of Object.entries(animations))
@@ -111,6 +111,6 @@ test('idle and ambient animation cadence is calm without slowing responsive comb
  assert.ok(runtime.includes('time:frames.length*60/state.fps'))
  assert.ok(!runtime.includes("stableIdle&&name==='stand'?4:state.fps"))
  const compiler=fs.readFileSync('scripts/compile-art.mjs','utf8')
- assert.ok(compiler.includes("nobby-idle.png',6,2"))
- assert.ok(compiler.includes("Tree1.png',[192,256],8,[96,234],[40,24],true,3"))
+ assert.ok(compiler.includes("nobby-idle.png',6,1.5"))
+ assert.ok(compiler.includes("Tree1.png',[192,256],8,[96,234],[40,24],true,2.5"))
 })

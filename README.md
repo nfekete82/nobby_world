@@ -128,8 +128,8 @@ angezeigt; eine synchrone Anzeige für alle Spieler ist ein späterer Multiplaye
 ### Ruhige Animationen (FPS)
 
 Das Sprite-Timing liegt in `src/art/registry.json` unter `assets.*.animations.*.fps`.
-Aktuell: Nobby idle **2 FPS** (zwei ruhige Posen), Mira idle **2 FPS**,
-Gegner idle **5 FPS**, Bäume/Büsche **3 FPS**, Schafe **5 FPS**, Wasser
-**6 FPS**, Portal **9 FPS**. Laufen, Angriff und Zaubern sind unverändert
+Aktuell: Nobby idle **1,5 FPS** (zwei ruhige Posen), Mira idle **1,5 FPS**,
+Gegner idle **4 FPS**, Bäume/Büsche **2,5 FPS**, Schafe **4 FPS**, Wasser
+**5 FPS**, Portal **8 FPS**. Laufen, Angriff und Zaubern sind unverändert
 schnell. Die gleichen Werte sind in `scripts/compile-art.mjs` gesetzt,
 damit `npm run art:prepare` sie nicht zurücksetzt.

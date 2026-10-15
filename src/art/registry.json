@@ -34,7 +34,7 @@
         "stand": {
           "image": "tiny-swords/custom/nobby-idle.png",
           "frames": 6,
-          "fps": 2,
+          "fps": 1.5,
           "visibleBounds": [
             [
               75,
@@ -272,7 +272,7 @@
         "stand": {
           "image": "tiny-swords/custom/mira-idle.png",
           "frames": 6,
-          "fps": 2,
+          "fps": 1.5,
           "visibleBounds": [
             [
               74,
@@ -315,7 +315,7 @@
         "walk": {
           "image": "tiny-swords/custom/mira-idle.png",
           "frames": 6,
-          "fps": 5,
+          "fps": 4,
           "visibleBounds": [
             [
               74,
@@ -376,7 +376,7 @@
         "stand": {
           "image": "tiny-swords/Units/Red Units/Warrior/Warrior_Idle.png",
           "frames": 8,
-          "fps": 5,
+          "fps": 4,
           "visibleBounds": [
             [
               62,
@@ -523,7 +523,7 @@
         "stand": {
           "image": "tiny-swords/Units/Black Units/Warrior/Warrior_Idle.png",
           "frames": 8,
-          "fps": 5,
+          "fps": 4,
           "visibleBounds": [
             [
               62,
@@ -671,7 +671,7 @@
         "stand": {
           "image": "tiny-swords/Terrain/Resources/Wood/Trees/Tree1.png",
           "frames": 8,
-          "fps": 3,
+          "fps": 2.5,
           "visibleBounds": [
             [
               37,
@@ -726,7 +726,7 @@
         "walk": {
           "image": "tiny-swords/Terrain/Resources/Wood/Trees/Tree1.png",
           "frames": 8,
-          "fps": 3,
+          "fps": 2.5,
           "visibleBounds": [
             [
               37,
@@ -800,7 +800,7 @@
         "stand": {
           "image": "tiny-swords/Terrain/Resources/Wood/Trees/Tree2.png",
           "frames": 8,
-          "fps": 3,
+          "fps": 2.5,
           "visibleBounds": [
             [
               43,
@@ -855,7 +855,7 @@
         "walk": {
           "image": "tiny-swords/Terrain/Resources/Wood/Trees/Tree2.png",
           "frames": 8,
-          "fps": 3,
+          "fps": 2.5,
           "visibleBounds": [
             [
               43,
@@ -929,7 +929,7 @@
         "stand": {
           "image": "tiny-swords/Terrain/Resources/Wood/Trees/Tree3.png",
           "frames": 8,
-          "fps": 3,
+          "fps": 2.5,
           "visibleBounds": [
             [
               51,
@@ -984,7 +984,7 @@
         "walk": {
           "image": "tiny-swords/Terrain/Resources/Wood/Trees/Tree3.png",
           "frames": 8,
-          "fps": 3,
+          "fps": 2.5,
           "visibleBounds": [
             [
               51,
@@ -1058,7 +1058,7 @@
         "stand": {
           "image": "tiny-swords/Terrain/Decorations/Bushes/Bushe1.png",
           "frames": 8,
-          "fps": 3,
+          "fps": 2.5,
           "visibleBounds": [
             [
               33,
@@ -1113,7 +1113,7 @@
         "walk": {
           "image": "tiny-swords/Terrain/Decorations/Bushes/Bushe1.png",
           "frames": 8,
-          "fps": 3,
+          "fps": 2.5,
           "visibleBounds": [
             [
               33,
@@ -1277,7 +1277,7 @@
         "stand": {
           "image": "tiny-swords/Terrain/Resources/Meat/Sheep/Sheep_Idle.png",
           "frames": 6,
-          "fps": 5,
+          "fps": 4,
           "visibleBounds": [
             [
               41,
@@ -1320,7 +1320,7 @@
         "walk": {
           "image": "tiny-swords/Terrain/Resources/Meat/Sheep/Sheep_Idle.png",
           "frames": 6,
-          "fps": 5,
+          "fps": 4,
           "visibleBounds": [
             [
               41,
@@ -1697,7 +1697,7 @@
         "stand": {
           "image": "tiny-swords/Units/Blue Units/Monk/Heal_Effect.png",
           "frames": 11,
-          "fps": 9,
+          "fps": 8,
           "visibleBounds": [
             [
               47,
@@ -1770,7 +1770,7 @@
         "walk": {
           "image": "tiny-swords/Units/Blue Units/Monk/Heal_Effect.png",
           "frames": 11,
-          "fps": 9,
+          "fps": 8,
           "visibleBounds": [
             [
               47,
@@ -1862,7 +1862,7 @@
         "stand": {
           "image": "tiny-swords/Terrain/Tileset/Water Foam.png",
           "frames": 16,
-          "fps": 6,
+          "fps": 5,
           "visibleBounds": [
             [
               54,
@@ -1965,7 +1965,7 @@
         "walk": {
           "image": "tiny-swords/Terrain/Tileset/Water Foam.png",
           "frames": 16,
-          "fps": 6,
+          "fps": 5,
           "visibleBounds": [
             [
               54,
@@ -2087,7 +2087,7 @@
         "stand": {
           "image": "tiny-swords/Terrain/Decorations/Rocks in the Water/Water Rocks_01.png",
           "frames": 16,
-          "fps": 6,
+          "fps": 5,
           "visibleBounds": [
             [
               17,
@@ -2190,7 +2190,7 @@
         "walk": {
           "image": "tiny-swords/Terrain/Decorations/Rocks in the Water/Water Rocks_01.png",
           "frames": 16,
-          "fps": 6,
+          "fps": 5,
           "visibleBounds": [
             [
               17,
