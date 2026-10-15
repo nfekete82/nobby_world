@@ -4,6 +4,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { PNG } from 'pngjs'
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const json = file => JSON.parse(fs.readFileSync(path.join(root,file),'utf8'))
 const registry = json('src/art/registry.json')
@@ -13,7 +14,11 @@ const cards = manifest.references.map(ref => {
   const asset = registry.assets[ref.id], [width,height] = asset.frame
   const image = asset.animations.stand.image
   const label = ref.origin === 'pack' ? 'NATIVE STYLE MASTER' : 'APPROVED EXTENSION'
-  const img = encodeURI('../../public/' + image)
+  // Embed a real first-frame PNG. Gallery remains usable when downloaded from CI alone.
+  const raw = PNG.sync.read(fs.readFileSync(path.join(root,'public',image)))
+  const frame = new PNG({width,height})
+  PNG.bitblt(raw,frame,0,0,width,height,0,0)
+  const img = 'data:image/png;base64,' + PNG.sync.write(frame).toString('base64')
   return `<article class="card"><div class="title"><span class="${ref.origin}">${label}</span><strong>${escape(ref.id)}</strong></div>
     <div class="stage"><div class="crop" style="width:${width}px;height:${height}px"><img src="${escape(img)}" alt="${escape(ref.id)}"></div></div>
     <div class="note">${escape(ref.role)}</div><div class="meta">${width} × ${height}px / ${asset.animations.stand.frames} frames / foot ${asset.foot.join(', ')}</div></article>`
