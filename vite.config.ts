@@ -13,6 +13,12 @@ export default defineConfig({
   plugins: [
     {
       name: 'nobby-local-worlds',
+      // Vite 8's environment-aware hook: do not HMR/reload a TMX while the
+      // web editor is awaiting its save response. Keep the compatibility hook
+      // for earlier Vite versions and any plugin using the classic pipeline.
+      hotUpdate(ctx) {
+        if (ignoreEditorFileChange(ctx.file)) return [];
+      },
       handleHotUpdate(ctx) {
         if (ignoreEditorFileChange(ctx.file)) return [];
       },

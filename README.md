@@ -322,3 +322,18 @@ Die drei PNG-Varianten werden aus der Original-Tiny-Swords-Wiese beim
 Start bzw. World-Compile mit `scripts/biome-art.mjs` erzeugt, ohne die
 Originalgrafiken zu verändern. Beide Karten haben leere neue Ebenen;
 bestehende Weltinhalte und Objekte bleiben unverändert.
+
+### Browser-Speicherung und Vite 8
+
+Das Web-Editor-Speichern darf keinen Hot-Reload starten: Dafür unterdrückt
+`vite.config.ts` während eines verwalteten TMX-Speichervorgangs sowohl Vites
+`hotUpdate` (Vite 8) als auch den Kompatibilitäts-Hook `handleHotUpdate`.
+Nach erfolgreichem Speichern bleibt der Editor geöffnet. Das reguläre Laden
+der aktualisierten Spielwelt findet erst mit **Schließen** statt.
+
+Ein Regressionstest speichert die tatsächliche `simplemap.tmx` in einem **temporären
+Verzeichnis**, einschließlich der lokalen Kartendimensionen und aller Kachelebenen.
+Die Projektkarte selbst wird dabei nicht verändert. Der Browser-Test
+`npm run test:web-editor` liest ebenfalls die tatsächliche Kartengröße, statt
+40×32 vorauszusetzen. Der Browser-Test exportiert/ändert die Karte nur im
+Arbeitsspeicher und schreibt keine gespeicherte TMX-Datei.

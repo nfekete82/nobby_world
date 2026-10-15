@@ -96,3 +96,46 @@ test('editor exposes category tabs, readable layer help and deferred refresh',()
  assert.match(api,/writeOutput:false/)
  assert.match(api,/needsRefresh:true/)
 })
+
+test('Vite 8 suppresses managed map HMR while the editor save is in flight',()=>{
+ const vite=fs.readFileSync('vite.config.ts','utf8')
+ assert.match(vite,/hotUpdate\\(ctx\\) \\{[\\s\\S]*?ignoreEditorFileChange\\(ctx\\.file\\)/)
+ assert.match(vite,/handleHotUpdate\\(ctx\\) \\{[\\s\\S]*?ignoreEditorFileChange\\(ctx\\.file\\)/)
+})
+
+test('save roundtrip on the real authored map dimensions, without changing user files',async()=>{
+ const {validateEditorMap}=await import('../scripts/web-editor-api.mjs')
+ const xml=await import('xml-js')
+ const original=fs.readFileSync('src/tiled/simplemap.tmx','utf8')
+ const map=xml.xml2js(original,{compact:true}).map
+ const width=Number(map._attributes.width),height=Number(map._attributes.height)
+ assert.ok(width*height>0&&width*height<=6250)
+ const layers=Array.isArray(map.layer)?map.layer:[map.layer]
+ assert.ok(layers.length>=6,'actual scene must retain its game layers')
+ const desert=layers.find(layer=>layer._attributes.name==='Wüste')
+ assert.ok(desert,'new layered desert tile exists')
+ const sourceCells=String(desert.data._text).trim().split(/\\s*,\\s*/)
+ const before=sourceCells[0]
+ sourceCells[0]=before==='228'?'229':'228'
+ desert.data._text='\\n'+Array.from({length:height},(_,y)=>sourceCells.slice(y*width,(y+1)*width).join(',')).join(',\\n')+'\\n'
+ const updated=xml.js2xml({map},{compact:true})
+ const edited='<?xml version="1.0" encoding="UTF-8"?>\\n'+updated+'\\n'
+ assert.deepEqual(validateEditorMap(original,edited),{width,height,layers:layers.length})
+ const tempDir=fs.mkdtempSync(path.join(os.tmpdir(),'nobby-editor-full-map-'))
+ try{
+  const dest=path.join(tempDir,'src','tiled')
+  fs.mkdirSync(dest,{recursive:true})
+  fs.writeFileSync(path.join(dest,'simplemap.tmx'),original)
+  let verified=0
+  const compile=()=>{verified++;validateEditorMap(original,fs.readFileSync(path.join(dest,'simplemap.tmx'),'utf8'))}
+  const first=editorWrite({id:'simplemap',original,updated:edited},tempDir,{compile})
+  assert.equal(first.status,200,JSON.stringify(first.body))
+  assert.equal(verified,1)
+  assert.equal(first.body.width,width)
+  assert.equal(first.body.height,height)
+  assert.equal(fs.readFileSync(path.join(dest,'simplemap.tmx'),'utf8'),edited)
+  assert.equal(editorWrite({id:'simplemap',original:edited,updated:edited},tempDir,{compile}).body.unchanged,true)
+  assert.equal(verified,1,'no recompilation when saved document is identical')
+  assert.ok(fs.readdirSync(path.join(tempDir,'art','map-backups')).length>0)
+ }finally{fs.rmSync(tempDir,{recursive:true,force:true})}
+})
