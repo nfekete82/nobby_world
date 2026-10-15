@@ -28,12 +28,15 @@ Neubau. Das Spiel benötigt im Einzelspielermodus keinen externen Server.
 
 | Eingabe | Aktion |
 | --- | --- |
-| Pfeiltasten | Bewegen; automatischen Lauf unterbrechen |
-| Linksklick auf die Karte | Sicher zum angeklickten Ziel laufen (A*-Wegfindung) |
+| Pfeiltasten | Bewegen; zwei Pfeiltasten gleichzeitig ermöglichen diagonale Bewegung |
+| WASD | Normale Laufsteuerung |
+| Linksklick auf die Karte | Automatisch auch diagonal laufen, ohne Wasser- oder Mauerecken zu schneiden (8-Wege-A*) |
 | Leertaste | Nahkampf / NPC ansprechen / Portal benutzen |
 | H oder Heilen-Button | 25 % Leben heilen, kostet 25 Mana |
 | Esc oder Menü-Button | Status, Inventar, Fähigkeiten, Ausrüstung, Optionen, Speichern |
 | Button rechts oben | Browser-Vollbild |
+
+Die diagonale Navigation nutzt weiterhin die normale RPG-JS-Laufanimation. Dafür werden die beiden Bewegungsachsen im schnellen Wechsel über die vorhandenen Bewegungsbefehle ausgeführt; das Gameplay bleibt kollisionsgeprüft und serverautoritativ.
 
 Die Ansicht füllt das Fenster. Papier- und Holzrahmen laden auch unter einem konfigurierten Vite-Unterpfad.
 Der Heil-Button wird bei voller Gesundheit oder zu wenig Mana deaktiviert. Kamera-Zoom ist ganzzahlig, sämtliche Texturen
