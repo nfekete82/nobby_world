@@ -1,6 +1,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { PNG } from 'pngjs'
+import { ensureBiomeProps } from './biome-props.mjs'
+import { ensureSheepGraze, SHEEP_GRAZE_FRAMES, SHEEP_GRAZE_FPS } from './sheep-art.mjs'
 
 const root=process.cwd(),base='public/tiny-swords/'
 const read=file=>PNG.sync.read(fs.readFileSync(file))
@@ -124,6 +126,8 @@ fs.mkdirSync('src/tiled/tiny-swords',{recursive:true})
 fs.copyFileSync(base+'Terrain/Tileset/Water Foam.png','src/tiled/tiny-swords/foam.png')
 for(const [name,file]of [['grass','Terrain/Tileset/Tilemap_color1.png'],['forest','Terrain/Tileset/Tilemap_color3.png'],['meadow','Terrain/Tileset/Tilemap_color4.png'],['water','Terrain/Tileset/Water Background color.png'],['path','compiled/path.png'],['bridge','compiled/bridge.png']])fs.copyFileSync(base+file,`src/tiled/tiny-swords/${name}.png`)
 
+ensureBiomeProps()
+ensureSheepGraze()
 const assets={}
 function actor(id,states,foot=[96,132],hitbox=[32,24]){assets[id]={kind:'actor',frame:[192,192],foot,hitbox,directional:true,animations:states}}
 const anim=(image,frames,fps)=>({image:'tiny-swords/'+image,frames,fps})
@@ -139,6 +143,7 @@ prop('bush','Terrain/Decorations/Bushes/Bushe1.png',[128,128],8,[64,99],[40,20],
 prop('rock','Terrain/Decorations/Rocks/Rock1.png',[64,64],1,[32,55],[36,22])
 prop('ore','Terrain/Resources/Gold/Gold Stones/Gold Stone 1.png',[128,128],1,[64,102],[54,30])
 prop('sheep','Terrain/Resources/Meat/Sheep/Sheep_Idle.png',[128,128],6,[64,96],[32,20],false,4)
+assets.sheep.animations.graze=anim('biomes/sheep-graze.png',SHEEP_GRAZE_FRAMES,SHEEP_GRAZE_FPS)
 for(const [id,file,frame,foot,hitbox]of [
  ['house','House1.png',[128,192],[64,170],[88,44]],['house-large','House2.png',[128,192],[64,170],[92,46]],
  ['barracks','Barracks.png',[192,256],[96,226],[140,64]],['monastery','Monastery.png',[192,320],[96,288],[130,62]],
@@ -148,6 +153,16 @@ prop('portal-stone','Terrain/Decorations/Rocks/Rock2.png',[64,64],1,[32,55],[28,
 prop('portal-marker','Units/Blue Units/Monk/Heal_Effect.png',[192,192],11,[96,132],[28,24],false,8)
 prop('foam','Terrain/Tileset/Water Foam.png',[192,192],16,[96,96],[1,1],false,5)
 prop('water-rock','Terrain/Decorations/Rocks in the Water/Water Rocks_01.png',[64,64],16,[32,52],[1,1],false,5)
+prop('desert-cactus','biomes/desert-cactus.png',[64,128],1,[32,113],[22,18],true,1)
+prop('desert-cactus-small','biomes/desert-cactus-small.png',[64,128],1,[32,113],[20,16],true,1)
+prop('desert-rock','biomes/desert-rock.png',[64,64],1,[32,55],[38,22],true,1)
+prop('desert-house','biomes/desert-house.png',[192,192],1,[96,187],[82,42],true,1)
+prop('desert-tent','biomes/desert-tent.png',[320,192],1,[160,187],[80,35],true,1)
+prop('desert-temple','biomes/desert-temple.png',[256,192],1,[128,187],[130,62],true,1)
+prop('snow-pine','biomes/snow-pine.png',[128,192],1,[64,172],[34,24],true,1)
+prop('desert-agave','biomes/desert-agave.png',[64,64],1,[32,56],[26,16],false,1)
+prop('desert-shrub','biomes/desert-shrub.png',[64,64],1,[32,56],[24,16],false,1)
+prop('desert-prickly-pear','biomes/desert-prickly-pear.png',[64,64],1,[32,56],[30,18],true,1)
 for(const asset of Object.values(assets))for(const state of Object.values(asset.animations)){
  const p=read('public/'+state.image),[fw,fh]=asset.frame
  if(p.width!==fw*state.frames||p.height!==fh)throw Error(`${state.image}: expected ${fw*state.frames}×${fh}, got ${p.width}×${p.height}`)

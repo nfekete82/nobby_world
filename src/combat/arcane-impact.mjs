@@ -1,7 +1,7 @@
 import { ARCANE_DAMAGE } from './arcane-rules.mjs'
 
 /**
- * Fixed-potency, server-authoritative ranged magic. Unlike melee, arcane
+ * Server-authoritative ranged magic with explicit player magick bonus. Unlike melee, arcane
  * projectiles must not inherit the RPG-JS physical weapon formula/multiplier.
  *
  * RPG-JS BattleAi.handleDamage() still owns retaliation, hit feedback,
@@ -13,7 +13,11 @@ export function applyArcaneImpact(attacker,victim){
   return {damage:0,hpBefore,hpAfter:hpBefore}
 
  const ai=victim.battleAi
- const damage=Math.min(ARCANE_DAMAGE,hpBefore)
+ // Magic investments affect spells only; physical attack remains unchanged.
+ const stat=attacker?.nobbyStatMagic
+ const raw=typeof stat==='function'?stat():stat
+ const magic=Number.isSafeInteger(raw)&&raw>0?Math.min(raw,999):0
+ const damage=Math.min(ARCANE_DAMAGE+magic*2,hpBefore)
  ai.visionRange=Math.max(Number(ai.visionRange)||0,440)
  victim.hp=Math.max(0,hpBefore-damage)
  ai.handleDamage(attacker,{damage,defeated:victim.hp<=0})

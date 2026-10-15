@@ -3,8 +3,9 @@ import { BattleAi, EnemyType, AttackPattern } from '@rpgjs/action-battle/server'
 import worlds from '../../generated/worlds.json'
 import { combatOptions } from './combat'
 import { ART } from '../../art/sprites'
+import { sheepEvent } from './sheep-event'
 
-export function worldEvent(object: any): EventDefinition {
+export function worldEvent(object: any, world?: any): EventDefinition {
     if (object.kind === 'monster') return {
         name: object.name,
         onInit() {
@@ -35,6 +36,7 @@ export function worldEvent(object: any): EventDefinition {
         onInit() { this.setGraphic('female'); this.setHitbox(...ART.actorHitbox as [number,number]) },
         async onAction(player) { await player.showText(object.text) }
     }
+    if(object.kind==='prop'&&object.asset==='sheep')return sheepEvent(object,world)
     if(object.kind==='prop')return {
         name:object.name,
         // Physics bodies normally have mass 100; even a non-moving event can

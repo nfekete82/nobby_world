@@ -9,6 +9,6 @@ export default defineModule<RpgServer>({
   maps: worlds.map(world=>({
     id: world.id,
     positions: { start: world.start },
-    events: world.objects.map(object=>({id:object.id,x:object.x,y:object.y,event:worldEvent(object)}))
+    events: world.objects.map(object=>({id:object.id,x:object.x,y:object.y,event:worldEvent(object,world)}))
   }))
 });

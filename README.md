@@ -23,8 +23,36 @@ npm start
 docker compose up -d --build --force-recreate
 ```
 
-Die Docker-Version ist ein fertiger Build und übernimmt Änderungen nach einem
-Neubau. Das Spiel benötigt im Einzelspielermodus keinen externen Server.
+Die Docker-Version auf Port 8088 ist ein fertiger Build und übernimmt Änderungen
+nach einem Neubau. Das Spiel benötigt im Einzelspielermodus keinen externen Server.
+
+### OrbStack · einmal einrichten, danach ohne Terminal spielen und Karten bearbeiten
+
+OrbStack führt bereits den Spielcontainer mit `restart: unless-stopped` aus.
+Für Kartenänderungen und automatische Live-Aktualisierung ist jetzt zusätzlich
+ein **Editor-Container** vorgesehen. Einmalig im Projektverzeichnis:
+
+```sh
+docker compose --profile editor up -d editor
+```
+
+Danach einfach **http://localhost:5173** öffnen. Auf diesem Port läuft das
+Spiel inklusive Esc-Karteneditor, **direktem Speichern in `src/tiled/`**, 
+Hot-Reload und Backup. Die macOS-Projektdateien sind in den Container eingebunden;
+Abhängigkeiten liegen separat in einem OrbStack-/Docker-Volume und werden nur
+bei Änderung der `package-lock.json` neu installiert.
+
+Der Container wird nach Docker-Neustarts automatisch wiederhergestellt, solange
+du ihn nicht manuell stoppst; dafür muss OrbStack laufen (optional **Start on login**
+in den OrbStack-Einstellungen aktivieren). Der Editor ist aus Sicherheitsgründen
+nur auf `127.0.0.1:5173` am Mac veröffentlicht. Prüfen mit
+`docker compose --profile editor ps`, bei Bedarf Logs mit
+`docker compose --profile editor logs -f editor`.
+
+**Unterschied:** `localhost:5173` ist immer die Live-Entwicklerversion;
+`localhost:8088` ist der separate, gebaute Release-Container. Für neue Versionen
+auf 8088 einmal `docker compose up -d --build game` ausführen, für Arbeiten im
+Karteneditor ist das nicht nötig.
 
 | Eingabe | Aktion |
 | --- | --- |
@@ -174,9 +202,10 @@ Er unterstützt:
 - Rückgängig, TMX exportieren und Speichern; alle Änderungen bleiben im
   von Tiled bearbeitbaren TMX-Format
 
-**Direkt in die Projektdateien speichern:** die lokale Entwickler-Vorschau
-starten (in einem Terminal: `npm run dev -- --host 127.0.0.1 --port 5173 --strictPort`),
-dann http://127.0.0.1:5173 öffnen und **Esc → Karteneditor**.
+**Direkt in die Projektdateien speichern:** Den oben beschriebenen OrbStack-
+Editor einmalig starten und anschließend http://localhost:5173 öffnen.
+Alternativ ohne Docker: `npm run dev -- --host 127.0.0.1 --port 5173 --strictPort`.
+Dann **Esc → Karteneditor** öffnen.
 Die Vite-API erlaubt Änderungen nur von der lokalen Vorschau, prüft die
 Dateiversion, erstellt vor jeder Änderung ein Backup unter
 `art/map-backups/web-editor-*.tmx` und validiert die Karten. Bei einem
@@ -218,3 +247,160 @@ entfernen. Zum Übernehmen **Speichern** (Vorschau auf Port 5173) oder
 und sämtliche Tilesets wieder her. Aktuelle technische Grenzen:
 128 Kacheln pro Seite und höchstens 6.250 Kacheln insgesamt, um das
 RPG-JS-Navigationslimit (100.000 Zellen) nicht zu überschreiten.
+
+### Erfahrungspunkte und Levelaufstieg
+
+RPG-JS verteilt besiegten Gegnern automatisch **15 EP × Gegnerstufe** und
+berechnet daraus Levelaufstiege. Die pro Stufe benötigten EP steigen mit der
+bestehenden RPG-JS-Erfahrungskurve:
+
+| Von → nach Stufe | EP für diesen Aufstieg |
+| --- | ---: |
+| 1 → 2 | 50 |
+| 2 → 3 | 112 |
+| 3 → 4 | 204 |
+| 4 → 5 | 329 |
+| 5 → 6 | 485 |
+
+Die EP-Leiste zeigt den aktuellen Fortschritt innerhalb der Stufe, das
+Charakterfenster (**C**) zusätzlich die noch fehlenden EP. Jeder Aufstieg
+gibt 3 frei verteilbare Attributpunkte. Das Spiel berechnet weiterhin EP,
+Stufen und die verfügbaren Punkte auf dem autoritativen Server.
+
+### Karteneditor: sicher erweitern, speichern und einfach bedienen
+
+**Karte erweitern:** Über **▣ Karte erweitern** Breite und Höhe in 64px-Kacheln
+erhöhen. Bestehende Felder und Objekte bleiben an ihren Koordinaten; neue
+Fläche ist Wasser mit blockierter Kollision. **💾 Speichern** validiert alle
+CSV-Ebenen und Spielobjekte, schreibt die TMX-Datei atomar und kontrolliert
+Breite, Höhe und Daten nach dem Schreiben. Ein Backup liegt unter
+`art/map-backups/web-editor-*.tmx`. Bei einem Fehler wird die vorherige TMX
+wiederhergestellt, der Editor bleibt mit deinen Änderungen offen und zeigt
+die konkrete Fehlermeldung. Nach **erfolgreichem Speichern** kannst du
+weiter editieren; mit **✕ Schließen** wird die Spielwelt neu kompiliert
+und einmal kontrolliert neu geladen. So unterbricht kein erzwungener
+Vite-Reload das Speichern.
+
+**Kacheln versus Objekte:** Beim Klick auf **🖌 Kacheln** erscheinen
+die Ebenenauswahl, eine Erklärung der Ebene sowie die Filter **Gelände,
+Wasser, Wege, Brücken, Details**. Ein Filter wählt die passende Ebene vor;
+die gewünschte Kachel danach aus der Vorschau anklicken. Bei **🌲 Platzieren**
+und **↖ Objekte** gibt es stattdessen **Wald, Wasserobjekte, Felsen,
+Gebäude, Deko, Tiere, NPCs, Gegner, Portale**. Das Platzieren bleibt aktiv,
+bis du auf Objekte zurückschaltest. Die Ebenenauswahl wird bei Objekten
+absichtlich ausgeblendet: Objekte sind unabhängig von den Kachelebenen.
+
+**Ebenen:** Wassergrund = unterste Ozeanfläche; Uferwellen = optische Wellen;
+Gelände = Gras/Erde/Inselland; Wege = sichtbare Wege; Brücke = sichtbare
+Übergänge; **Sperrflächen (Logik)** = unsichtbare Kollision. In der
+Kachelauswahl wird die Kollisionsschicht rot überblendet. Nachdem du neues
+Land über dem hinzugefügten Wasser angelegt hast, auf **Sperrflächen
+(Logik)** wechseln und die roten Sperren auf dem neuen Land mit
+**⌫ Löschen** entfernen. Die echten Tiled-Namen werden nicht geändert,
+damit vorhandene Karten kompatibel bleiben.
+
+**OrbStack:** Den Editor-Container einmalig mit
+`docker compose --profile editor up -d editor` starten. Änderungen an
+TypeScript/JavaScript werden über Vite automatisch übernommen. Bei
+Konfigurationsänderungen mit Vite-Neustart kann einmalig
+`docker compose --profile editor restart editor` erforderlich sein.
+
+### Zusätzliche Landschafts-Ebenen: Wüste, Felsboden und Schnee
+
+Unter **Esc → Karteneditor → Kacheln** findest du **Wüste**, **Felsboden**
+und **Schnee**. Jede Kategorie hat ein eigenes Tiny-Swords-Tileset mit 54
+64×64-Kacheln und eine eigene Tiled-Ebene (sowohl in simplemap als auch in wald).
+Das Anklicken eines Tilesets wählt die passende Ebene automatisch aus.
+
+Neue Landschaften liegen **über Gras, aber unter Wegen und Brücken**. Das
+gewünschte Übereinanderlegen bleibt erhalten: Beim Malen löscht der Editor
+**keine fremden Ebenen**. Mit ⌫ Löschen entfernst du nur die aktuell gewählte
+Ebene. Neue Landflächen müssen zusätzlich auf der Kollisions-Ebene entsperrt
+werden, damit Nobby dort laufen kann.
+
+Die drei PNG-Varianten werden aus der Original-Tiny-Swords-Wiese beim
+Start bzw. World-Compile mit `scripts/biome-art.mjs` erzeugt, ohne die
+Originalgrafiken zu verändern. Beide Karten haben leere neue Ebenen;
+bestehende Weltinhalte und Objekte bleiben unverändert.
+
+### Browser-Speicherung und Vite 8
+
+Das Web-Editor-Speichern darf keinen Hot-Reload starten: Dafür unterdrückt
+`vite.config.ts` während eines verwalteten TMX-Speichervorgangs sowohl Vites
+`hotUpdate` (Vite 8) als auch den Kompatibilitäts-Hook `handleHotUpdate`.
+Nach erfolgreichem Speichern bleibt der Editor geöffnet. Das reguläre Laden
+der aktualisierten Spielwelt findet erst mit **Schließen** statt.
+
+Ein Regressionstest speichert die tatsächliche `simplemap.tmx` in einem **temporären
+Verzeichnis**, einschließlich der lokalen Kartendimensionen und aller Kachelebenen.
+Die Projektkarte selbst wird dabei nicht verändert. Der Browser-Test
+`npm run test:web-editor` liest ebenfalls die tatsächliche Kartengröße, statt
+40×32 vorauszusetzen. Der Browser-Test exportiert/ändert die Karte nur im
+Arbeitsspeicher und schreibt keine gespeicherte TMX-Datei.
+
+### Biome-Workshop: additive Tilesets ohne Map-Verlust
+
+Beim Öffnen des Web-Editors werden zusätzliche Overlay-Tilesets
+`desert-path.tsx` und `snow-path.tsx` **nur im Browser-Dokument** eingebunden.
+Sie erscheinen unter **Wüste → Übergänge** bzw. **Schnee → Übergänge**.
+Die GIDs werden hinter dem höchsten bereits verwendeten Tileset ermittelt,
+sodass auch ältere und lokal erweiterte Karten keine existierenden IDs verlieren.
+Erst beim Malen und Speichern werden die neuen Tileset-Referenzen in der
+TMX-Datei mitgespeichert. Gebäude und Kakteen verwenden die generierten
+Sprite-Assets und benötigen keine neuen Kachelebenen.
+
+### Werkstatt-Workflow: Wald, Wüste und Schnee
+
+**Esc → Karteneditor → Gegend wählen:** Wald, Wüste oder Schnee.
+Unter **🖌 Kacheln** erscheinen passende Flächen, Wasser, Wege, Brücken
+und zusätzliche **Übergänge** (Sandweg/Schneepfad). Unter **🌲 Platzieren**
+sind die zur Gegend passenden Objekte zu finden: sechs neue Wüstenobjekte
+(zwei Kakteen, Fels, Lehmhaus, Zelt, Tempel) und ein Schneebaum.
+Ein Objekt bleibt für Mehrfachplatzierung ausgewählt.
+
+**Kollisionen:** Neue, gemalte Landschaft/Wege/Brücken entfernen standardmäßig
+die Sperrfläche an dieser 64px-Kachel. Die Option
+**„Beim Malen Boden/Wege begehbar machen“** lässt sich im Editor abschalten.
+**„🧭 Vorhandene Wege entsperren“** korrigiert alte, sichtbare Wege/Brücken
+und Biomflächen, die noch auf gesperrtem Wasser liegen. Das ist eine bewusste
+Änderung der logischen Ebene; Wasser, Gras und Brückengrafiken werden **nicht**
+zusammengeführt oder gelöscht. Bei der Reparatur nur bewusst angelegte
+Wege/Brücken/Flächen prüfen, danach speichern.
+
+Die Wüstengrafik verwendet stärkere Sand-Schattierung, dezente Dünenlinien
+und Körnung statt eines einheitlich eingefärbten Gras-Tilesets.
+Die neue Weggrafik ist als transparentes 3×3-Tileset ausgelegt und kann
+auf die Sand- bzw. Schneeschicht gelegt werden; sie ist keine automatische
+48-Kachel-Wang-/Blob-Autotiling-Engine. Ein komplexeres, vollständig
+automatisches Multi-Terrain-Autotiling wäre ein späterer Ausbauschritt.
+
+**Lokale Karten schützen:** Bei lokal editierten `src/tiled/*.tmx`
+keinen Reset/Checkout und keinen Stash-Pop ausführen. Die Änderung dieses
+Branches enthält keine zusätzlichen Änderungen an den beiden bereits
+eingecheckten TMX-Karten; `git pull --ff-only` kann den Code daher unabhängig
+von deiner 100×40-Karte aktualisieren. Wenn Git wegen anderer Dateien
+blockiert, zuerst Kopien davon außerhalb des Repos anlegen.
+
+### Lebendige Schafe auf der Wiese
+
+Bereits platzierte und neu im Karteneditor hinzugefügte `sheep`-Objekte
+sind jetzt servergesteuerte, friedliche Tiere. Sie laufen jeweils einzelne
+64px-Schritte, nur auf echten Gras-/Waldkacheln, höchstens vier Kacheln
+von ihrem ursprünglichen Standort entfernt. Dazwischen warten sie 2–4
+Sekunden mit eigener, abgesenkter Fressanimation. Die Tiere überschreiten
+keine Wassersperren, Gebäude oder Wege und wechseln nicht auf Wüste,
+Felsen oder Schnee. Andere Props bleiben starr.
+
+RPGJS `infiniteMoveRoute()` verwaltet die Abläufe auf dem Server ohne
+eigene `setInterval`-Timer pro Tier. Kollisionslogik ist nicht verändert;
+Schafe selbst sind weiterhin durchquerbar. Alle Kartenmasken werden beim
+Kompilieren aus den tatsächlich gespeicherten TMX-Ebenen generiert.
+`scripts/sheep-art.mjs` erzeugt das 6-Frame-Fressspritesheet aus der
+vorhandenen Schafgrafik in einem ignorierten Ausgabeverzeichnis.
+
+### Schafe im laufenden Browser prüfen
+
+`npm run test:sheep` startet einen nicht-schreibenden Playwright-Test:
+Er öffnet die echte Startwelt, wartet auf die serverseitigen Schaf-Events,
+beobachtet ihre Positionen ca. 22 Sekunden und prüft den Gras- und
+Bewegungsradius. Der Test ändert keine Karten und legt keine Objekte an.

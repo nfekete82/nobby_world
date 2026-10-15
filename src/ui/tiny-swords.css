@@ -96,3 +96,27 @@ canvas,img,.nobby-portrait,#nobby-hud *,.rpg-ui-main-menu-layout,.rpg-ui-dialog,
  animation:nobby-feedback-in .18s ease-out both;
 }
 @keyframes nobby-feedback-in{from{opacity:0;transform:translate(-50%,-7px)}to{opacity:1;transform:translate(-50%,0)}}
+
+/* Player progression: an XP meter and a frame that matches the game's HUD. */
+.nobby-meter.xp{height:19px}
+.nobby-meter.xp i{background:#bc9c42;border-top:2px solid #dfc96e}
+.nobby-meter.xp span{font-size:11px;line-height:15px}
+.nobby-actions button.has-points{filter:drop-shadow(0 3px 0 #29354455) drop-shadow(0 0 6px #ffe67c)}
+.nobby-stats-panel{position:absolute;top:135px;left:16px;width:min(390px,calc(100vw - 32px));max-height:calc(100vh - 160px);overflow:auto;pointer-events:auto;padding:18px 20px;border:16px solid transparent;border-image:var(--nobby-paper-frame) 64 fill / 16px / 0 stretch;filter:drop-shadow(0 4px 0 #29354466);box-sizing:border-box}
+.nobby-stats-panel[hidden]{display:none}
+.nobby-stats-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.nobby-stats-head h2{font:800 19px var(--rpg-ui-font);margin:0}
+.nobby-stats-head button,.nobby-stats-row button{pointer-events:auto;cursor:pointer;border:2px solid #866442;background:#e0bd7e;color:#49372e;font-weight:900;min-width:35px;min-height:34px;box-shadow:0 2px 0 #866442}
+.nobby-stats-row button:hover:not(:disabled),.nobby-stats-head button:hover{background:#f1d49e}
+.nobby-stats-row button:disabled{opacity:.4;cursor:not-allowed}
+.nobby-stats-points{font-weight:800;color:#4b5332;background:#f4dfaa;padding:8px 10px;margin:14px 0}
+.nobby-stats-grid{display:grid;gap:6px}
+.nobby-stats-row{display:grid;grid-template-columns:1fr 30px 36px;align-items:center;gap:9px;padding:8px;border-bottom:1px solid #bca47c}
+.nobby-stats-row strong,.nobby-stats-row small{display:block}
+.nobby-stats-row small{color:#75634c;font-size:11px;margin-top:4px}
+.nobby-stats-row span{text-align:right;font-weight:800}
+.nobby-stats-note{font-size:11px;line-height:1.5;margin:12px 0 0;color:#75634c}
+@media(max-width:760px){.nobby-stats-panel{top:132px;left:8px;max-height:calc(100vh - 170px)}.nobby-actions button{padding:3px 5px;gap:5px}}
+@media(max-height:540px){.nobby-stats-panel{top:8px;max-height:calc(100vh - 65px)}}
+
+.nobby-stats-xp{margin:-6px 0 12px;font-size:12px;color:#675642;line-height:1.5}

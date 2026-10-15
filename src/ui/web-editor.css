@@ -95,3 +95,26 @@
  .we-object-thumb{width:74px;height:62px}
  .we-zoom-status{min-width:37px}
 }
+
+/* Readable layer help and category chips; underlying Tiled names stay stable. */
+.we-categories{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 15px;align-items:center}
+.we-category-title{width:100%;font-size:13px;color:#5a4934}
+.we-overlay .we-category{padding:5px 8px;font-size:12px;border-radius:4px}
+.we-overlay .we-category.we-active{background:#437b72;color:#fff6dc;border-color:#254c4b}
+.we-layer-help{flex:1 1 100%;color:#4e4637;background:#f5e4bd;
+ font-size:12px;line-height:1.35;padding:5px 11px;border-left:3px solid #7e9b83}
+.we-category:focus-visible,.we-tile:focus-visible{outline:3px solid #477ca0;outline-offset:2px}
+@media(max-width:780px){
+ .we-layer-help{font-size:11px;padding:3px 7px}
+ .we-categories{margin:2px 0 9px}
+ .we-overlay .we-category{padding:4px 6px;font-size:11px}
+}
+
+/* Biome-first editor navigation with independent Tiled layers */
+.we-biomes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;
+ margin:7px 0 13px;padding:9px;background:#dfd1af;border:1px solid #a88f62}
+.we-biomes strong{grid-column:1/-1;font-size:13px}
+.we-overlay .we-biome{font-size:13px;padding:8px 3px}
+.we-walkable{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;margin:12px 0 7px}
+.we-walkable input{width:18px;height:18px;flex-shrink:0}
+.we-overlay .we-repair{font-size:12px;padding:8px;width:100%;text-align:center}

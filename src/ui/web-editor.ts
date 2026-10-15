@@ -1,6 +1,8 @@
 import art from '../art/registry.json'
 import './web-editor.css'
 import {expandLayerGrid,expansionFill,validateMapExpansion} from './map-resize.mjs'
+import {walkabilityChanges,repairPaintedWalkways} from './terrain-rules.mjs'
+import {OBJECT_CATEGORIES,TILE_CATEGORIES,layerLabel,layerHelp,objectCategory,tilesetCategory,layerForTileCategory,layerForTileset,BIOMES,BIOME_TILE_CATEGORIES,BIOME_OBJECT_CATEGORIES,objectBiome,tilesetBiome,visibleInBiome} from './editor-taxonomy.mjs'
 
 type Sheet={first:number,count:number,cols:number,img:HTMLImageElement,source:string,title:string}
 type PaintLayer={node:Element,name:string,gids:number[]}
@@ -61,8 +63,14 @@ class MapEditor {
  private zoom=.55
  private offsetX=0
  private offsetY=0
- private layerIndex=0
- private chosenGid=57
+ private layerIndex=2
+ private activeCategory='Alle'
+ private biome='Wald'
+ private autoWalkable=true
+ private biomeTabs=elt<HTMLElement>('div','we-biomes')
+ private pendingRefresh=false
+ private saving=false
+ private chosenGid=2
  private chosenAsset='tree-oak'
  private selected:Element|null=null
  private history:string[]=[]
@@ -81,11 +89,16 @@ class MapEditor {
  private resizeHeight=elt<HTMLInputElement>('input')
  private zoomText=elt<HTMLElement>('span','we-zoom-status','100 %')
  private layerPicker=elt<HTMLSelectElement>('select')
+ private layerHelpText=elt<HTMLElement>('div','we-layer-help')
+ private layerField=field('Kachelebene',this.layerPicker)
+ private categoryTabs=elt<HTMLElement>('div','we-categories')
  private paletteTabs=elt<HTMLElement>('div','we-tabs')
  private viewport=elt<HTMLElement>('div','we-viewport')
  private stage=elt<HTMLElement>('div','we-stage')
  private staticNotice=elt<HTMLElement>('div','we-static-notice',
-  'Direktes Speichern ist über npm run dev (Port 5173) möglich. In der Docker-Version bitte TMX exportieren.')
+  import.meta.env.DEV
+   ? 'Live-Editor aktiv (localhost:5173): Änderungen werden direkt in die TMX-Projektdateien gespeichert.'
+   : 'Fertige Spielversion: direkte Kartenbearbeitung nicht verfügbar. Bitte TMX exportieren oder den OrbStack-Editor auf localhost:5173 öffnen.')
  constructor(private engine:any){
   this.root.setAttribute('role','dialog');this.root.setAttribute('aria-modal','true')
   this.root.setAttribute('aria-label','Nobby World Karteneditor')
@@ -99,16 +112,21 @@ class MapEditor {
   for(const [id,label] of [['select','↖ Objekte'],['object','🌲 Platzieren'],['tile','🖌 Kacheln'],['erase','⌫ Löschen']]){
    const el=button(label,()=>this.setTool(id));el.dataset.tool=id;toolbar.append(el)
   }
-  this.layerPicker.addEventListener('change',()=>{this.layerIndex=Number(this.layerPicker.value);this.redraw()})
-  toolbar.append(field('Ebene',this.layerPicker),
+  this.layerPicker.addEventListener('change',()=>{this.layerIndex=Number(this.layerPicker.value);this.updateLayerHelp();this.redraw()})
+  toolbar.append(this.layerField,
    button('−',()=>this.zoomAt(.8),'we-zoom-button'),
    this.zoomText,button('+',()=>this.zoomAt(1.25),'we-zoom-button'),
    button('⤢ Einpassen',()=>this.fitMap()),
-   button('▣ Karte erweitern',()=>this.toggleMapSize(),'we-resize-toggle'))
+   button('▣ Karte erweitern',()=>this.toggleMapSize(),'we-resize-toggle'),this.layerHelpText)
+  const walkCheck=elt<HTMLInputElement>('input');walkCheck.type='checkbox';walkCheck.checked=true
+  walkCheck.addEventListener('change',()=>this.autoWalkable=walkCheck.checked)
+  const walkLabel=elt<HTMLLabelElement>('label','we-walkable')
+  walkLabel.append(walkCheck,elt('span','','Beim Malen Boden/Wege begehbar machen'))
+  const walkRepair=button('🧭 Vorhandene Wege entsperren',()=>this.repairWalkways(),'we-repair')
   const pane=elt('main','we-body')
   this.stage.append(this.canvas);this.viewport.append(this.stage)
   const sidebar=elt('aside','we-sidebar')
-  const toolHelp=elt('p','we-help','Objekte anklicken und ziehen oder eine Kachel aus dem Tileset wählen. Mausrad zoomt, Rechtsklick zieht die Ansicht.')
+  const toolHelp=elt('p','we-help','Gelände, Wüste, Felsboden und Schnee besitzen eigene Kachelebenen. Wege und Brücken können darüber liegen. ⌫ Löschen entfernt nur die gewählte Ebene. Für neues Land rote Sperrflächen separat entfernen.')
   this.picker.addEventListener('change',()=>{
    this.chosenAsset=this.picker.value;this.refreshGallerySelection()
   })
@@ -129,7 +147,7 @@ class MapEditor {
    field('Breite in Kacheln',this.resizeWidth),
    field('Höhe in Kacheln',this.resizeHeight),
    button('Fläche erweitern',()=>this.expandMap(),'we-primary'))
-  sidebar.append(this.resizePanel,this.objectArea,this.detail,this.paletteTabs,this.palette,toolHelp,this.staticNotice)
+  sidebar.append(this.resizePanel,this.biomeTabs,this.categoryTabs,this.objectArea,this.detail,this.paletteTabs,this.palette,walkLabel,walkRepair,toolHelp,this.staticNotice)
   pane.append(this.viewport,sidebar)
   this.message.setAttribute('role','status')
   const footer=elt('footer','we-footer')
@@ -150,6 +168,7 @@ class MapEditor {
   this.canvas.addEventListener('pointerup',()=>this.endPointer())
   this.canvas.addEventListener('pointercancel',()=>this.endPointer())
   this.canvas.addEventListener('lostpointercapture',()=>this.endPointer())
+  this.renderBiomes()
   this.setTool('select')
   document.body.append(this.root)
   void this.load()
@@ -162,12 +181,80 @@ class MapEditor {
  }
  private status(text:string){this.message.textContent=text}
  private setTool(tool:string){
+  if((tool==='tile'||tool==='erase')!==(this.tool==='tile'||this.tool==='erase'))this.activeCategory='Alle'
   this.tool=tool
   this.root.querySelectorAll<HTMLButtonElement>('[data-tool]').forEach(b=>b.classList.toggle('we-active',b.dataset.tool===tool))
   this.palette.hidden=tool!=='tile';this.paletteTabs.hidden=tool!=='tile'
   this.objectArea.hidden=tool!=='select'&&tool!=='object'
   this.detail.hidden=tool!=='select'
-  this.redraw()
+  this.layerField.hidden=tool!=='tile'&&tool!=='erase'
+  this.layerHelpText.hidden=tool!=='tile'&&tool!=='erase'
+  this.renderCategories();this.filterGallery();this.filterTilesets();this.redraw()
+ }
+ private renderBiomes(){
+  this.biomeTabs.replaceChildren(elt('strong','','Gegend wählen'))
+  for(const name of BIOMES){
+   const control=button(name,()=>{
+    this.biome=name;this.activeCategory='Alle'
+    this.renderBiomes();this.renderCategories();this.filterGallery();this.filterTilesets()
+    this.status('Biom: '+name+' · Flächen und Objekte passend zur Gegend.')
+   },'we-biome')
+   control.classList.toggle('we-active',this.biome===name)
+   control.setAttribute('aria-pressed',String(this.biome===name))
+   this.biomeTabs.append(control)
+  }
+ }
+ private renderCategories(){
+  this.categoryTabs.replaceChildren()
+  const tileMode=this.tool==='tile'||this.tool==='erase'
+  this.categoryTabs.append(elt('strong','we-category-title',tileMode?'Kacheln nach Bereich':'Objekte nach Kategorie'))
+  const choices=tileMode?BIOME_TILE_CATEGORIES[this.biome as keyof typeof BIOME_TILE_CATEGORIES]:BIOME_OBJECT_CATEGORIES[this.biome as keyof typeof BIOME_OBJECT_CATEGORIES]
+  for(const name of choices){
+   const choice=button(name,()=>{
+    this.activeCategory=name
+    if(tileMode){
+     const preferred=layerForTileCategory(name)
+     const index=this.layer.findIndex(layer=>layer.name===preferred)
+     if(index>=0){this.layerIndex=index;this.layerPicker.value=String(index);this.updateLayerHelp()}
+    }
+    this.renderCategories();this.filterGallery();this.filterTilesets();this.redraw()
+   },'we-category')
+   choice.classList.toggle('we-active',this.activeCategory===name)
+   choice.setAttribute('aria-pressed',String(this.activeCategory===name))
+   this.categoryTabs.append(choice)
+  }
+ }
+ private updateLayerHelp(){
+  const layer=this.layer[this.layerIndex]
+  this.layerHelpText.textContent=layer?layerHelp(layer.name):'Wähle eine Ebene, um ihre Funktion zu sehen.'
+ }
+ private filterTilesets(){
+  if((this.tool!=='tile'&&this.tool!=='erase')||!this.sheet.length)return
+  let first=-1
+  this.paletteTabs.querySelectorAll<HTMLButtonElement>('button').forEach((b,index)=>{
+   const visible=visibleInBiome(tilesetBiome(this.sheet[index].source),this.biome)&&
+     (this.activeCategory==='Alle'||tilesetCategory(this.sheet[index].source)===this.activeCategory)
+   b.hidden=!visible
+   if(visible&&first<0)first=index
+  })
+  const current=this.sheet.findIndex(s=>this.chosenGid>=s.first&&this.chosenGid<s.first+s.count)
+  if(first>=0&&(current<0||!visibleInBiome(tilesetBiome(this.sheet[current].source),this.biome)||
+   (this.activeCategory!=='Alle'&&tilesetCategory(this.sheet[current].source)!==this.activeCategory))){
+   let index=first
+   // Selecting a biome should open its landscape, not generic background water.
+   if(this.activeCategory==='Alle'){
+    const preferred=this.biome==='Wüste'?'desert.tsx':this.biome==='Schnee'?'snow.tsx':'grass.tsx'
+    const found=this.sheet.findIndex(s=>s.source===preferred)
+    if(found>=0)index=found
+   }
+   // Prefer blue background water over the collision-only water tile.
+   if(this.activeCategory==='Wasser'){
+    const water=this.sheet.findIndex(s=>s.source==='water-background.tsx')
+    if(water>=0)index=water
+   }
+   this.chosenGid=this.sheet[index].first
+   this.showSheet(index)
+  }
  }
  private async load(){
   try{
@@ -195,6 +282,7 @@ class MapEditor {
     return {first:Number(ref.getAttribute('firstgid')),count:Number(tsx.getAttribute('tilecount')),
      cols:Number(tsx.getAttribute('columns')),img,source,title:tsx.getAttribute('name')||source}
    }))
+   await this.loadExtraPathTilesets(map)
    this.parseLayers()
    await this.preloadSprites()
    this.buildPalettes()
@@ -202,6 +290,30 @@ class MapEditor {
    this.redraw()
    this.status(this.id+' · '+this.w/64+' × '+this.h/64+' Kacheln · 64 px Raster')
   }catch(error){this.status('Fehler: '+String(error));this.root.querySelectorAll('button').forEach(b=>{if(b.textContent?.includes('Speichern'))b.disabled=true})}
+ }
+ private async loadExtraPathTilesets(map:Element){
+  // No on-disk TMX migration: older 100x40 user maps remain untouched until
+  // they explicitly paint and save. Tiled refs are added only in editor memory.
+  let gid=Math.max(1,...this.sheet.map(s=>s.first+s.count))
+  for(const source of ['desert-path.tsx','snow-path.tsx']){
+   if(this.sheet.some(sheet=>sheet.source===source))continue
+   const url=pathUrl('map/'+source)
+   const response=await fetch(url)
+   if(!response.ok)throw Error('Biom-Übergang fehlt: '+source)
+   const definition=readXml(await response.text()).documentElement
+   const imgName=definition.querySelector('image')?.getAttribute('source')||''
+   const img=await image(new URL(imgName,new URL(url,location.href)).href)
+   if(!img.naturalWidth)throw Error('Biom-Übergang Grafik fehlt: '+source)
+   const count=Number(definition.getAttribute('tilecount'))
+   const cols=Number(definition.getAttribute('columns'))
+   if(!Number.isInteger(count)||count<1||!Number.isInteger(cols)||cols<1)
+    throw Error('Biom-Tileset beschädigt: '+source)
+   const ref=this.document.createElement('tileset')
+   ref.setAttribute('firstgid',String(gid));ref.setAttribute('source',source)
+   map.insertBefore(ref,map.querySelector(':scope > layer'))
+   this.sheet.push({first:gid,count,cols,img,source,title:definition.getAttribute('name')||source})
+   gid+=count
+  }
  }
  private parseLayers(){
   this.layer=Array.from(this.document.querySelectorAll('map > layer')).map(node=>{
@@ -211,10 +323,11 @@ class MapEditor {
   })
   this.layerPicker.replaceChildren()
   this.layer.forEach((l,n)=>{
-   const o=elt<HTMLOptionElement>('option','',l.name);o.value=String(n);this.layerPicker.append(o)
+   const o=elt<HTMLOptionElement>('option','',layerLabel(l.name));o.value=String(n);this.layerPicker.append(o)
   })
   this.layerIndex=Math.min(this.layerIndex,this.layer.length-1)
   this.layerPicker.value=String(this.layerIndex)
+  this.updateLayerHelp()
  }
  private async preloadSprites(){
   const images=new Set<string>()
@@ -242,20 +355,21 @@ class MapEditor {
   })
   this.showSheet(this.sheet.findIndex(s=>this.chosenGid>=s.first&&this.chosenGid<s.first+s.count))
   this.buildGallery()
+  this.renderCategories()
+  this.filterTilesets()
  }
 
  private objectEntries(){
   const props=Object.entries(art.assets)
    .filter(([_,a])=>a.kind==='prop')
-   .map(([id,a])=>({id,label:id.replaceAll('-',' '),asset:a,group:
-     /tree|bush|rock|sheep/.test(id)?'Natur & Tiere':'Häuser & Gebäude'}))
+   .map(([id,a])=>({id,label:id.replaceAll('-',' '),asset:a,group:objectCategory(id),biome:objectBiome(id)}))
   const actors=[
-   {id:'npc:mira',label:'Mira (NPC)',asset:art.assets.female,group:'Figuren & Portale'},
-   {id:'monster:ritter',label:'Ritter (Gegner)',asset:art.assets['enemy-warrior'],group:'Figuren & Portale'},
-   {id:'monster:berserker',label:'Berserker (Gegner)',asset:art.assets['enemy-berserker'],group:'Figuren & Portale'},
-   {id:'portal:map',label:'Kartenportal',asset:art.assets['portal-marker'],group:'Figuren & Portale'}
+   {id:'npc:mira',label:'Mira (NPC)',asset:art.assets.female,group:'NPCs',biome:'Alle'},
+   {id:'monster:ritter',label:'Ritter (Gegner)',asset:art.assets['enemy-warrior'],group:'Gegner',biome:'Alle'},
+   {id:'monster:berserker',label:'Berserker (Gegner)',asset:art.assets['enemy-berserker'],group:'Gegner',biome:'Alle'},
+   {id:'portal:map',label:'Kartenportal',asset:art.assets['portal-marker'],group:'Portale',biome:'Alle'}
   ]
-  return [...props,...actors]
+  return [...props,...actors].sort((a,b)=>OBJECT_CATEGORIES.indexOf(a.group)-OBJECT_CATEGORIES.indexOf(b.group))
  }
  private buildGallery(){
   this.gallery.replaceChildren()
@@ -266,7 +380,7 @@ class MapEditor {
     this.gallery.append(elt('h4','we-object-group',group))
    }
    const b=elt<HTMLButtonElement>('button','we-object-card')
-   b.type='button';b.dataset.asset=entry.id
+   b.type='button';b.dataset.asset=entry.id;b.dataset.category=entry.group;b.dataset.biome=entry.biome
    b.title=entry.label+' platzieren'
    const thumb=elt<HTMLCanvasElement>('canvas','we-object-thumb')
    thumb.width=92;thumb.height=78
@@ -311,7 +425,9 @@ class MapEditor {
   let matching=0
   for(const el of this.gallery.children){
    if(!(el instanceof HTMLButtonElement))continue
-   el.hidden=!el.textContent?.toLocaleLowerCase('de').includes(query)
+   el.hidden=!visibleInBiome(el.dataset.biome||'Wald',this.biome)||
+    (this.activeCategory!=='Alle'&&el.dataset.category!==this.activeCategory)||
+    !el.textContent?.toLocaleLowerCase('de').includes(query)
    if(!el.hidden)matching++
   }
   for(const header of this.gallery.querySelectorAll<HTMLElement>('.we-object-group')){
@@ -364,11 +480,15 @@ class MapEditor {
   this.canvas.width=this.w;this.canvas.height=this.h
   for(const layer of this.layer)this.updateLayerNode(layer)
   this.resizePanel.hidden=true
-  this.redraw();this.updateStage()
-  this.status('Karte auf '+newW+' × '+newH+' Kacheln erweitert · Neue Fläche ist Wasser. Zum Übernehmen speichern.')
+  this.fitMap();this.redraw()
+  this.status('Karte auf '+newW+' × '+newH+' Kacheln erweitert. Neue Fläche ist gesperrtes Wasser. Bitte speichern.')
  }
  private showSheet(idx:number){
   const sheet=this.sheet[Math.max(0,idx)]||this.sheet[0];if(!sheet)return
+  // Keep layers independent: painting sand never removes grass, roads or bridges.
+  const preferred=layerForTileset(sheet.source)
+  const target=this.layer.findIndex(l=>l.name===preferred)
+  if(target>=0){this.layerIndex=target;this.layerPicker.value=String(target);this.updateLayerHelp()}
   this.palette.replaceChildren()
   this.paletteTabs.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('we-active',this.sheet[i]===sheet))
   if(!sheet.img.naturalWidth){this.palette.textContent='Kachelgrafik konnte nicht geladen werden';return}
@@ -406,6 +526,12 @@ class MapEditor {
      ctx.restore()
     }else ctx.drawImage(sheet.img,(tile%sheet.cols)*64,Math.floor(tile/sheet.cols)*64,64,64,x,y,64,64)
    })
+  }
+  if(this.layer[this.layerIndex]?.name==='Wasser und Klippen · Kollision'&&(this.tool==='tile'||this.tool==='erase')){
+   const current=this.layer[this.layerIndex]
+   ctx.fillStyle='rgba(220,55,45,.35)'
+   for(let i=0;i<current.gids.length;i++)if(current.gids[i]!==0)
+    ctx.fillRect((i%(this.w/64))*64,Math.floor(i/(this.w/64))*64,64,64)
   }
   for(const obj of this.objects().sort((a,b)=>(a.y+a.h)-(b.y+b.h))){
    const asset=(art.assets as any)[obj.asset]
@@ -454,14 +580,30 @@ class MapEditor {
   for(let y=0;y<this.h/64;y++)lines.push(layer.gids.slice(y*width,(y+1)*width).join(','))
   layer.node.querySelector('data')!.textContent='\n'+lines.join(',\n')+'\n'
  }
+ private repairWalkways(){
+  const changes=repairPaintedWalkways(this.layer)
+  if(!changes.length){this.status('Keine gesperrten Wege oder Biomflächen gefunden.');return}
+  this.saveHistory()
+  const collision=this.layer.find(l=>l.name==='Wasser und Klippen · Kollision')!
+  for(const change of changes)collision.gids[change.index]=change.gid
+  this.updateLayerNode(collision);this.redraw()
+  this.status(changes.length+' Wege-/Biom-Kacheln entsperrt. Zum Übernehmen speichern.')
+ }
  private paint(p:{x:number,y:number},erase=false){
   const x=Math.floor(p.x/64),y=Math.floor(p.y/64),i=y*(this.w/64)+x
   if(this.paintLast===i)return
   this.paintLast=i
   const layer=this.layer[this.layerIndex],gid=erase?0:this.chosenGid
-  if(!layer||layer.gids[i]===gid)return
+  if(!layer)return
+  const changes=erase?[]:walkabilityChanges(this.layer,i,layer.name,gid,this.autoWalkable)
+  if(layer.gids[i]===gid&&!changes.length)return
   this.saveHistory()
-  layer.gids[i]=gid;this.updateLayerNode(layer);this.redraw()
+  if(layer.gids[i]!==gid){layer.gids[i]=gid;this.updateLayerNode(layer)}
+  for(const change of changes){
+   const collision=this.layer.find(l=>l.name===change.name)
+   if(collision){collision.gids[change.index]=change.gid;this.updateLayerNode(collision)}
+  }
+  this.redraw()
  }
  private selectAt(p:{x:number,y:number}){
   const objs=this.objects()
@@ -606,7 +748,9 @@ class MapEditor {
  private async save(){
   if(!this.document)return
   if(!this.dirty){this.status('Keine Änderungen vorhanden');return}
-  this.status('Karte wird sicher gespeichert …')
+  if(this.saving)return
+  this.saving=true
+  this.status('Karte wird geprüft und sicher gespeichert …')
   try{
    const edited=this.xml()
    const reply=await fetch(base+'__nobby-editor/save',{
@@ -616,13 +760,32 @@ class MapEditor {
    const result=await reply.json()
    if(!reply.ok)throw Error(result.error||'Speichern fehlgeschlagen')
    this.source=edited;this.dirty=false;this.history=[]
-   this.status('Gespeichert! Die Vorschau übernimmt die Änderungen.')
+   this.pendingRefresh=Boolean(result.needsRefresh)||this.pendingRefresh
+   this.status('Gespeichert: '+(result.width??this.w/64)+' × '+(result.height??this.h/64)+' Kacheln. Zum Aktualisieren des Spiels Editor schließen.')
   }catch(error){
-   this.status('Speichern nicht möglich: '+String(error)+' · bitte TMX exportieren oder Port 5173 verwenden.')
+   this.status('Speichern fehlgeschlagen – Änderungen im Editor bleiben erhalten: '+String(error))
+  }finally{this.saving=false}
+ }
+ private async refreshAfterClose(){
+  this.status('Karte gespeichert. Spielwelt wird aktualisiert …')
+  try{
+   const reply=await fetch(base+'__nobby-editor/refresh',{
+    method:'POST',headers:{'X-Nobby-Editor':'local-authoring'}
+   })
+   const result=await reply.json()
+   if(!reply.ok)throw Error(result.error||'Neuaufbau fehlgeschlagen')
+   this.pendingRefresh=false
+   window.removeEventListener('keydown',this.globalKey,true)
+   this.root.remove()
+   window.location.reload()
+  }catch(error){
+   this.status('Karte ist gespeichert, aber das Aktualisieren schlug fehl: '+String(error)+' · erneut Schließen klicken.')
   }
  }
  private close(){
+  if(this.saving){this.status('Speichern läuft. Danach erneut schließen.');return}
   if(this.dirty&&!window.confirm('Ungespeicherte Kartenänderungen verwerfen?'))return
+  if(this.pendingRefresh){void this.refreshAfterClose();return}
   window.removeEventListener('keydown',this.globalKey,true)
   this.root.remove()
  }
