@@ -25,7 +25,9 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
     window.__nobbyClickEvents=[];
     window.__nobbyClickDiagnostics=[];
     window.__nobbyControlEvents=[];
+    window.__nobbyDiagonalEvents=[];
     window.addEventListener('nobby:move-control',event=>window.__nobbyControlEvents.push(event.detail));
+    window.addEventListener('nobby:diagonal-input',event=>window.__nobbyDiagonalEvents.push(event.detail));
     window.addEventListener('nobby:move-target',event=>window.__nobbyClickEvents.push(event.detail));
     window.addEventListener('nobby:move-diagnostic',event=>window.__nobbyClickDiagnostics.push(event.detail));
   });
@@ -138,37 +140,30 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
     const p=window.__clickReview.engine.getCurrentPlayer();
     return {x:p.x(),y:p.y()};
   });
-  console.log('Diagonal click accepted and moved on both axes.',{from:current,to:moved,waypoints:diagonal.route.length});
-  // Physical arrow-key chords must also use native walk frames on BOTH axes.
-  await page.evaluate(()=>{ window.__RPGJS_MOBILE_DEBUG_EVENTS__=[]; });
+  const mouseVectorEvents=await page.evaluate(()=>window.__nobbyDiagonalEvents.filter(e=>e.source==='mouse'));
+  assert.ok(mouseVectorEvents.length>0,'mouse diagonals must send real vector motion, not alternating arrow impulses');
+  assert.equal(mouseVectorEvents[0].mode,'normalized-vector');
+  console.log('Diagonal click accepted and moved on both axes.',{from:current,to:moved,waypoints:diagonal.route.length,vectorPackets:mouseVectorEvents.length});
+  // Keyboard chords use authoritative normalized vector packets. We verify
+  // their directions independently of the visual animation debug buffer:
+  // the latter only records cardinal processMovementInput() callbacks.
   await page.keyboard.down('ArrowUp');
   await page.keyboard.down('ArrowRight');
-  await page.waitForTimeout(450);
+  await page.waitForTimeout(400);
   await page.keyboard.up('ArrowRight');
   await page.keyboard.up('ArrowUp');
-  const chord=await page.evaluate(()=>({
-    bound:!!window.__clickReview.engine.activeKeyboardControls?.()?.keyboard?.getControl?.('up_right'),
-    inputs:(window.__RPGJS_MOBILE_DEBUG_EVENTS__||[])
-      .filter(e=>e.type==='movement:input').map(e=>e.input)
-  }));
-  assert.equal(chord.bound,true,'Native up+right combo must be registered');
-  assert.ok(chord.inputs.includes('up')&&chord.inputs.includes('right'),
-    'Diagonal arrow chord must drive both axes: '+JSON.stringify(chord));
+  const arrows=await page.evaluate(()=>window.__nobbyDiagonalEvents.filter(e=>e.source==='keyboard'&&e.dx===1&&e.dy===-1));
+  assert.ok(arrows.length>=2,'ArrowUp+ArrowRight did not send continuous diagonal vectors: '+JSON.stringify(arrows));
+  await page.waitForTimeout(160);
 
-  // WASD is remappable in RPG-JS; its keyboard engine otherwise treats W+D
-  // as two independent cardinal commands. Verify the game fixes that too.
-  await page.evaluate(()=>{window.__RPGJS_MOBILE_DEBUG_EVENTS__=[];});
   await page.keyboard.down('w');
   await page.keyboard.down('d');
-  await page.waitForTimeout(450);
+  await page.waitForTimeout(400);
   await page.keyboard.up('d');
   await page.keyboard.up('w');
-  const wasdInputs=await page.evaluate(()=>
-    (window.__RPGJS_MOBILE_DEBUG_EVENTS__||[])
-      .filter(e=>e.type==='movement:input').map(e=>e.input)
-  );
-  assert.ok(wasdInputs.includes('up')&&wasdInputs.includes('right'),
-    'Diagonal WASD chord must drive both movement axes: '+JSON.stringify(wasdInputs));
+  const wasd=await page.evaluate(()=>window.__nobbyDiagonalEvents.filter(e=>e.source==='keyboard'&&e.dx===1&&e.dy===-1));
+  assert.ok(wasd.length>arrows.length+1,'W+D did not send diagonal vectors: '+JSON.stringify(wasd));
+  const chord={arrows:arrows.length,wasd:wasd.length,mode:'normalized-vector'}
   assert.deepEqual(errors,[]);
   assert.deepEqual(missing,[]);
   console.log('Click-to-move browser review passed.',{from:before.current,to:after,target:before.dest,route:accepted,controls:await page.evaluate(()=>window.__nobbyControlEvents),chord});
