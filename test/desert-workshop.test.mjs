@@ -41,7 +41,7 @@ test('generated cactus, houses, temple and snow pine are real nonempty transpare
   const asset=registry.assets[name]
   assert.ok(asset,name+' registered')
   assert.equal(asset.kind,'prop')
-  assert.equal(asset.solid,true)
+  assert.equal(asset.solid,!['desert-agave','desert-shrub'].includes(name))
   assert.deepEqual(asset.frame,[w,h])
   assert.equal(asset.animations.stand.image,'tiny-swords/biomes/'+name+'.png')
  }
