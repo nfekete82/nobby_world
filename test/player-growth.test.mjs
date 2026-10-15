@@ -88,3 +88,11 @@ test('OrbStack live editor is optional, persistent and local-only',()=>{
  assert.match(compose,/\.\/:\/app/)
  assert.match(compose,/--host 0\.0\.0\.0 --port 5173 --strictPort/)
 })
+
+test('compose passes shell lock_hash literally to the editor container',()=>{
+ const compose=fs.readFileSync('compose.yaml','utf8')
+ const echoLine=compose.split('\n').find(line=>line.includes('node_modules/.nobby-lock')&&line.includes('echo'))
+ assert.ok(echoLine,'lock file write must exist')
+ assert.ok(echoLine.includes('$$'+'lock_hash'),'Compose must escape shell variables using two dollar signs')
+ assert.ok(!echoLine.includes('echo "'+'$'+'lock_hash"'),'single dollar is expanded prematurely by Compose')
+})
