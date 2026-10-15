@@ -466,7 +466,7 @@ class MapEditor {
     }else ctx.drawImage(sheet.img,(tile%sheet.cols)*64,Math.floor(tile/sheet.cols)*64,64,64,x,y,64,64)
    })
   }
-  if(this.layer[this.layerIndex]?.name==='Wasser und Klippen · Kollision'&&this.tool==='tile'){
+  if(this.layer[this.layerIndex]?.name==='Wasser und Klippen · Kollision'&&(this.tool==='tile'||this.tool==='erase')){
    const current=this.layer[this.layerIndex]
    ctx.fillStyle='rgba(220,55,45,.35)'
    for(let i=0;i<current.gids.length;i++)if(current.gids[i]!==0)
