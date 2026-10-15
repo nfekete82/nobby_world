@@ -161,3 +161,35 @@ in 200-ms-Schritten (1 Mana pro Schritt), nur solange der Held lebt,
 auf einer Karte steht und noch Mana fehlt. Laufen und Zaubern setzen die
 kurze Ruhephase zurück; das Mana kann niemals den MAXSP-Wert überschreiten.
 Der Timer wird beim Verlassen der Spielsitzung entfernt.
+
+### Karteneditor direkt im Spiel (erste Version)
+
+Der Browser-Karteneditor ist über **Esc → 🗺 Karteneditor** erreichbar und
+zeigt die echten Tiny-Swords-Kacheln, Häuser, Bäume, NPCs und Gegner an.
+Er unterstützt:
+- Kachelebenen auswählen, Kacheln aus allen vorhandenen Tilesets malen,
+  mit dem Rad zoomen und per rechter Maustaste die Karte verschieben
+- Gebäude und Bäume direkt platzieren, Objekte auswählen/verschieben/löschen,
+  Objektnamen und Asset wechseln sowie Gegnerstufen und NPC-Texte ändern
+- Rückgängig, TMX exportieren und Speichern; alle Änderungen bleiben im
+  von Tiled bearbeitbaren TMX-Format
+
+**Direkt in die Projektdateien speichern:** die lokale Entwickler-Vorschau
+starten (in einem Terminal: `npm run dev -- --host 127.0.0.1 --port 5173 --strictPort`),
+dann http://127.0.0.1:5173 öffnen und **Esc → Karteneditor**.
+Die Vite-API erlaubt Änderungen nur von der lokalen Vorschau, prüft die
+Dateiversion, erstellt vor jeder Änderung ein Backup unter
+`art/map-backups/web-editor-*.tmx` und validiert die Karten. Bei einem
+Fehler wird die Ursprungsdatei wiederhergestellt. Danach lädt die Vorschau
+bei Bedarf automatisch neu.
+
+**Docker auf Port 8088:** hier kann der Editor ebenfalls angezeigt und
+benutzt werden, aber der Webserver enthält keinen Dateischreibdienst.
+Mit **TMX exportieren** erhältst du die bearbeitete Karte zum manuellen
+Ersetzen. Für direktes Speichern stets die Entwicklungs-Vorschau 5173 benutzen.
+
+Die native RPG-JS-Spiellogik und die Original-Tiled-Vorlagen bleiben erhalten.
+Komplexe Spezialeditoren (Autotiling, mehrstufige Objektgruppen, neue eigene
+Sprites) werden weiterhin in Tiled gepflegt. Der Browser-Editor ist ein
+erster, bewusst begrenzter Kartenbau-Modus. Browser-Abnahmetest:
+`npm run test:web-editor`.
