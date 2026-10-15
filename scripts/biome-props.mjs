@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {PNG} from 'pngjs'
+import {styledBiomeProps} from './biome-props-style.mjs'
 
 const folder=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../public/tiny-swords/biomes')
 const C={
@@ -122,14 +123,19 @@ function pine(p){
   }
  }
 }
+// All biome assets are rendered with the same grouped-pixel art direction.
+// Preserve native frames and registry ids so existing maps continue working.
 const specs={
- 'desert-cactus':[64,128,p=>cactus(p)],
- 'desert-cactus-small':[64,128,p=>cactus(p,true)],
- 'desert-rock':[64,64,rock],
- 'desert-house':[128,192,p=>house(p,'house')],
- 'desert-tent':[128,192,p=>house(p,'tent')],
- 'desert-temple':[128,192,p=>house(p,'temple')],
- 'snow-pine':[128,192,pine]
+ 'desert-cactus':[64,128,styledBiomeProps['desert-cactus']],
+ 'desert-cactus-small':[64,128,styledBiomeProps['desert-cactus-small']],
+ 'desert-rock':[64,64,styledBiomeProps['desert-rock']],
+ 'desert-house':[128,192,styledBiomeProps['desert-house']],
+ 'desert-tent':[128,192,styledBiomeProps['desert-tent']],
+ 'desert-temple':[128,192,styledBiomeProps['desert-temple']],
+ 'snow-pine':[128,192,styledBiomeProps['snow-pine']],
+ 'desert-agave':[64,64,styledBiomeProps['desert-agave']],
+ 'desert-shrub':[64,64,styledBiomeProps['desert-shrub']],
+ 'desert-prickly-pear':[64,64,styledBiomeProps['desert-prickly-pear']]
 }
 export const BIOME_PROP_SPECS=Object.fromEntries(Object.entries(specs).map(([k,[w,h]])=>[k,[w,h]]))
 export function ensureBiomeProps(){
