@@ -85,3 +85,14 @@ canvas,img,.nobby-portrait,#nobby-hud *,.rpg-ui-main-menu-layout,.rpg-ui-dialog,
 @keyframes nobby-arcane-spin{to{transform:rotate(360deg)}}
 @keyframes nobby-arcane-flash{from{opacity:1;transform:translate(-50%,-50%) scale(.35)}to{opacity:0;transform:translate(-50%,-50%) scale(1.65)}}
 @media(prefers-reduced-motion:reduce){.nobby-arcane-orb,.nobby-arcane-orb::after{animation:none}}
+
+/* A rejected spell must have visible feedback rather than an inert click. */
+.nobby-magic-feedback {
+ position:fixed;z-index:40;top:16%;left:50%;transform:translateX(-50%);
+ padding:9px 17px;border-radius:9px;pointer-events:none;
+ color:#f8f0de;background:rgba(23,26,45,.94);
+ border:1px solid rgba(151,212,255,.55);box-shadow:0 6px 26px #0008;
+ font:600 14px/1.4 system-ui,sans-serif;text-align:center;
+ animation:nobby-feedback-in .18s ease-out both;
+}
+@keyframes nobby-feedback-in{from{opacity:0;transform:translate(-50%,-7px)}to{opacity:1;transform:translate(-50%,0)}}
