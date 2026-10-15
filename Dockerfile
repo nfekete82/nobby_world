@@ -1,10 +1,14 @@
+FROM node:24-alpine AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY index.html tsconfig.json vite.config.ts ./
+COPY src/ ./src/
+COPY public/ ./public/
+COPY scripts/world-data.mjs ./scripts/world-data.mjs
+COPY editor/ ./editor/
+RUN npm run build
+
 FROM nginx:stable-alpine
-
-# Package only the playable game and locally imported art.
-# Avoid OrbStack/macOS bind-mount permission and file-sharing issues.
-COPY index.html /usr/share/nginx/html/index.html
-COPY assets/ /usr/share/nginx/html/assets/
-
-# The nginx worker runs as an unprivileged user.
-RUN test -s /usr/share/nginx/html/index.html \
-    && chmod -R a+rX /usr/share/nginx/html
+COPY --from=build /app/dist/ /usr/share/nginx/html/
+RUN test -s /usr/share/nginx/html/index.html && test -s /usr/share/nginx/html/map/simplemap.tmx

@@ -1,8 +1,8 @@
-.DS_Store
-Thumbs.db
 node_modules/
 dist/
 .env
-*.log
-assets/tiny-swords/
-Tiny Swords (Free Pack).zip
+.env.*
+!.env.example
+.DS_Store
+.tools/
+*.tiled-session

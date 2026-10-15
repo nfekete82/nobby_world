@@ -1,15 +1,19 @@
-# Asset credits and distribution
+# Sources and credits
 
-## Active art: Tiny Swords (Free Pack)
+- Framework: [RSamaium/RPG-JS](https://github.com/RSamaium/RPG-JS), MIT license.
+  Installed packages retain their bundled licenses in `node_modules`.
+- Starter source snapshot: `bc5be54ecba24d0ebca1b7dae423d8b6dad286b8`.
+- Initial project: [rpgjs/starter, v5 branch](https://github.com/rpgjs/starter/tree/v5).
+- Sample character sprites and map tiles: [Pipoya](https://pipoya.itch.io), as
+  credited by the official starter. These are the starter's sample graphics,
+  not newly generated Nobby artwork.
 
-- **Author:** Pixel Frog
-- **Source:** https://pixelfrog-assets.itch.io/tiny-swords
-- **Used:** Terrain tiles, grass, trees, bushes, stones, structures, character (Monk), animations and particles
-- **Animations:** The published original recommends 10 FPS for animation playback
-- **License:** The current Free Pack allows personal and commercial games and modifications; credit is optional. **The raw sprites may not be redistributed, resold, or repackaged**, even if modified. That is why the project only contains an import script and expects your own ZIP locally. Check the artist's current license before distributing the game.
+Original Nobby World code and graphics are archived in Git and are not part of
+the restarted application. RPG-JS does not provide the earlier game's custom
+mechanics automatically.
 
-## Legacy art (fallback)
-
-- `assets/woods.png` originates from the previously user-supplied `pixel_16_woods v2 free.zip` (352×192). No license text was found in that ZIP; this artwork should not be distributed until its license is verified. It remains a fallback when Tiny Swords is not imported.
-
-The programmatic placeholder hero and procedural details are kept as fallback only.
+Local editor combat sprites: red Warrior idle/run/attack sheets from the user's
+supplied Tiny Swords (Free Pack), by Pixel Frog. Used as in-game enemy artwork;
+the complete pack is not redistributed. Tiled is installed locally from the
+[official release](https://github.com/mapeditor/tiled/releases/tag/v1.12.2) and is
+not committed or shipped inside the game image.

@@ -1,15 +1,11 @@
 name: nobby-world
-
 services:
   game:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     image: nobby-world:local
     restart: unless-stopped
     ports:
       - "127.0.0.1:8088:80"
-    # No file bind mounts: prevents OrbStack permission-related 403 responses.
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/ || exit 1"]
       interval: 10s
