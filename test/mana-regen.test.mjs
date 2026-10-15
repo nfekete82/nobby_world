@@ -1,5 +1,6 @@
 import {test} from 'node:test'
 import assert from 'node:assert/strict'
+import fs from 'node:fs'
 import {
  createManaClock,markManaActive,regenerateIdleMana,
  IDLE_MANA_PER_SECOND,IDLE_MANA_TICK_MS,IDLE_MANA_GRACE_MS
@@ -63,7 +64,7 @@ test('lag is clamped to one second, and rewinding time is safe',()=>{
  assert.equal(tick(p,c,200),0)
 })
 test('authoritative player integration owns one timer and disposes it on disconnect',()=>{
- const source=(await import('node:fs')).readFileSync('src/modules/main/player.ts','utf8')
+ const source=fs.readFileSync('src/modules/main/player.ts','utf8')
  assert.match(source,/regenerateIdleMana\(player,clock,Number\(player\.param\[MAXSP\]\)\)/)
  assert.match(source,/onMove\(player: RpgPlayer\)/)
  assert.match(source,/onDisconnected\(player: RpgPlayer\)/)
