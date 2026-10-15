@@ -1,4 +1,4 @@
-/** Orthogonal A* on an actor-footprint grid, without movement or teleport shortcuts. */
+/** Eight-way A* on a footprint grid, disallowing diagonal corner cuts. */
 export function unpackNavigation(packed) {
   if (!packed || packed.cell !== 16 || !Number.isInteger(packed.cols) ||
       !Number.isInteger(packed.rows) || packed.cols<=0 || packed.rows<=0)
@@ -42,7 +42,7 @@ export function findRoute(nav,from,target) {
   const dist=new Float64Array(size).fill(Infinity);
   const previous=new Int32Array(size).fill(-1);
   const visited=new Uint8Array(size);
-  const h=(x,y)=>Math.abs(x-gx)+Math.abs(y-gy);
+  const h=(x,y)=>{const dx=Math.abs(x-gx),dy=Math.abs(y-gy);return dx+dy+(Math.SQRT2-2)*Math.min(dx,dy)};
   const heap=[];
   const push=value=>{
     let i=heap.length;heap.push(value);
@@ -76,16 +76,18 @@ export function findRoute(nav,from,target) {
     const goalDist=(x-gx)**2+(y-gy)**2;
     if(goalDist<nearestDist){nearestDist=goalDist;nearest=at;}
     if(at===goal){nearest=at;break;}
-    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]]){
       const nx=x+dx,ny=y+dy;
       if(isBlocked(nav,nx,ny))continue;
+      // Do not slide diagonally past corners of two solid tiles.
+      if(dx!==0&&dy!==0&&(isBlocked(nav,x+dx,y)||isBlocked(nav,x,y+dy)))continue;
       const next=ny*cols+nx;
       // Equal-distance routes can zigzag tile-by-tile. Prefer long straight
       // stretches so the character does not snap direction every 16 pixels.
       const earlier=previous[at]
       const turn=earlier<0?0:
         ((x-(earlier%cols))!==dx||(y-Math.floor(earlier/cols))!==dy?0.12:0)
-      const cost=g+1+turn
+      const cost=g+(dx!==0&&dy!==0?Math.SQRT2:1)+turn
       if(visited[next]||cost>=dist[next])continue;
       dist[next]=cost;previous[next]=at;
       push({at:next,g:cost,f:cost+h(nx,ny)});
