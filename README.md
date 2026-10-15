@@ -193,3 +193,28 @@ Komplexe Spezialeditoren (Autotiling, mehrstufige Objektgruppen, neue eigene
 Sprites) werden weiterhin in Tiled gepflegt. Der Browser-Editor ist ein
 erster, bewusst begrenzter Kartenbau-Modus. Browser-Abnahmetest:
 `npm run test:web-editor`.
+
+
+#### Objektgalerie und Kartengröße
+
+**Esc → Karteneditor → 🌲 Platzieren:** rechts sind alle verfügbaren Gebäude,
+Bäume, Büsche, Steine, Figuren und Portale als **anklickbare Pixel-Art-Miniaturen**.
+Mit der Suchleiste passende Objekte filtern. Ein Klick auf ein Objekt aktiviert
+„Platzieren“ – weitere Klicks auf die Karte fügen dasselbe Objekt wiederholt
+hinzu; **↖ Objekte** beendet den Platziermodus. Die Eigenschaften eines Objekts
+kannst du weiterhin in „Objekte“ bearbeiten.
+
+**Nur die Ansicht vergrößern:** oben **+ / −** oder Mausrad verwenden.
+**⤢ Einpassen** zeigt wieder die ganze Karte.
+
+**Die Spielwelt erweitern:** oben **▣ Karte erweitern** anklicken, neue Breite
+und Höhe in 64px-Kacheln eingeben und **Fläche erweitern** wählen.
+Die vorhandene Karte bleibt links oben an ihrer bisherigen Position, einschließlich
+aller Landschaftskacheln, Gebäude, NPCs und Gegner. Rechts/unten kommt
+anfangs **Wasser mit Kollisionssperre** dazu. Das kannst du anschließend mit
+Geländekacheln übermalen und die Wasser-Kollision auf den neuen Landfeldern
+entfernen. Zum Übernehmen **Speichern** (Vorschau auf Port 5173) oder
+**TMX exportieren** (Docker). Rückgängig stellt die vorige Kartengröße
+und sämtliche Tilesets wieder her. Aktuelle technische Grenzen:
+128 Kacheln pro Seite und höchstens 6.250 Kacheln insgesamt, um das
+RPG-JS-Navigationslimit (100.000 Zellen) nicht zu überschreiten.
