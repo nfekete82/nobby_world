@@ -4,9 +4,34 @@ import { findRoute, unpackNavigation } from './pathfinding.mjs'
 
 type Point={x:number,y:number}
 type Nav=ReturnType<typeof unpackNavigation>
-type State={mapId:string,path:Point[],lastInput:number,lastProgress:number,previous:Point|null,raf:number|null}
+type State={mapId:string,path:Point[],lastInput:number,lastProgress:number,previous:Point|null,raf:number|null,held:string|null,controls:any}
 const instances=new WeakMap<RpgClientEngine,State>()
 const cache=new Map<string,Nav>()
+let currentEngine:RpgClientEngine|null=null
+let installed=false
+const mapIdOf=(engine:RpgClientEngine)=>String(engine.sceneMap.data()?.id??'').replace(/^map-/,'')
+function nativeControls(engine:RpgClientEngine):any{
+  const controls=(engine as any).activeKeyboardControls?.()
+  return typeof controls?.applyControl==='function'?controls:null
+}
+function release(state:State){
+  const key=state.held,controls=state.controls
+  state.held=null;state.controls=null
+  if(key&&controls)void controls.applyControl(key,false).catch(console.warn)
+}
+function cancel(state:State){state.path=[];release(state)}
+function hold(engine:RpgClientEngine,state:State,key:string):boolean{
+  const controls=nativeControls(engine)
+  if(!controls)return false
+  if(key===state.held&&controls===state.controls)return true
+  release(state)
+  state.held=key;state.controls=controls
+  // This is the *same* CanvasEngine control path as WASD: it drives
+  // predicted movement AND sets the full walk animation on the character.
+  void controls.applyControl(key,true).catch(error=>{cancel(state);console.warn(error)})
+  window.dispatchEvent(new CustomEvent('nobby:move-control',{detail:{direction:key,source:'native-keyboard'}}))
+  return true
+}
 
 function navFor(id:string):Nav|undefined {
   const world=worlds.find(w=>w.id===id)
@@ -23,54 +48,45 @@ function viewportOf(node:any):any{
   }
 }
 /** Register once per engine; do not depend on the renderer having mounted yet. */
-function init(engine:RpgClientEngine,state:State):void{
-  const diagnose=(reason:string,details:Record<string,unknown>={})=>{
-    // Consumer-friendly browser acceptance diagnostics; no game state mutated.
+/** One pointer handler bound to the ready map engine, never transient engines. */
+function init():void{
+  if(installed)return
+  installed=true
+  const diagnose=(reason:string,details:Record<string,unknown>={})=>
     window.dispatchEvent(new CustomEvent('nobby:move-diagnostic',{detail:{reason,...details}}))
-  }
   window.addEventListener('pointerdown',(event:PointerEvent)=>{
     if(event.button!==0||!event.isPrimary)return
-    const path=event.composedPath()
-    // The renderer can remount its canvas when changing maps. Match the canvas
-    // actually clicked instead of comparing against a potentially stale one.
-    const canvas=path.find((node):node is HTMLCanvasElement=>
+    const engine=currentEngine
+    if(!engine)return
+    const canvas=event.composedPath().find((node):node is HTMLCanvasElement=>
       node instanceof HTMLCanvasElement)
     if(!canvas)return
-    const rendererCanvas=((engine as any).renderer?.canvas??(engine as any).canvasApp?.canvas) as HTMLCanvasElement|undefined
-    const gameRoot=document.querySelector('#rpg')
-    if(canvas!==rendererCanvas&&!gameRoot?.contains(canvas))return
-    const hud=document.querySelector('#nobby-hud') as HTMLElement|null
-    if(hud?.hidden){diagnose('hud-hidden');return}
-    const mapId=String(engine.sceneMap.data()?.id??'').replace(/^map-/,'')
-    const nav=navFor(mapId)
-    const player=engine.getCurrentPlayer() as any
-    if(!nav||!player){diagnose('map-or-player-missing',{mapId,hasNav:!!nav,hasPlayer:!!player});return}
-    const rect=canvas.getBoundingClientRect()
-    const viewport=viewportOf((engine as any).canvasApp?.stage)
-    if(!viewport||!rect.width||!rect.height){
-      diagnose('viewport-missing',{mapId,hasViewport:!!viewport});return
-    }
-    // Use the same CSS-pixel transformation as RPG-JS pointer tracking.
+    const rendererCanvas=((engine as any).renderer?.canvas??(engine as any).canvasApp?.canvas)
+    const root=document.querySelector('#rpg')
+    if(canvas!==rendererCanvas&&!root?.contains(canvas))return
+    if((document.querySelector('#nobby-hud') as HTMLElement|null)?.hidden)return
+    const mapId=mapIdOf(engine),nav=navFor(mapId),player=engine.getCurrentPlayer() as any
+    if(!nav||!player){diagnose('map-or-player-missing',{mapId});return}
+    const rect=canvas.getBoundingClientRect(),viewport=viewportOf((engine as any).canvasApp?.stage)
+    if(!viewport||!rect.width||!rect.height){diagnose('viewport-missing',{mapId});return}
     const p=viewport.toWorld(event.clientX-rect.left,event.clientY-rect.top)
-    if(!Number.isFinite(p?.x)||!Number.isFinite(p?.y)){
-      diagnose('invalid-pointer',{mapId});return
-    }
-    const target={x:p.x-16,y:p.y-12}
-    const route=findRoute(nav,position(player),target)
-    state.path=route
+    if(!Number.isFinite(p?.x)||!Number.isFinite(p?.y))return
+    const target={x:p.x-16,y:p.y-12},state=instances.get(engine)!
+    cancel(state)
     state.mapId=mapId
-    state.lastInput=0
+    state.path=findRoute(nav,position(player),target)
     state.lastProgress=performance.now()
     state.previous=position(player)
-    if(route.length)startRoute(engine,state)
-    diagnose(route.length?'route-accepted':'route-empty',{mapId,waypoints:route.length})
-    window.dispatchEvent(new CustomEvent('nobby:move-target',{
-      detail:{mapId,target,waypoints:route.length}
-    }))
+    window.dispatchEvent(new CustomEvent('nobby:move-target',{detail:{
+      mapId,target,waypoints:state.path.length,inputMode:'native-keyboard'
+    }}))
+    diagnose(state.path.length?'route-accepted':'route-empty',{mapId,waypoints:state.path.length})
+    if(state.path.length)startRoute(engine,state)
   },{capture:true})
   window.addEventListener('keydown',event=>{
+    if(!currentEngine)return
     if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','w','a','s','d','W','A','S','D','Escape',' ','h','H'].includes(event.key))
-      state.path=[]
+      cancel(instances.get(currentEngine)!)
   },{capture:true})
 }
 /**
@@ -90,41 +106,43 @@ function startRoute(engine:RpgClientEngine,state:State){
 
 function driveRoute(engine:RpgClientEngine,state:State):boolean{
   if(!state.path.length)return false
-  const mapId=String(engine.sceneMap.data()?.id??'').replace(/^map-/,'')
-  if(mapId!==state.mapId){state.path=[];return false}
+  const mapId=mapIdOf(engine)
+  if(mapId!==state.mapId){cancel(state);return false}
   const player=engine.getCurrentPlayer() as any
   const hud=document.querySelector('#nobby-hud') as HTMLElement|null
   const canMove=typeof player?.canMove==='function'?player.canMove():player?.canMove
   if(!player||hud?.hidden||canMove===false||player.knockbackActive?.()){
-    state.path=[];return false
+    cancel(state);return false
   }
   const at=position(player),now=performance.now()
   if(!state.previous||Math.hypot(at.x-state.previous.x,at.y-state.previous.y)>4){
     state.previous=at;state.lastProgress=now
   }else if(now-state.lastProgress>1100){
-    state.path=[];return false // Dynamic obstacle or blocked movement
+    cancel(state);return false // Dynamic obstacle or blocked movement
   }
   while(state.path.length&&Math.abs(at.x-state.path[0].x)<=9&&Math.abs(at.y-state.path[0].y)<=9)
     state.path.shift()
-  if(!state.path.length)return false
-  // At 60Hz this samples movement each animation frame, just like WASD.
-  if(now-state.lastInput>=14){
-    const next=state.path[0],dx=next.x-at.x,dy=next.y-at.y
-    const direction=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up')
-    state.lastInput=now
-    void engine.processInput({input:{type:'move',direction} as any})
-  }
+  if(!state.path.length){release(state);return false}
+  const next=state.path[0],dx=next.x-at.x,dy=next.y-at.y
+  const direction=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up')
+  if(!hold(engine,state,direction)){cancel(state);return false}
   return true
 }
 
-/** Hook solely maintains scene lifecycle; a click starts the movement clock. */
+/** Register one listener and keep only an active, fully initialized client. */
 export function updateClickMove(engine:RpgClientEngine){
+  init()
+  const mapId=mapIdOf(engine)
+  if(!mapId||!navFor(mapId)||!engine.getCurrentPlayer()||!nativeControls(engine))return
+  if(currentEngine&&currentEngine!==engine){
+    const previous=instances.get(currentEngine)
+    if(previous)cancel(previous)
+  }
+  currentEngine=engine
   let state=instances.get(engine)
   if(!state){
-    state={mapId:'',path:[],lastInput:0,lastProgress:0,previous:null,raf:null}
-    init(engine,state)
+    state={mapId,path:[],lastInput:0,lastProgress:0,previous:null,raf:null,held:null,controls:null}
     instances.set(engine,state)
   }
-  const mapId=String(engine.sceneMap.data()?.id??'').replace(/^map-/,'')
-  if(mapId!==state.mapId){state.path=[];state.mapId=mapId}
+  if(mapId!==state.mapId){cancel(state);state.mapId=mapId}
 }
