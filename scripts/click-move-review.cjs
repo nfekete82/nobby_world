@@ -22,7 +22,9 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
    document.querySelector('#nobby-hud')?.hidden===false,{},{timeout:20000});
   await page.evaluate(()=>{
     window.__nobbyClickEvents=[];
+    window.__nobbyClickDiagnostics=[];
     window.addEventListener('nobby:move-target',event=>window.__nobbyClickEvents.push(event.detail));
+    window.addEventListener('nobby:move-diagnostic',event=>window.__nobbyClickDiagnostics.push(event.detail));
   });
   const before=await page.evaluate(()=>{
    const e=window.__clickReview.engine,p=e.getCurrentPlayer();
@@ -43,7 +45,17 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
   assert.equal(hit.insideCanvas,true,'test point is not on game canvas: '+JSON.stringify(hit));
   await page.mouse.click(before.click.x,before.click.y);
   await page.waitForFunction(()=>window.__nobbyClickEvents.length>0,{},{timeout:4000})
-    .catch(()=>{throw new Error('Left click never reached click-to-move handler')});
+    .catch(async()=>{
+      const detail=await page.evaluate(()=>{
+        const e=window.__clickReview.engine;
+        return {diagnostics:window.__nobbyClickDiagnostics,
+          mapId:e.sceneMap.data()?.id,hasPlayer:!!e.getCurrentPlayer(),
+          canvasTag:e.renderer?.canvas?.tagName,
+          viewportChildren:e.canvasApp?.stage?.children?.length,
+          hudHidden:document.querySelector('#nobby-hud')?.hidden};
+      });
+      throw new Error('Left click was not accepted: '+JSON.stringify(detail));
+    });
   const accepted=await page.evaluate(()=>window.__nobbyClickEvents.at(-1));
   assert.ok(accepted.waypoints>0,'A* did not accept a route: '+JSON.stringify(accepted));
   await page.waitForFunction(x=>window.__clickReview.engine.getCurrentPlayer().x()>=x+24,

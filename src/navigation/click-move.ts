@@ -22,50 +22,62 @@ function viewportOf(node:any):any{
     if(result)return result
   }
 }
-function init(engine:RpgClientEngine,state:State):boolean{
-  // Listen above the canvas: RPG-JS can replace/reparent the canvas during
-  // scene transitions. PointerEvent.composedPath also supports shadow roots.
-  const canvas=((engine as any).renderer?.canvas??(engine as any).canvasApp?.canvas) as HTMLCanvasElement|undefined
-  if(!canvas?.addEventListener)return false
-  canvas.style.cursor='crosshair'
+/** Register once per engine; do not depend on the renderer having mounted yet. */
+function init(engine:RpgClientEngine,state:State):void{
+  const diagnose=(reason:string,details:Record<string,unknown>={})=>{
+    // Consumer-friendly browser acceptance diagnostics; no game state mutated.
+    window.dispatchEvent(new CustomEvent('nobby:move-diagnostic',{detail:{reason,...details}}))
+  }
   window.addEventListener('pointerdown',(event:PointerEvent)=>{
     if(event.button!==0||!event.isPrimary)return
-    const currentCanvas=((engine as any).renderer?.canvas??(engine as any).canvasApp?.canvas) as HTMLCanvasElement|undefined
-    if(!currentCanvas||!event.composedPath().includes(currentCanvas))return
-    const canvas=currentCanvas
-    if((document.querySelector('#nobby-hud') as HTMLElement|null)?.hidden)return
+    const path=event.composedPath()
+    // The renderer can remount its canvas when changing maps. Match the canvas
+    // actually clicked instead of comparing against a potentially stale one.
+    const canvas=path.find((node):node is HTMLCanvasElement=>
+      node instanceof HTMLCanvasElement)
+    if(!canvas)return
+    const rendererCanvas=((engine as any).renderer?.canvas??(engine as any).canvasApp?.canvas) as HTMLCanvasElement|undefined
+    const gameRoot=document.querySelector('#rpg')
+    if(canvas!==rendererCanvas&&!gameRoot?.contains(canvas))return
+    const hud=document.querySelector('#nobby-hud') as HTMLElement|null
+    if(hud?.hidden){diagnose('hud-hidden');return}
     const mapId=String(engine.sceneMap.data()?.id??'').replace(/^map-/,'')
-    const nav=navFor(mapId),player=engine.getCurrentPlayer() as any
-    if(!nav||!player)return
+    const nav=navFor(mapId)
+    const player=engine.getCurrentPlayer() as any
+    if(!nav||!player){diagnose('map-or-player-missing',{mapId,hasNav:!!nav,hasPlayer:!!player});return}
     const rect=canvas.getBoundingClientRect()
     const viewport=viewportOf((engine as any).canvasApp?.stage)
-    if(!viewport||!rect.width||!rect.height)return
-    // Match RPG-JS's own pointer tracking, including its viewport camera.
+    if(!viewport||!rect.width||!rect.height){
+      diagnose('viewport-missing',{mapId,hasViewport:!!viewport});return
+    }
+    // Use the same CSS-pixel transformation as RPG-JS pointer tracking.
     const p=viewport.toWorld(event.clientX-rect.left,event.clientY-rect.top)
-    if(!Number.isFinite(p?.x)||!Number.isFinite(p?.y))return
-    const goal={x:p.x-16,y:p.y-12} // actor 32x24px hitbox
-    state.path=findRoute(nav,position(player),goal)
+    if(!Number.isFinite(p?.x)||!Number.isFinite(p?.y)){
+      diagnose('invalid-pointer',{mapId});return
+    }
+    const target={x:p.x-16,y:p.y-12}
+    const route=findRoute(nav,position(player),target)
+    state.path=route
     state.mapId=mapId
-    state.lastInput=0;state.lastProgress=performance.now()
+    state.lastInput=0
+    state.lastProgress=performance.now()
     state.previous=position(player)
-    // A harmless game-level event for browser acceptance tests and future UI.
+    diagnose(route.length?'route-accepted':'route-empty',{mapId,waypoints:route.length})
     window.dispatchEvent(new CustomEvent('nobby:move-target',{
-      detail:{mapId,target:goal,waypoints:state.path.length}
+      detail:{mapId,target,waypoints:route.length}
     }))
   },{capture:true})
-  window.addEventListener('keydown',(event)=>{
-    if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','w','a','s','d','W','A','S','D','Escape',' ','h','H'].includes(event.key)){
+  window.addEventListener('keydown',event=>{
+    if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','w','a','s','d','W','A','S','D','Escape',' ','h','H'].includes(event.key))
       state.path=[]
-    }
   },{capture:true})
-  return true
 }
 /** Use the same predicted, server-authoritative movement packets as the keyboard. */
 export function updateClickMove(engine:RpgClientEngine){
   let state=instances.get(engine)
   if(!state){
     state={mapId:'',path:[],lastInput:0,lastProgress:0,previous:null}
-    if(!init(engine,state))return
+    init(engine,state)
     instances.set(engine,state)
   }
   const mapId=String(engine.sceneMap.data()?.id??'').replace(/^map-/,'')
@@ -85,7 +97,9 @@ export function updateClickMove(engine:RpgClientEngine){
   }
   while(state.path.length&&Math.abs(at.x-state.path[0].x)<=9&&Math.abs(at.y-state.path[0].y)<=9)
     state.path.shift()
-  if(!state.path.length||now-state.lastInput<65)return
+  // The keyboard produces movement input every simulation tick. Match its cadence
+  // to keep walk animation continuous; 65ms pulses caused stand/walk flicker.
+  if(!state.path.length||now-state.lastInput<16)return
   const next=state.path[0],dx=next.x-at.x,dy=next.y-at.y
   const direction=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up')
   state.lastInput=now
