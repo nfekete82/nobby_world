@@ -15,6 +15,10 @@ const layers={
 export const layerLabel=name=>layers[name]?.[0]??name
 export const layerHelp=name=>layers[name]?.[1]??'Sichtbare Kachelebene aus Tiled'
 export function objectCategory(id){
+ if(id.startsWith('desert-cactus'))return 'Kakteen'
+ if(['desert-house','desert-tent','desert-temple'].includes(id))return 'Gebäude'
+ if(id==='desert-rock')return 'Felsen'
+ if(id.startsWith('snow-pine'))return 'Wald'
  if(id.startsWith('npc:'))return 'NPCs'
  if(id.startsWith('monster:'))return 'Gegner'
  if(id.startsWith('portal:'))return 'Portale'
@@ -27,6 +31,7 @@ export function objectCategory(id){
 }
 export function tilesetCategory(source){
  const value=String(source).toLowerCase()
+ if(value.includes('desert-path')||value.includes('snow-path'))return 'Übergänge'
  if(value.includes('desert'))return 'Wüste'
  if(value.includes('rocky'))return 'Felsboden'
  if(value.includes('snow'))return 'Schnee'
@@ -44,7 +49,34 @@ export const layerForTileCategory=category=>({
 // A palette tile always picks the matching edit layer, including in 'Alle'.
 export function layerForTileset(source){
  const file=String(source).split('/').pop()?.toLowerCase()
+ if(file==='desert-path.tsx'||file==='snow-path.tsx')return 'Wege'
  if(file==='foam.tsx')return 'Uferwellen'
  if(file==='water.tsx')return 'Wasser und Klippen · Kollision'
  return layerForTileCategory(tilesetCategory(source))
 }
+
+export const BIOMES=['Wald','Wüste','Schnee']
+export const BIOME_TILE_CATEGORIES={
+ Wald:['Alle','Gelände','Felsboden','Wege','Wasser','Brücken','Details'],
+ Wüste:['Alle','Wüste','Wege','Übergänge','Wasser','Brücken','Details'],
+ Schnee:['Alle','Schnee','Wege','Übergänge','Wasser','Brücken','Details']
+}
+export const BIOME_OBJECT_CATEGORIES={
+ Wald:OBJECT_CATEGORIES,
+ Wüste:['Alle','Kakteen','Gebäude','Felsen','Deko','NPCs','Gegner','Portale'],
+ Schnee:['Alle','Wald','Gebäude','Felsen','Deko','NPCs','Gegner','Portale']
+}
+export function objectBiome(id){
+ if(id.startsWith('desert-'))return 'Wüste'
+ if(id.startsWith('snow-'))return 'Schnee'
+ if(id.startsWith('npc:')||id.startsWith('monster:')||id.startsWith('portal:'))return 'Alle'
+ return 'Wald'
+}
+export function tilesetBiome(source){
+ const file=String(source).toLowerCase()
+ if(file.includes('desert'))return 'Wüste'
+ if(file.includes('snow'))return 'Schnee'
+ if(file.includes('water')||file.includes('foam')||file.includes('bridge')||file.includes('path'))return 'Alle'
+ return 'Wald'
+}
+export function visibleInBiome(assigned,selected){return assigned==='Alle'||assigned===selected}
