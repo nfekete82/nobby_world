@@ -140,7 +140,7 @@ const specs={
 export const BIOME_PROP_SPECS=Object.fromEntries(Object.entries(specs).map(([k,[w,h]])=>[k,[w,h]]))
 export function ensureBiomeProps(){
  fs.mkdirSync(folder,{recursive:true})
- const modified=fs.statSync(fileURLToPath(import.meta.url)).mtimeMs
+ const modified=Math.max(fs.statSync(fileURLToPath(import.meta.url)).mtimeMs,fs.statSync(path.join(path.dirname(fileURLToPath(import.meta.url)),'biome-props-style.mjs')).mtimeMs)
  for(const [name,[width,height,draw]] of Object.entries(specs)){
   const output=path.join(folder,name+'.png')
   if(fs.existsSync(output)&&fs.statSync(output).mtimeMs>=modified)continue
