@@ -125,6 +125,20 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
   assert.ok(staged,'no enemy test position projected onto an unobscured canvas; possible camera/viewport bug: '+
     JSON.stringify({origin,sites:candidateSites.length}));
   const click={x:staged.click.x,y:staged.click.y};
+  // Client-side mana is also validated before sending the request; allow
+  // Signe synchronization to deliver the server's restored mana.
+  await page.waitForFunction(()=>{
+   const p=window.__spellReview.engine.getCurrentPlayer();
+   return p?.spSignal?.()===100;
+  },{},{timeout:4000}).catch(async()=>{
+   const resources=await page.evaluate(()=>{
+    const c=window.__spellReview.engine.getCurrentPlayer();
+    const s=Object.values(window.__spellReview.server.subRoom.players())[0];
+    return {clientMana:c?.spSignal?.(),serverMana:s?.sp,
+      x:c?.x?.(),y:c?.y?.()};
+   });
+   throw new Error('Authoritative mana did not sync before click: '+JSON.stringify(resources));
+  });
   // The authoritative map is the one the attacking player belongs to,
   // not necessarily server.subRoom (which may be a transfer wrapper).
   const before=await page.evaluate(targetId=>{
