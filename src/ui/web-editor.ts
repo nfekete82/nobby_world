@@ -171,7 +171,7 @@ class MapEditor {
  }
  private status(text:string){this.message.textContent=text}
  private setTool(tool:string){
-  if((tool==='tile')!==(this.tool==='tile'))this.activeCategory='Alle'
+  if((tool==='tile'||tool==='erase')!==(this.tool==='tile'||this.tool==='erase'))this.activeCategory='Alle'
   this.tool=tool
   this.root.querySelectorAll<HTMLButtonElement>('[data-tool]').forEach(b=>b.classList.toggle('we-active',b.dataset.tool===tool))
   this.palette.hidden=tool!=='tile';this.paletteTabs.hidden=tool!=='tile'
@@ -183,7 +183,7 @@ class MapEditor {
  }
  private renderCategories(){
   this.categoryTabs.replaceChildren()
-  const tileMode=this.tool==='tile'
+  const tileMode=this.tool==='tile'||this.tool==='erase'
   this.categoryTabs.append(elt('strong','we-category-title',tileMode?'Kacheln nach Bereich':'Objekte nach Kategorie'))
   for(const name of tileMode?TILE_CATEGORIES:OBJECT_CATEGORIES){
    const choice=button(name,()=>{
@@ -205,7 +205,7 @@ class MapEditor {
   this.layerHelpText.textContent=layer?layerHelp(layer.name):'Wähle eine Ebene, um ihre Funktion zu sehen.'
  }
  private filterTilesets(){
-  if(this.tool!=='tile'||!this.sheet.length)return
+  if((this.tool!=='tile'&&this.tool!=='erase')||!this.sheet.length)return
   let first=-1
   this.paletteTabs.querySelectorAll<HTMLButtonElement>('button').forEach((b,index)=>{
    const visible=this.activeCategory==='Alle'||tilesetCategory(this.sheet[index].source)===this.activeCategory
