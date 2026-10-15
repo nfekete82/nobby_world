@@ -15,7 +15,7 @@ const layers={
 export const layerLabel=name=>layers[name]?.[0]??name
 export const layerHelp=name=>layers[name]?.[1]??'Sichtbare Kachelebene aus Tiled'
 export function objectCategory(id){
- if(id.startsWith('desert-cactus'))return 'Kakteen'
+ if(id.startsWith('desert-cactus')||id==='desert-prickly-pear')return 'Kakteen'
  if(['desert-house','desert-tent','desert-temple'].includes(id))return 'Gebäude'
  if(id==='desert-rock')return 'Felsen'
  if(id.startsWith('snow-pine'))return 'Wald'
