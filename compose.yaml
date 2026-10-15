@@ -33,7 +33,7 @@ services:
         lock_hash="$$(sha256sum package-lock.json | cut -d ' ' -f 1)"
         if [ "$$(cat node_modules/.nobby-lock 2>/dev/null || true)" != "$$lock_hash" ]; then
           npm ci
-          echo "$lock_hash" > node_modules/.nobby-lock
+          echo "$$lock_hash" > node_modules/.nobby-lock
         fi
         exec npm run dev -- --host 0.0.0.0 --port 5173 --strictPort
     healthcheck:
