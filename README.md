@@ -91,6 +91,10 @@ npm run test:editor
 npm run test:art
 ```
 
+`npm run test:art` startet bei Bedarf selbst einen lokalen Vite-Server auf
+`127.0.0.1:5173`, beendet ihn nach dem Test und verwendet einen bereits laufenden
+Nobby-World-Server unverändert weiter. Es ist kein zweites Terminal nötig.
+
 Tests prüfen Framegrenzen/Füße, referenzierte PNGs, echte Gelände-/Objektgrundflächen,
 Erreichbarkeit aller Begegnungen und Portale, Produktions-Builds unter Root/Subpfad,
 Nahkampf/Belohnungen, Dialoge, Speichern, Kartenwechsel, Live-Editing und echte

@@ -1,5 +1,8 @@
 const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs'),{PNG}=require('pngjs');
+const ensureDevServer = require('./ensure-dev-server.cjs');
 (async()=>{
+ const stopDevServer=await ensureDevServer();
+ try {
  const browser=await chromium.launch({channel:'chrome',headless:true,args:['--enable-unsafe-swiftshader']});
  try{
  const page=await browser.newPage({viewport:{width:1280,height:800}}),errors=[],missing=[],checks=[];
@@ -17,7 +20,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
   },{x,y});await page.waitForTimeout(100);console.log('teleport',x,y,await page.evaluate(()=>{const e=window.__editor.engine,p=e.getCurrentPlayer(),s=Object.values(window.__editor.server.subRoom.players())[0];return {client:[p.x(),p.y()],server:[s.x(),s.y()],move:p.canMove,dialog:e.guiService.gui()['rpg-dialog'].display()}}));await page.waitForFunction(({x,y})=>{const p=window.__editor.engine.getCurrentPlayer();return Math.abs(p.x()-x)<2&&Math.abs(p.y()-y)<2},{x,y},{timeout:2000});await page.waitForTimeout(500)}
  const position=()=>page.evaluate(()=>{const p=Object.values(window.__editor.server.subRoom.players())[0];return{x:p.x(),y:p.y()}})
  const hold=async(key,ms)=>{await page.keyboard.down(key);await page.waitForTimeout(ms);await page.keyboard.up(key);await page.waitForTimeout(100)}
- await page.goto('http://localhost:5173');await ready();assert.equal(await page.getByRole('button',{name:'✦ Heilen H'}).isDisabled(),true,'full-health heal should be disabled');await shot('village');
+ await page.goto('http://127.0.0.1:5173/');await ready();assert.equal(await page.getByRole('button',{name:'✦ Heilen H'}).isDisabled(),true,'full-health heal should be disabled');await shot('village');
  await page.keyboard.press('Escape',{delay:150});await page.getByText('Nobby',{exact:true}).first().waitFor();await shot('menu');
  for(const tab of ['Items','Skills','Equip','Options']){await page.getByText(tab,{exact:true}).first().click();await page.waitForTimeout(300);await shot(tab.toLowerCase())}
  await page.getByText('Save',{exact:true}).click();await page.locator('[data-slot-index="0"]').waitFor();await shot('save');
@@ -42,4 +45,5 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
  assert.deepEqual(errors,[]);assert.deepEqual(missing,[]);
  fs.writeFileSync(dir+'/report.json',JSON.stringify({browser:'Google Chrome / Playwright',checks,rendering,healed,waterBefore,waterAfter,errors,missing},null,2)+'\n');console.log('Tiny Swords visual / collision / UI review passed.');
  }finally{await browser.close()}
+ } finally {await stopDevServer()}
 })().catch(e=>{console.error(e);process.exit(1)});
