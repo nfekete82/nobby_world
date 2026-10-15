@@ -1,0 +1,50 @@
+{
+  "browser": "Chrome / Playwright",
+  "state": {
+    "room": "map-simplemap",
+    "events": [
+      {
+        "id": "object-2",
+        "name": "Mira",
+        "x": 300,
+        "y": 400,
+        "hp": 741,
+        "ai": false
+      },
+      {
+        "id": "object-3",
+        "name": "Roter Ritter",
+        "x": 500,
+        "y": 360,
+        "hp": 65,
+        "ai": true
+      },
+      {
+        "id": "object-4",
+        "name": "Waldwächter",
+        "x": 600,
+        "y": 520,
+        "hp": 90,
+        "ai": true
+      },
+      {
+        "id": "object-5",
+        "name": "Zum wald",
+        "x": 420,
+        "y": 470,
+        "hp": 741,
+        "ai": false
+      }
+    ]
+  },
+  "checks": [
+    "Tiled coordinates and enemy levels imported",
+    "Space damages enemies",
+    "AI counterattacks",
+    "defeat grants gold",
+    "portal changes map and returns",
+    "saved map property reloads a level 3 enemy, then restores original file"
+  ],
+  "errors": [],
+  "missing": []
+}

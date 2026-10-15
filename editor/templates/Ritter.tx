@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<template>
+  <object name="Ritter" class="monster" width="28" height="28">
+    <properties>
+      <property name="enemy" type="string" value="ritter" />
+      <property name="level" type="int" value="1" />
+      <property name="hp" type="int" value="0" />
+      <property name="vision" type="int" value="130" />
+    </properties>
+  </object>
+</template>

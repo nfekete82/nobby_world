@@ -1,19 +1,14 @@
 import { defineModule } from "@rpgjs/common";
 import { RpgServer } from "@rpgjs/server";
 import { player } from './player'
-import { Npc } from "./event";
+import { worldEvent } from "./world-events";
+import worlds from '../../generated/worlds.json';
 
 export default defineModule<RpgServer>({
   player,
-  maps: [
-    {
-      id: 'simplemap',
-      events: [{
-        id: 'npc',
-        x: 300,
-        y: 400,
-        event: Npc()
-      }]
-    }
-  ]
+  maps: worlds.map(world=>({
+    id: world.id,
+    positions: { start: world.start },
+    events: world.objects.map(object=>({id:object.id,x:object.x,y:object.y,event:worldEvent(object)}))
+  }))
 });

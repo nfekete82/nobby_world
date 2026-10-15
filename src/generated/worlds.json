@@ -1,0 +1,102 @@
+[
+  {
+    "id": "simplemap",
+    "title": "Die erste Insel",
+    "width": 800,
+    "height": 640,
+    "start": {
+      "x": 300,
+      "y": 300
+    },
+    "objects": [
+      {
+        "id": "object-2",
+        "kind": "npc",
+        "name": "Mira",
+        "x": 300,
+        "y": 400,
+        "text": "Willkommen, Nobby! Hier beginnt unsere neue Welt."
+      },
+      {
+        "id": "object-3",
+        "kind": "monster",
+        "name": "Roter Ritter",
+        "x": 500,
+        "y": 360,
+        "enemy": "ritter",
+        "level": 1,
+        "hp": 0,
+        "vision": 110
+      },
+      {
+        "id": "object-4",
+        "kind": "monster",
+        "name": "Waldwächter",
+        "x": 600,
+        "y": 520,
+        "enemy": "berserker",
+        "level": 2,
+        "hp": 0,
+        "vision": 110
+      },
+      {
+        "id": "object-5",
+        "kind": "portal",
+        "name": "Zum wald",
+        "x": 420,
+        "y": 470,
+        "target": "wald"
+      }
+    ]
+  },
+  {
+    "id": "wald",
+    "title": "Übungswald",
+    "width": 800,
+    "height": 640,
+    "start": {
+      "x": 300,
+      "y": 300
+    },
+    "objects": [
+      {
+        "id": "object-2",
+        "kind": "npc",
+        "name": "Mira",
+        "x": 300,
+        "y": 400,
+        "text": "Willkommen, Nobby! Hier beginnt unsere neue Welt."
+      },
+      {
+        "id": "object-3",
+        "kind": "monster",
+        "name": "Roter Ritter",
+        "x": 500,
+        "y": 360,
+        "enemy": "ritter",
+        "level": 1,
+        "hp": 0,
+        "vision": 110
+      },
+      {
+        "id": "object-4",
+        "kind": "monster",
+        "name": "Waldwächter",
+        "x": 600,
+        "y": 520,
+        "enemy": "berserker",
+        "level": 2,
+        "hp": 0,
+        "vision": 110
+      },
+      {
+        "id": "object-5",
+        "kind": "portal",
+        "name": "Zum simplemap",
+        "x": 420,
+        "y": 470,
+        "target": "simplemap"
+      }
+    ]
+  }
+]

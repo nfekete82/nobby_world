@@ -1,0 +1,97 @@
+{
+  "folders": [
+    "src/tiled",
+    "editor/templates"
+  ],
+  "propertyTypes": [
+    {
+      "id": 1,
+      "name": "start",
+      "type": "class",
+      "color": "#ff55cc88",
+      "drawFill": true,
+      "useAs": [
+        "object"
+      ],
+      "members": []
+    },
+    {
+      "id": 2,
+      "name": "monster",
+      "type": "class",
+      "color": "#ffe26058",
+      "drawFill": true,
+      "useAs": [
+        "object"
+      ],
+      "members": [
+        {
+          "name": "enemy",
+          "type": "string",
+          "value": "ritter",
+          "propertyType": "Gegnertyp"
+        },
+        {
+          "name": "level",
+          "type": "int",
+          "value": 1
+        },
+        {
+          "name": "hp",
+          "type": "int",
+          "value": 0
+        },
+        {
+          "name": "vision",
+          "type": "int",
+          "value": 130
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "npc",
+      "type": "class",
+      "color": "#ff60a4d1",
+      "drawFill": true,
+      "useAs": [
+        "object"
+      ],
+      "members": [
+        {
+          "name": "text",
+          "type": "string",
+          "value": "Hallo, Nobby!"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "portal",
+      "type": "class",
+      "color": "#ffc3a3ec",
+      "drawFill": true,
+      "useAs": [
+        "object"
+      ],
+      "members": [
+        {
+          "name": "target",
+          "type": "string",
+          "value": "wald"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Gegnertyp",
+      "type": "enum",
+      "storageType": "string",
+      "values": [
+        "ritter",
+        "berserker"
+      ],
+      "valuesAsFlags": false
+    }
+  ]
+}

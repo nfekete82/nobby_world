@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<template>
+  <object name="Dorfbewohner" class="npc" width="28" height="28">
+    <properties>
+      <property name="text" type="string" value="Hallo, Nobby!" />
+    </properties>
+  </object>
+</template>

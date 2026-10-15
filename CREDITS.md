@@ -11,3 +11,9 @@
 Original Nobby World code and graphics are archived in Git and are not part of
 the restarted application. RPG-JS does not provide the earlier game's custom
 mechanics automatically.
+
+Local editor combat sprites: red Warrior idle/run/attack sheets from the user's
+supplied Tiny Swords (Free Pack), by Pixel Frog. Used as in-game enemy artwork;
+the complete pack is not redistributed. Tiled is installed locally from the
+[official release](https://github.com/mapeditor/tiled/releases/tag/v1.12.2) and is
+not committed or shipped inside the game image.
