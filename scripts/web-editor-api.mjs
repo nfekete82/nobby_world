@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { readWorld, compileWorlds } from './world-data.mjs'
+import { compileWorlds } from './world-data.mjs'
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..')
 export const EDITOR_BODY_LIMIT=1_500_000
@@ -32,7 +32,6 @@ export function editorWrite({id,original,updated},rootDir=root) {
  const temp=filename+'.nobby-editor-tmp'
  try{
   fs.writeFileSync(temp,updated,'utf8')
-  if(!readWorld(temp))throw Error('Kartenkennzeichnung nobbyWorld fehlt')
   fs.renameSync(temp,filename)
   try{compileWorlds()}catch(error){
    fs.writeFileSync(filename,current,'utf8')
