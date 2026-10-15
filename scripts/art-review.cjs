@@ -14,6 +14,7 @@ const ensureDevServer = require('./ensure-dev-server.cjs');
  const dir='artifacts/tiny-swords/after';fs.mkdirSync(dir,{recursive:true});
  async function ready(){await page.waitForFunction(()=>window.__editor?.engine?.getCurrentPlayer()&&document.querySelector('#nobby-hud')?.hidden===false);await page.waitForTimeout(500)}
  async function shot(name){await page.screenshot({path:dir+'/'+name+'.png'})}
+ async function freshScene(){await page.reload();await ready()}
  // Test-only camera positioning. A standalone RPG-JS client can receive a
  // previously queued authoritative movement tick just after server.teleport().
  // Reconcile both sides over several animation frames instead of asserting
@@ -61,13 +62,26 @@ const ensureDevServer = require('./ensure-dev-server.cjs');
  await page.reload();await ready();
  await teleport(784,1176);await hold('ArrowDown',100);await page.keyboard.press('Space',{delay:150});await page.getByText('Willkommen, Nobby! Hier beginnt unsere neue Welt.',{exact:true}).waitFor();await shot('dialog');await page.keyboard.press('Space',{delay:150});await page.waitForFunction(()=>window.__editor.engine.guiService.gui()['rpg-dialog'].display()===false,{},{timeout:5000});await page.waitForTimeout(300);
  checks.push('native status/items/skills/equipment/options/save screens and German NPC dialogue render with pack frames');
+ await freshScene(); // Each collision scenario starts without movement/GUI prediction history.
  await teleport(1380,800);const waterBefore=await position();await hold('ArrowRight',1000);const waterAfter=await position();assert.ok(waterAfter.x>waterBefore.x&&waterAfter.x<=1441,'river blocks walking');checks.push('river collision blocks walking');
- await teleport(1380,1060);await hold('ArrowRight',2300);assert.ok((await position()).x>1664,'bridge crosses the river');await teleport(1450,1060);await shot('bridge');checks.push('bridge crosses the same river');
+ await freshScene();
+ await teleport(1380,1060);await hold('ArrowRight',2300);
+ const bridgeState=await page.evaluate(()=>{
+  const e=window.__editor.engine,p=e.getCurrentPlayer(),s=Object.values(window.__editor.server.subRoom.players())[0];
+  return {clientX:p.x(),serverX:s.x(),clientY:p.y(),serverY:s.y()};
+ });
+ assert.ok(bridgeState.serverX>1664&&bridgeState.clientX>1664,'bridge crosses the river on both client and server');
+ assert.ok(Math.abs(bridgeState.clientX-bridgeState.serverX)<48&&Math.abs(bridgeState.clientY-bridgeState.serverY)<48,
+   `client/server diverged during real bridge crossing: ${JSON.stringify(bridgeState)}`);
+ await shot('bridge');checks.push('real bridge crossing synchronizes client/server and is photographed from the landing');
+ await freshScene();
  await teleport(540,1040);await hold('ArrowUp',800);assert.ok((await position()).y>=1003,'house ground footprint blocks walking');checks.push('house footprint collision');
+ await freshScene();
  await teleport(2020,690);await shot('highlands');
  const tree=await page.evaluate(()=>{const events=Object.values(window.__editor.server.subRoom.events());return events.filter(e=>e.graphics().includes('tree-oak')).map(e=>({x:e.x(),y:e.y()})).find(e=>e.x>1900&&e.y>900&&e.y<1600)});
  assert.ok(tree,'tree scene available');
  await teleport(tree.x+4,tree.y-40);await shot('behind-tree');await teleport(tree.x+4,tree.y+32);await shot('in-front-of-tree');checks.push('tree occlusion before/behind photographed');
+ await freshScene();
  await teleport(784,1088);await page.evaluate(()=>{const p=Object.values(window.__editor.server.subRoom.players())[0];p.hp=400;p.sp=100});await page.waitForTimeout(150);assert.equal(await page.getByRole('button',{name:'✦ Heilen H'}).isEnabled(),true,'heal becomes available when injured');await page.getByRole('button',{name:'✦ Heilen H'}).click();await page.waitForTimeout(250);await shot('heal');
  const healed=await page.evaluate(()=>{const p=Object.values(window.__editor.server.subRoom.players())[0];return{hp:p.hp,sp:p.sp}});assert.ok(healed.hp>400&&healed.hp<=741);assert.equal(healed.sp,75);checks.push('real heal button restores HP and spends 25 mana');
  await page.waitForTimeout(700);await page.keyboard.down('ArrowRight');await page.waitForTimeout(180);await shot('run');await page.keyboard.up('ArrowRight');await page.keyboard.press('Space',{delay:80});await page.waitForTimeout(140);await shot('attack');checks.push('run and distinct attack/heal frames photographed during actual input');
