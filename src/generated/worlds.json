@@ -15,7 +15,7 @@
         "name": "Mira",
         "x": 784,
         "y": 1216,
-        "text": "Willkommen, Nobby! Hier beginnt unsere neue Welt."
+        "text": "Willkommen, nobby! Hier beginnt unsere neue Welt."
       },
       {
         "id": "object-3",
@@ -50,7 +50,7 @@
       {
         "id": "object-100",
         "kind": "prop",
-        "name": "Nobbys Haus",
+        "name": "nobbys Haus",
         "x": 512,
         "y": 960,
         "asset": "house"
@@ -799,7 +799,7 @@
         "name": "Mira",
         "x": 784,
         "y": 1728,
-        "text": "Willkommen, Nobby! Hier beginnt unsere neue Welt."
+        "text": "Willkommen, nobby! Hier beginnt unsere neue Welt."
       },
       {
         "id": "object-3",
