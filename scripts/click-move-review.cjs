@@ -89,6 +89,56 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
   assert.ok(after.x>before.current.x+24,'click did not move player');
   assert.ok(Math.abs(after.y-before.current.y)<35,'player deviated from path');
   assert.ok(Math.abs(after.x-before.dest.x)<36,'player did not approach click');
+
+  // Find a reachable 45° destination in the authored map, not a hardcoded
+  // spot. Check both axes move after the actual browser pointer click.
+  const { findRoute, unpackNavigation } = await import('../src/navigation/pathfinding.mjs');
+  const worlds = require('../src/generated/worlds.json');
+  const currentMap = await page.evaluate(()=>window.__clickReview.engine.sceneMap.data()?.id);
+  const world=worlds.find(w=>w.id===currentMap);
+  assert.ok(world?.navigation,'navigation missing for diagonal click');
+  const nav=unpackNavigation(world.navigation);
+  const current=await page.evaluate(()=>{
+    const p=window.__clickReview.engine.getCurrentPlayer();
+    return {x:p.x(),y:p.y()};
+  });
+  let diagonal;
+  for(const dist of [48,64,32,80]){
+    for(const sx of [1,-1])for(const sy of [1,-1]){
+      const goal={x:current.x+sx*dist,y:current.y+sy*dist};
+      const route=findRoute(nav,current,goal);
+      const first=route[0];
+      if(!first||!((first.x-current.x)*sx>16&&(first.y-current.y)*sy>16))continue;
+      const screen=await page.evaluate(goal=>{
+        const e=window.__clickReview.engine,canvas=e.renderer.canvas;
+        const locate=node=>{if(node?.toScreen&&node?.toWorld)return node;
+          for(const child of node?.children??[]){const v=locate(child);if(v)return v}};
+        const viewport=locate(e.canvasApp.stage),rect=canvas.getBoundingClientRect();
+        const spot=viewport.toScreen(goal.x+16,goal.y+12);
+        const x=rect.left+spot.x,y=rect.top+spot.y;
+        return {x,y,visible:document.elementFromPoint(x,y)===canvas};
+      },goal);
+      if(screen.visible){diagonal={goal,screen,route};break}
+    }
+    if(diagonal)break
+  }
+  assert.ok(diagonal,'no accessible on-screen diagonal test route near Nobby');
+  await page.mouse.click(diagonal.screen.x,diagonal.screen.y);
+  await page.waitForFunction(from=>{
+    const p=window.__clickReview.engine.getCurrentPlayer();
+    return Math.abs(p.x()-from.x)>12&&Math.abs(p.y()-from.y)>12;
+  },current,{timeout:12000}).catch(async()=>{
+    const p=await page.evaluate(()=>{
+      const p=window.__clickReview.engine.getCurrentPlayer();
+      return {x:p.x(),y:p.y(),events:window.__nobbyClickEvents};
+    });
+    throw new Error('Diagonal click failed to move both axes: '+JSON.stringify({current,p,diagonal}));
+  });
+  const moved=await page.evaluate(()=>{
+    const p=window.__clickReview.engine.getCurrentPlayer();
+    return {x:p.x(),y:p.y()};
+  });
+  console.log('Diagonal click accepted and moved on both axes.',{from:current,to:moved,waypoints:diagonal.route.length});
   // Physical arrow-key chords must also use native walk frames on BOTH axes.
   await page.evaluate(()=>{ window.__RPGJS_MOBILE_DEBUG_EVENTS__=[]; });
   await page.keyboard.down('ArrowUp');
