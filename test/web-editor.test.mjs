@@ -105,7 +105,7 @@ test('Vite 8 suppresses managed map HMR while the editor save is in flight',()=>
 
 test('save roundtrip on the real authored map dimensions, without changing user files',async()=>{
  const {validateEditorMap}=await import('../scripts/web-editor-api.mjs')
- const xml=await import('xml-js')
+ const {default:xml}=await import('xml-js')
  const original=fs.readFileSync('src/tiled/simplemap.tmx','utf8')
  const map=xml.xml2js(original,{compact:true}).map
  const width=Number(map._attributes.width),height=Number(map._attributes.height)
