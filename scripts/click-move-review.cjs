@@ -8,12 +8,13 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
   browser=await chromium.launch({channel:'chrome',headless:true,args:['--enable-unsafe-swiftshader']});
   const page=await browser.newPage({viewport:{width:1280,height:800}});
   const errors=[],missing=[];
+  await page.addInitScript(()=>{window.__RPGJS_MOBILE_DEBUG__=true;});
   page.on('pageerror',e=>errors.push(e.message));
   page.on('response',r=>{if(r.status()>=400)missing.push(r.url())});
   await page.route('**/src/modules/main/display.ts*',async route=>{
    const response=await route.fetch();
    const original=await response.text();
-   const body=original.replace('onStep(engine) {','onStart(engine) { window.__clickReview={engine}; }, onStep(engine) {');
+   const body=original.replace('onStep(engine) {', 'onStep(engine) { if(engine.sceneMap.data()?.id && engine.getCurrentPlayer() && engine.activeKeyboardControls?.()) window.__clickReview={engine};');
    assert.notEqual(body,original,'test-only browser engine hook not applied');
    await route.fulfill({response,body});
   });
@@ -23,6 +24,8 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
   await page.evaluate(()=>{
     window.__nobbyClickEvents=[];
     window.__nobbyClickDiagnostics=[];
+    window.__nobbyControlEvents=[];
+    window.addEventListener('nobby:move-control',event=>window.__nobbyControlEvents.push(event.detail));
     window.addEventListener('nobby:move-target',event=>window.__nobbyClickEvents.push(event.detail));
     window.addEventListener('nobby:move-diagnostic',event=>window.__nobbyClickDiagnostics.push(event.detail));
   });
@@ -58,6 +61,18 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
     });
   const accepted=await page.evaluate(()=>window.__nobbyClickEvents.at(-1));
   assert.ok(accepted.waypoints>0,'A* did not accept a route: '+JSON.stringify(accepted));
+  assert.equal(accepted.inputMode,'native-keyboard','Mouse must use normal WASD controls');
+  await page.waitForFunction(()=>window.__nobbyControlEvents.length>0,{},{timeout:3000});
+  await page.waitForFunction(()=>{
+    const events=window.__RPGJS_MOBILE_DEBUG_EVENTS__||[];
+    return events.some(e=>e.type==='walk:set');
+  },{},{timeout:5000}).catch(async()=>{
+    const debug=await page.evaluate(()=>({
+      controls:window.__nobbyControlEvents,
+      frames:(window.__RPGJS_MOBILE_DEBUG_EVENTS__||[]).slice(-12)
+    }));
+    throw new Error('Native walk animation did not start: '+JSON.stringify(debug));
+  });
   await page.waitForFunction(x=>window.__clickReview.engine.getCurrentPlayer().x()>=x+24,
    before.current.x,{timeout:12000}).catch(async()=>{
     const actual=await page.evaluate(()=>{
@@ -76,7 +91,7 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
   assert.ok(Math.abs(after.x-before.dest.x)<36,'player did not approach click');
   assert.deepEqual(errors,[]);
   assert.deepEqual(missing,[]);
-  console.log('Click-to-move browser review passed.',{from:before.current,to:after,target:before.dest,route:accepted});
+  console.log('Click-to-move browser review passed.',{from:before.current,to:after,target:before.dest,route:accepted,controls:await page.evaluate(()=>window.__nobbyControlEvents)});
  }finally{
   if(browser)await browser.close();
   await stop();
