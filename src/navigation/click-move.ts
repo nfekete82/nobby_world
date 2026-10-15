@@ -23,12 +23,16 @@ function viewportOf(node:any):any{
   }
 }
 function init(engine:RpgClientEngine,state:State):boolean{
-  // Use the real Pixi canvas. canvasElement can be a wrapper in RPG-JS 5.
+  // Listen above the canvas: RPG-JS can replace/reparent the canvas during
+  // scene transitions. PointerEvent.composedPath also supports shadow roots.
   const canvas=((engine as any).renderer?.canvas??(engine as any).canvasApp?.canvas) as HTMLCanvasElement|undefined
   if(!canvas?.addEventListener)return false
   canvas.style.cursor='crosshair'
-  canvas.addEventListener('pointerdown',(event:PointerEvent)=>{
+  window.addEventListener('pointerdown',(event:PointerEvent)=>{
     if(event.button!==0||!event.isPrimary)return
+    const currentCanvas=((engine as any).renderer?.canvas??(engine as any).canvasApp?.canvas) as HTMLCanvasElement|undefined
+    if(!currentCanvas||!event.composedPath().includes(currentCanvas))return
+    const canvas=currentCanvas
     if((document.querySelector('#nobby-hud') as HTMLElement|null)?.hidden)return
     const mapId=String(engine.sceneMap.data()?.id??'').replace(/^map-/,'')
     const nav=navFor(mapId),player=engine.getCurrentPlayer() as any
@@ -44,7 +48,11 @@ function init(engine:RpgClientEngine,state:State):boolean{
     state.mapId=mapId
     state.lastInput=0;state.lastProgress=performance.now()
     state.previous=position(player)
-  })
+    // A harmless game-level event for browser acceptance tests and future UI.
+    window.dispatchEvent(new CustomEvent('nobby:move-target',{
+      detail:{mapId,target:goal,waypoints:state.path.length}
+    }))
+  },{capture:true})
   window.addEventListener('keydown',(event)=>{
     if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','w','a','s','d','W','A','S','D','Escape',' ','h','H'].includes(event.key)){
       state.path=[]
