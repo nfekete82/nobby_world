@@ -29,7 +29,8 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
   const foe=world.objects.find(o=>o.kind==='monster');
   assert.ok(foe,'no authored enemy available');
   await page.evaluate(()=>{
-   window.__spellCast=[];window.__spellFX=[];window.__spellRejected=[];
+   window.__spellCast=[];window.__spellFX=[];window.__spellRejected=[];window.__spellServer=[];
+   window.addEventListener('nobby:spell-server',e=>window.__spellServer.push(e.detail));
    window.addEventListener('nobby:spell-cast',e=>window.__spellCast.push(e.detail));
    window.addEventListener('nobby:spell-visual',e=>window.__spellFX.push(e.detail));
    window.addEventListener('nobby:spell-rejected',e=>window.__spellRejected.push(e.detail));
@@ -131,8 +132,12 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
    },{click,targetId:foe.id});
    throw new Error('Enemy click did not emit a spell: '+JSON.stringify(diagnostics));
   });
-  // Orb might already have flown by the time Playwright resumes. The launch
-  // event is reliable regardless of renderer frame rate or machine load.
+  // A magical projectile must be server-acknowledged BEFORE it is visible.
+  assert.ok(await page.evaluate(()=>window.__spellServer.some(e=>e.stage==='accepted')),
+    'server never acknowledged the cast');
+  assert.ok(await page.evaluate(()=>window.__spellCast.some(e=>e.confirmed===true)),
+    'client spawned an unconfirmed projectile');
+  // The launch event is reliable even after the projectile DOM element is gone.
   assert.ok(await page.evaluate(()=>window.__spellFX.some(e=>e.phase==='launch')),
     'magical orb launch was not emitted');
   await page.waitForFunction(({targetId,hp})=>{
@@ -172,6 +177,8 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
   });
   assert.equal(impact.stage,'impact','spell must reach server impact: '+JSON.stringify(impact));
   assert.equal(impact.reason,'hit','server must report HP damage: '+JSON.stringify(impact));
+  await page.waitForFunction(()=>window.__spellServer.some(e=>e.stage==='impact'&&e.reason==='hit'),
+    {},{timeout:2000});
   assert.equal(after.aggro,after.playerId,'Wounded enemy must target the attacker immediately');
   assert.ok(after.visionRange>=440,'Wounded enemy must chase beyond normal sight range');
   await page.waitForFunction(()=>window.__spellFX.some(e=>e.phase==='impact'),{},{timeout:5000});
