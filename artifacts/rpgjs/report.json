@@ -1,0 +1,14 @@
+{
+  "url": "http://localhost:8088/",
+  "browser": "Google Chrome / Playwright",
+  "checks": [
+    "2D map and sprites load",
+    "default menu shows Nobby and initialized HP",
+    "save slot writes new storage namespace",
+    "keyboard movement reaches NPC",
+    "Space opens German NPC dialog",
+    "390px viewport renders"
+  ],
+  "errors": [],
+  "missing": []
+}

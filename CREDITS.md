@@ -1,28 +1,13 @@
-# Artwork and software provenance
+# Sources and credits
 
-## Active 3D world
+- Framework: [RSamaium/RPG-JS](https://github.com/RSamaium/RPG-JS), MIT license.
+  Installed packages retain their bundled licenses in `node_modules`.
+- Starter source snapshot: `bc5be54ecba24d0ebca1b7dae423d8b6dad286b8`.
+- Initial project: [rpgjs/starter, v5 branch](https://github.com/rpgjs/starter/tree/v5).
+- Sample character sprites and map tiles: [Pipoya](https://pipoya.itch.io), as
+  credited by the official starter. These are the starter's sample graphics,
+  not newly generated Nobby artwork.
 
-`assets/3d/world.js` defines original Nobby World geometry, character rigs, buildings,
-vegetation and effects. The user's Nobby artwork guides his identity. The user's
-Secret-of-Mana remake screenshot guides composition and atmosphere; no models or
-textures from that game were extracted.
-
-`assets/3d/materials.png`, `foliage.png`, and `ui-source.png` were generated for this
-project with built-in OpenAI ImageGen. `ui.png` is their normalized transparent UI
-export. See [prompt set](assets/3d/PROMPTS.md) and [art contract](docs/3D_ART_DIRECTION.md).
-
-Three.js 0.186.1 is bundled locally in `assets/vendor/` under the MIT license.
-Copyright Three.js Authors. The full notice is in
-[THREE-LICENSE.txt](assets/vendor/THREE-LICENSE.txt).
-Source: https://github.com/mrdoob/three.js.
-
-## Retained 2D artwork
-
-`assets/art/` contains the preceding ImageGen pixel-art pass and its source PNGs.
-`assets/custom/` and `assets/woods.png` are the existing user-supplied assets,
-retained for compatibility/fallback rendering. The original woods archive contained
-no license text.
-
-The supplied Tiny Swords Free Pack ZIP was inspected and imported locally as an
-art reference. Pixel Frog: https://pixelfrog-assets.itch.io/tiny-swords. The original
-pack is ignored by Git and is not required or fetched by the active 3D renderer.
+Original Nobby World code and graphics are archived in Git and are not part of
+the restarted application. RPG-JS does not provide the earlier game's custom
+mechanics automatically.
