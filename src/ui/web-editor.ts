@@ -276,6 +276,7 @@ class MapEditor {
     return {first:Number(ref.getAttribute('firstgid')),count:Number(tsx.getAttribute('tilecount')),
      cols:Number(tsx.getAttribute('columns')),img,source,title:tsx.getAttribute('name')||source}
    }))
+   await this.loadExtraPathTilesets(map)
    this.parseLayers()
    await this.preloadSprites()
    this.buildPalettes()
@@ -283,6 +284,30 @@ class MapEditor {
    this.redraw()
    this.status(this.id+' · '+this.w/64+' × '+this.h/64+' Kacheln · 64 px Raster')
   }catch(error){this.status('Fehler: '+String(error));this.root.querySelectorAll('button').forEach(b=>{if(b.textContent?.includes('Speichern'))b.disabled=true})}
+ }
+ private async loadExtraPathTilesets(map:Element){
+  // No on-disk TMX migration: older 100x40 user maps remain untouched until
+  // they explicitly paint and save. Tiled refs are added only in editor memory.
+  let gid=Math.max(1,...this.sheet.map(s=>s.first+s.count))
+  for(const source of ['desert-path.tsx','snow-path.tsx']){
+   if(this.sheet.some(sheet=>sheet.source===source))continue
+   const url=pathUrl('map/'+source)
+   const response=await fetch(url)
+   if(!response.ok)throw Error('Biom-Übergang fehlt: '+source)
+   const definition=readXml(await response.text()).documentElement
+   const imgName=definition.querySelector('image')?.getAttribute('source')||''
+   const img=await image(new URL(imgName,new URL(url,location.href)).href)
+   if(!img.naturalWidth)throw Error('Biom-Übergang Grafik fehlt: '+source)
+   const count=Number(definition.getAttribute('tilecount'))
+   const cols=Number(definition.getAttribute('columns'))
+   if(!Number.isInteger(count)||count<1||!Number.isInteger(cols)||cols<1)
+    throw Error('Biom-Tileset beschädigt: '+source)
+   const ref=this.document.createElement('tileset')
+   ref.setAttribute('firstgid',String(gid));ref.setAttribute('source',source)
+   map.insertBefore(ref,map.querySelector(':scope > layer'))
+   this.sheet.push({first:gid,count,cols,img,source,title:definition.getAttribute('name')||source})
+   gid+=count
+  }
  }
  private parseLayers(){
   this.layer=Array.from(this.document.querySelectorAll('map > layer')).map(node=>{

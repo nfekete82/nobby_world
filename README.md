@@ -337,3 +337,14 @@ Die Projektkarte selbst wird dabei nicht verändert. Der Browser-Test
 `npm run test:web-editor` liest ebenfalls die tatsächliche Kartengröße, statt
 40×32 vorauszusetzen. Der Browser-Test exportiert/ändert die Karte nur im
 Arbeitsspeicher und schreibt keine gespeicherte TMX-Datei.
+
+### Biome-Workshop: additive Tilesets ohne Map-Verlust
+
+Beim Öffnen des Web-Editors werden zusätzliche Overlay-Tilesets
+`desert-path.tsx` und `snow-path.tsx` **nur im Browser-Dokument** eingebunden.
+Sie erscheinen unter **Wüste → Übergänge** bzw. **Schnee → Übergänge**.
+Die GIDs werden hinter dem höchsten bereits verwendeten Tileset ermittelt,
+sodass auch ältere und lokal erweiterte Karten keine existierenden IDs verlieren.
+Erst beim Malen und Speichern werden die neuen Tileset-Referenzen in der
+TMX-Datei mitgespeichert. Gebäude und Kakteen verwenden die generierten
+Sprite-Assets und benötigen keine neuen Kachelebenen.
