@@ -6,6 +6,7 @@ import { allocatePoint, expThreshold, grantLevelPoints, statBonuses } from '../.
 import { characterClass, selectClass, restoreClass, CHARACTER_CLASSES } from '../../progression/character-class.mjs'
 import { companions, cleanupCompanions } from './skeleton-companions'
 import { resumeGame, saveResume } from './save-state'
+import { stepEnemyTargets } from './enemy-targets'
 
 // RPG-JS makes these custom props reactive, client-synchronized and save-persistent.
 const growthProps = {
@@ -55,6 +56,7 @@ function connectClock(player:RpgPlayer){
  * in a JavaScript interval. RPG-JS replaces those instances during joins. */
 export function stepPlayers(server:any){
     const now=Date.now()
+    stepEnemyTargets(server.subRoom,now)
     for(const player of Object.values(server.subRoom?.players?.()??{}) as RpgPlayer[]){
         const entry=manaTimers.get(player.id)
         if(!entry||now-entry.lastStep<IDLE_MANA_TICK_MS)continue

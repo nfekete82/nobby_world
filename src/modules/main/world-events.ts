@@ -6,6 +6,7 @@ import { ART } from '../../art/sprites'
 import { sheepEvent } from './sheep-event'
 import { enemyGraphic } from '../../art/enemies.mjs'
 import { desertSnakeEvent } from './desert-snake-event'
+import { refreshEnemyTargetNow } from './enemy-targets'
 
 export function worldEvent(object: any, world?: any): EventDefinition {
     if (object.kind === 'monster') return {
@@ -14,6 +15,9 @@ export function worldEvent(object: any, world?: any): EventDefinition {
             // Stable authored ID survives RPG-JS dynamic event creation.
             // Used only server-side to resolve and authorize spell targets.
             ;(this as any).nobbyWorldObjectId=object.id
+            ;(this as any).nobbyAggroRange=object.vision
+            ;(this as any).nobbyNearestTargetId=''
+            ;(this as any).nobbyRefreshTarget=()=>refreshEnemyTargetNow(this)
             const graphic=enemyGraphic(object.enemy)
             this.setGraphic(graphic)
             this.setHitbox(...ART.actorHitbox as [number,number])

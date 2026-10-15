@@ -20,3 +20,7 @@ Gemeinsame final verwendete Vorgaben: Pixel Frog Tiny Swords, Top-Down-Dreiviert
 Die neutrale kleine Schlange teilt die bewusst einheitliche Bildsprache der Viper und wird in nativer kleinerer Auflösung aus demselben Atlas kompiliert. Sand und Dschungelboden erweitern den vorhandenen Codegenerator mit mineralischer Palette und Pixeltexturen, unter Erhalt aller nativen Tile-Formen und Alphamasken. Die vorhandenen handgezeichneten Wüstengebäude bleiben erhalten.
 
 Visueller Vergleich: `artifacts/expansion/style-comparison.png`, Charakterauswahl, Beschwörungs- und Biome-Screenshots. Die endgültigen Spielbilder liegen unter `public/tiny-swords/expansion/`; die reparierte Agave unter `public/tiny-swords/illustrated/desert-agave.png`.
+
+## Überarbeitung nach direktem Vergleich mit Originalgrafiken
+
+Aktuell zwölf gespeicherte Rasterquellen; neun davon wurden für die Stilüberarbeitung neu gezeichnet. Direkte Original-PNG-Referenzen, Prompt-Satz und Änderungen am Compiler: [STYLE_AND_AGGRO_REVIEW.md](STYLE_AND_AGGRO_REVIEW.md).

@@ -72,3 +72,31 @@ test('neutral snakes roam within their home territory and reject blocked navigat
  assert.ok(walks>20)
  nav.bits.fill(255);assert.equal(snakeStep(nav,home,home,1),null)
 })
+test('biome trees match original visible scale and desert buildings keep padded native frames',()=>{
+ const original=art.assets['tree-oak'].animations.stand.visibleBounds[0]
+ const nativeHeight=original[3]-original[1]+1
+ for(const id of ['snow-fir','jungle-palm','jungle-tree']){
+  for(const b of art.assets[id].animations.stand.visibleBounds)
+   assert.ok(b[3]-b[1]+1<=nativeHeight+1&&b[3]-b[1]+1>=nativeHeight*.95,id+' exceeds original tree scale')
+ }
+ for(const id of ['desert-house','desert-tent','desert-temple']){
+  const a=art.assets[id],state=a.animations.stand,p=PNG.sync.read(fs.readFileSync('public/'+state.image))
+  assert.deepEqual([p.width,p.height],a.frame)
+  const [x0,y0,x1,y1]=state.visibleBounds[0]
+  assert.ok(x0>=5&&y0>=5&&x1<p.width-5&&y1<p.height-1,id+' cropped roof or edge')
+  assert.equal(y1,a.foot[1])
+  for(let i=3;i<p.data.length;i+=4)assert.ok(p.data[i]===0||p.data[i]===255)
+ }
+})
+test('skeleton has real rear actions and a collapsed final death pose in both directions',()=>{
+ const a=art.assets.skeleton
+ for(const state of Object.values(a.animations))assert.equal(state.rows,2)
+ const death=a.animations.death,p=PNG.sync.read(fs.readFileSync('public/'+death.image))
+ for(let row=0;row<2;row++){
+  let top=192,bottom=-1
+  for(let y=0;y<192;y++)for(let x=0;x<192;x++)if(p.data[((row*192+y)*p.width+(death.frames-1)*192+x)*4+3]){
+   top=Math.min(top,y);bottom=Math.max(bottom,y)
+  }
+  assert.ok(bottom-top<40,'death ends in a collapsed bone pile, not a standing rear frame')
+ }
+})

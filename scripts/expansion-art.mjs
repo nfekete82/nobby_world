@@ -93,8 +93,10 @@ function compileProps(registry){
   for(const [id,frame,foot,hitbox,solid,row]of specs){
    const p=rows[row],cw=Math.floor(p.width/4),ch=p.height
    const boxes=Array.from({length:4},(_,i)=>bounds(p,i*cw,0,cw,ch))
+   // Match original Tree1's 183px visible height instead of filling its cell.
+   const height=['jungle-palm','jungle-tree','snow-fir'].includes(id)?183:foot[1]-10
    const scale=Math.min((frame[0]-12)/Math.max(...boxes.map(b=>b[2]-b[0]+1)),
-    (foot[1]-10)/Math.max(...boxes.map(b=>b[3]-b[1]+1)))
+    height/Math.max(...boxes.map(b=>b[3]-b[1]+1)))
    const out=new PNG({width:frame[0]*4,height:frame[1]}),visibleBounds=[]
    for(let i=0;i<4;i++){
     const b=boxes[i],cx=(b[0]+b[2])/2
@@ -129,6 +131,39 @@ function compileProps(registry){
   for(const state of Object.values(registry.assets['desert-agave'].animations))state.visibleBounds=[bounds(out)]
  }
 }
+function compileBuildings(registry){
+ const file='art/generated-source/expansion/desert-buildings.png'
+ if(!fs.existsSync(path.join(root,file)))return
+ const p=read(file),density=Array(p.width).fill(0),cuts=[0]
+ for(let x=0;x<p.width;x++)for(let y=0;y<p.height;y++)if(p.data[(y*p.width+x)*4+3]>=128)density[x]++
+ for(let col=1;col<3;col++){
+  const ideal=p.width*col/3;let best=Math.round(ideal),score=Infinity
+  for(let x=Math.floor(p.width*(col-.35)/3);x<Math.ceil(p.width*(col+.35)/3);x++){
+   const occupied=density[x-1]+density[x]+density[x+1]
+   const value=occupied+Math.abs(x-ideal)*.001
+   if(value<score){score=value;best=x}
+  }
+  cuts.push(best)
+ }
+ cuts.push(p.width)
+ for(const [col,id]of ['desert-house','desert-tent','desert-temple'].entries()){
+  const asset=registry.assets[id],[w,h]=asset.frame,[fx,fy]=asset.foot
+  const left=cuts[col],cw=cuts[col+1]-left,b=bounds(p,left,0,cw,p.height)
+  const scale=Math.min((w-12)/(b[2]-b[0]+1),(fy-8)/(b[3]-b[1]+1)),out=new PNG({width:w,height:h})
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+   const sx=Math.floor((x-fx)/scale+(b[0]+b[2])/2),sy=Math.floor((y-fy)/scale+b[3])
+   if(sx<0||sx>=cw||sy<0||sy>=p.height)continue
+   const at=(sy*p.width+left+sx)*4,to=(y*w+x)*4
+   if(p.data[at+3]<128)continue
+   for(let k=0;k<3;k++)out.data[to+k]=Math.min(255,Math.round(p.data[at+k]/8)*8)
+   out.data[to+3]=255
+  }
+  const image=`tiny-swords/expansion/${id}.png`
+  write('public/'+image,out)
+  const state={image,frames:1,fps:1,visibleBounds:[bounds(out)]}
+  asset.animations={stand:state,walk:state}
+ }
+}
 export const EXPANSION_ACTORS={
  shaman:{rows:6,height:70,states:{stand:[0,6,4],walk:[1,6,10],attack:[2,6,16],heal:[3,6,9],hit:[4,2,10],death:[4,4,8,2]}},
  skeleton:{rows:6,height:66,states:{stand:[0,6,4],walk:[1,6,10],attack:[2,6,16],spawn:[3,6,9],hit:[4,2,10],death:[4,4,8,2]}},
@@ -155,15 +190,19 @@ export function compileExpansionArt(registry){
    const out=new PNG({width:192*count,height:192*(directional?2:1)})
    const visibleBounds=[]
    for(let direction=0;direction<(directional?2:1);direction++)for(let i=0;i<count;i++){
-    const backRows={stand:0,walk:1,attack:2,heal:3,hit:4,death:5}
-    const r=direction?(back?backRows[name]:5):row,frame=direction&&back?i:start+i
+    const backRows={stand:0,walk:1,attack:2,heal:3,spawn:3,hit:4,death:id==='skeleton'?4:5}
+    const r=direction?(back?backRows[name]:5):row
+    const frame=direction&&back?(id==='skeleton'&&name==='death'?start+i:i):start+i
     const src=direction&&back?back[r]:rows[r]
     const cellW=direction&&back?bw:cw,cellH=src.height
     const resize=direction&&back?backScale:scale
     const b=bounds(src,frame*cellW,0,cellW,cellH)
     const cx=(b[0]+b[2])/2,foot=b[3]
     for(let y=0;y<192;y++)for(let x=0;x<192;x++){
-     const sx=Math.floor((x-96)/resize+cx),sy=Math.floor((y-132)/resize+foot)
+     // Rear skeleton action poses use the opposite sheet orientation. Keep
+     // sword/shield handedness consistent with its rear idle silhouette.
+     const mirror=id==='skeleton'&&direction&&back&&name!=='stand'
+     const sx=Math.floor((mirror?96-x:x-96)/resize+cx),sy=Math.floor((y-132)/resize+foot)
      if(sx<0||sx>=cellW||sy<0||sy>=cellH)continue
      const at=(sy*src.width+frame*cellW+sx)*4
      if(src.data[at+3]<128)continue
@@ -181,6 +220,7 @@ export function compileExpansionArt(registry){
   registry.generation[id]={source,scale,footPixels:Array.from({length:6},()=>[96,132])}
  }
  compileProps(registry)
+ compileBuildings(registry)
  if(registry.assets['jungle-palm'])registry.assets['desert-palm']={...registry.assets['jungle-palm']}
  // Neutral wildlife shares the serpent's visual language, at a smaller native
  // size. It is a scenery event without BattleAi, never a hostile actor.

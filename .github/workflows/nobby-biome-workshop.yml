@@ -38,3 +38,7 @@ jobs:
         env:
           CI: 'true'
         run: npm run test:expansion
+      - name: Exercise closest hostile selection and native skeleton death
+        env:
+          CI: 'true'
+        run: npm run test:aggro

@@ -44,6 +44,9 @@ export function companions(player:any){
      new BattleAi(self,{
       enemyType:EnemyType.Defensive,faction:'players',targets:()=>false,
       visionRange:1,dodgeChance:0,fleeThreshold:0,attackPatterns:[],
+      // Native BattleAi already schedules its death transition and removal.
+      // The companion controller must not schedule a second deletion.
+      onDefeated(){self.nobbyCompanionDying=true},
       rewards:{exp:0,gold:0},animations:{attack:'attack',hurt:'hit',die:'death'},
       presentation:{name:'Nobbys Skelett',healthBar:{style:{width:36,height:4}}}
      })
@@ -55,6 +58,7 @@ export function companions(player:any){
    entity.stopMoveTo?.()
    entity.battleAi?.destroy()
    entity.canMove=false
+   if(entity.nobbyCompanionDying||!map.getEvent(entity.id))return
    if(death)entity.remove({reason:'expired',transition:{animation:'death',graphic:'skeleton',duration:450},timeoutMs:450})
    else map.removeEvent(entity.id)
   },

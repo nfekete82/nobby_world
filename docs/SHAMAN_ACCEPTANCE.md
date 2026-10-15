@@ -6,8 +6,8 @@ Datum: 2026-10-15. Implementierung: `77fbaddcdbac7eb4640ea0b4aa475229719e191f` p
 
 | Prüfung | Ergebnis |
 | --- | --- |
-| `npm test` im Arbeitsverzeichnis | **107/107 bestanden**, keine ausgelassenen Tests |
-| `npm test` in separater Kopie exakt des PR-Inhalts | **107/107 bestanden**, keine ausgelassenen Tests |
+| `npm test` im Arbeitsverzeichnis | **115/115 bestanden**, keine ausgelassenen Tests |
+| `npm test` in separater Kopie exakt des PR-Inhalts | **115/115 bestanden**, keine ausgelassenen Tests |
 | `npm run build`, Arbeitsverzeichnis und saubere PR-Kopie | **Bestanden**; Karten, Tilesets und PNGs im Produktionsoutput |
 | Produktionspreview-Node-Test | **Bestanden**, einschließlich Root- und `/quest/`-Basis-URLs |
 | `npm run art:prepare` in separater PR-Kopie | **Bestanden**, anschließend Node-Tests und Build bestanden |
@@ -23,6 +23,8 @@ Datum: 2026-10-15. Implementierung: `77fbaddcdbac7eb4640ea0b4aa475229719e191f` p
 
 Die neue Browserabnahme prüft echte Serverzustände mit testseitiger Engine-Instrumentierung. Ein tatsächlich platzierter Gegner wird für den Kampftest serverseitig in Sichtweite gestellt; weder Begleiterschaden noch Mana, Spawn oder Zielwahl werden simuliert. Die Reisestein-Abnahme öffnet den nativen Serverdialog und wählt das Ziel in der tatsächlichen GUI.
 
+Zusätzliche Stil- und Kampfprüfung: [Grafikvergleich und nächste Ziele](STYLE_AND_AGGRO_REVIEW.md). `npm run test:aggro` besteht drei echte Browserprüfungen inklusive nativer Skelett-Todesanimation und einmaliger Entfernung; Bericht und Screenshots sind dort verlinkt. Die neue Grafik-Pipeline ist nach Aktualisierung veralteter Registry-Bounds reproduzierbar; sämtliche neuen PNG-Sheets sowie die Original-Magier-PNGs bleiben bei erneutem Compilerlauf byteidentisch.
+
 ## Browser-Checks
 
 1. Erstwahl mit Tastatur und Maus; bisherige 25-Mana-Magierheilung.
@@ -37,7 +39,7 @@ Die neue Browserabnahme prüft echte Serverzustände mit testseitiger Engine-Ins
 10. Wüsten-, Schnee- und Dschungelkarten laden mit nativen Gegnern und Objekten.
 11. Auswahl und Beschwörung funktionieren per Touch auf einem 390px-Viewport.
 
-Der aktuelle maschinenlesbare Bericht ist [`artifacts/expansion/report.json`](../artifacts/expansion/report.json). Screenshots zeigen [Auswahl](../artifacts/expansion/character-selection.png), [Beschwörung](../artifacts/expansion/summoning.png), [Kampf](../artifacts/expansion/skeleton-combat.png), [Wüste](../artifacts/expansion/sunscar.png), [Schnee](../artifacts/expansion/frostwild.png), [Dschungel](../artifacts/expansion/verdant.png), [Touch](../artifacts/expansion/touch-summon.png), [Docker](../artifacts/expansion/docker-production.png) und den [Stilvergleich](../artifacts/expansion/style-comparison.png).
+Der aktuelle maschinenlesbare Bericht ist [`artifacts/expansion/report.json`](../artifacts/expansion/report.json). Screenshots zeigen [Auswahl](../artifacts/expansion/character-selection.png), [Beschwörung](../artifacts/expansion/summoning.png), [Kampf](../artifacts/expansion/skeleton-combat.png), [Wüste](../artifacts/expansion/sunscar.png), [Schnee](../artifacts/expansion/frostwild.png), [Dschungel](../artifacts/expansion/verdant.png), [Touch](../artifacts/expansion/touch-summon.png), [Docker](../artifacts/expansion/docker-production.png) und den [ursprünglichen Stilvergleich](../artifacts/expansion/style-comparison.png) sowie [Original/Vorher/Nachher](../artifacts/expansion/style-comparison-v2.png).
 
 ## Erhalt bestehender Daten
 

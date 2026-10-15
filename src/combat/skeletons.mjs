@@ -7,6 +7,8 @@ export const SUMMON = Object.freeze({ mana: 10, limit: 3, lifetime: 60000, coold
 export const position = e => ({ x: Number(typeof e.x === 'function' ? e.x() : e.x),
  y: Number(typeof e.y === 'function' ? e.y() : e.y) })
 export function companionTargetPermission({attacker,target}){
+ if(attacker?.battleAi?.getFaction?.()==='enemies'&&attacker.nobbyNearestTargetId!==undefined)
+  return !!attacker.nobbyNearestTargetId&&attacker.nobbyNearestTargetId===target?.id
  if(target?.nobbyCompanion)return attacker?.battleAi?.getFaction?.()==='enemies'
  if(attacker?.nobbyCompanion)return target?.battleAi?.getFaction?.()==='enemies'
  return undefined
@@ -131,6 +133,7 @@ export function skeletonImpact(entity, victim, owner) {
  const level=Number(readProp(owner,'level')??readProp(owner,'_level'))||1
  const damage=Math.min(victim.hp,Math.max(1,8+level*2-Number(victim.param?.pdef||0)))
  victim.hp-=damage
+ victim.nobbyRefreshTarget?.()
  victim.battleAi.handleDamage(owner,{damage,defeated:victim.hp<=0})
  return damage
 }

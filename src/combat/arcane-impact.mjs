@@ -19,6 +19,9 @@ export function applyArcaneImpact(attacker,victim){
  const magic=Number.isSafeInteger(raw)&&raw>0?Math.min(raw,999):0
  const damage=Math.min(ARCANE_DAMAGE+magic*2,hpBefore)
  ai.visionRange=Math.max(Number(ai.visionRange)||0,440)
+ // Preserve ranged retaliation and its expanded vision, while preferring a
+ // closer skeleton over the distant spell's reward owner.
+ victim.nobbyRefreshTarget?.()
  victim.hp=Math.max(0,hpBefore-damage)
  ai.handleDamage(attacker,{damage,defeated:victim.hp<=0})
  if(victim.hp>0&&ai.getTarget?.()!==attacker){
