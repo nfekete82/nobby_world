@@ -37,9 +37,17 @@ export function enemyAt(point,candidates){
  let best=null,bestScore=Infinity
  for(const enemy of candidates){
   if(!enemy||!(enemy.hp>0))continue
-  const dx=point.x-enemy.x-16,dy=point.y-enemy.y+19
-  if(Math.abs(dx)>43||dy< -54||dy>50)continue
-  const score=(dx/43)**2+(dy/55)**2
+  // Sprite art is up to 192×192 with its anchor near the character's
+  // feet (96,132). A tiny feet-only hitbox misses clicks on the visible head
+  // and torso. Derive a generous but actor-centered selection silhouette.
+  const frame=enemy.frame??[192,192],foot=enemy.foot??[96,132]
+  const x0=enemy.x+16,y0=enemy.y+24
+  const halfWidth=Math.min(58,Math.round(frame[0]*.31))
+  const upper=y0-foot[1],lower=y0+Math.min(20,frame[1]-foot[1])
+  const dx=point.x-x0
+  if(Math.abs(dx)>halfWidth||point.y<upper||point.y>lower)continue
+  const mid=(upper+lower)/2
+  const score=(dx/halfWidth)**2+((point.y-mid)/((lower-upper)/2))**2
   if(score<bestScore){best=enemy;bestScore=score}
  }
  return best

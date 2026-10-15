@@ -1,5 +1,6 @@
 import type { RpgClientEngine } from '@rpgjs/client'
 import worlds from '../generated/worlds.json'
+import art from '../art/registry.json'
 import { ARCANE_ACTION, ARCANE_MANA, ARCANE_COOLDOWN_MS, ARCANE_RANGE, ARCANE_SPEED,
  ARCANE_STARTUP_MS, canCast, clearShot, distance, enemyAt } from '../combat/arcane-rules.mjs'
 import type { NavigationGrid } from './pathfinding.mjs'
@@ -68,8 +69,9 @@ function enemies(engine:RpgClientEngine,id:string):Foe[]{
   if(!actor)return null
   const x=Number(actor.x()),y=Number(actor.y())
   const hp=Number(actor.hpSignal?.()??0)
+  const sprite=art.assets[o.enemy==='berserker'?'enemy-berserker':'enemy-warrior']
   return Number.isFinite(x)&&Number.isFinite(y)
-   ? {id:o.id,x,y,hp,actor}:null
+   ? {id:o.id,x,y,hp,actor,frame:sprite.frame,foot:sprite.foot}:null
  }).filter((v):v is Foe=>!!v&&v.hp>0)
 }
 function view(engine:RpgClientEngine):any{

@@ -38,3 +38,14 @@ test('real authored maps include clickable monsters and their navigation masks',
   assert.ok(grid.cols>0&&grid.rows>0)
  }
 })
+
+test('clicking the monster head and torso targets the enemy, not the terrain',()=>{
+ const enemy={id:'enemy-warrior',x:300,y:400,hp:50,frame:[192,192],foot:[96,132]}
+ const candidates=[enemy]
+ assert.equal(enemyAt({x:316,y:295},candidates)?.id,'enemy-warrior','head')
+ assert.equal(enemyAt({x:316,y:340},candidates)?.id,'enemy-warrior','torso')
+ assert.equal(enemyAt({x:316,y:410},candidates)?.id,'enemy-warrior','legs')
+ assert.equal(enemyAt({x:410,y:340},candidates),null,'outside sprite width')
+ assert.equal(enemyAt({x:316,y:285},candidates),null,'above sprite bounds')
+ assert.equal(enemyAt({x:316,y:340},[{...enemy,hp:0}]),null,'defeated enemy')
+})
