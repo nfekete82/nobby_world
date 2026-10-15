@@ -13,7 +13,7 @@
     "worlds:check": "node scripts/world-data.mjs",
     "world:new": "node scripts/new-world.mjs",
     "editor:setup": "sh scripts/setup-editor.sh",
-    "editor": "open -a .tools/Tiled.app nobby-world.tiled-project src/tiled/simplemap.tmx",
+    "editor": "npm run editor:setup && open -a \"$PWD/.tools/Tiled.app\" \"$PWD/nobby-world.tiled-project\" \"$PWD/src/tiled/simplemap.tmx\"",
     "prebuild": "node scripts/world-data.mjs",
     "predev": "node scripts/world-data.mjs",
     "prestart": "node scripts/world-data.mjs",
