@@ -2291,6 +2291,321 @@
           ]
         }
       }
+    },
+    "desert-cactus": {
+      "kind": "prop",
+      "frame": [
+        64,
+        128
+      ],
+      "foot": [
+        32,
+        113
+      ],
+      "hitbox": [
+        22,
+        18
+      ],
+      "solid": true,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/biomes/desert-cactus.png",
+          "frames": 1,
+          "fps": 1,
+          "visibleBounds": [
+            [
+              0,
+              0,
+              63,
+              127
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/biomes/desert-cactus.png",
+          "frames": 1,
+          "fps": 1,
+          "visibleBounds": [
+            [
+              0,
+              0,
+              63,
+              127
+            ]
+          ]
+        }
+      }
+    },
+    "desert-cactus-small": {
+      "kind": "prop",
+      "frame": [
+        64,
+        128
+      ],
+      "foot": [
+        32,
+        113
+      ],
+      "hitbox": [
+        20,
+        16
+      ],
+      "solid": true,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/biomes/desert-cactus-small.png",
+          "frames": 1,
+          "fps": 1,
+          "visibleBounds": [
+            [
+              0,
+              0,
+              63,
+              127
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/biomes/desert-cactus-small.png",
+          "frames": 1,
+          "fps": 1,
+          "visibleBounds": [
+            [
+              0,
+              0,
+              63,
+              127
+            ]
+          ]
+        }
+      }
+    },
+    "desert-rock": {
+      "kind": "prop",
+      "frame": [
+        64,
+        64
+      ],
+      "foot": [
+        32,
+        55
+      ],
+      "hitbox": [
+        38,
+        22
+      ],
+      "solid": true,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/biomes/desert-rock.png",
+          "frames": 1,
+          "fps": 1,
+          "visibleBounds": [
+            [
+              0,
+              0,
+              63,
+              63
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/biomes/desert-rock.png",
+          "frames": 1,
+          "fps": 1,
+          "visibleBounds": [
+            [
+              0,
+              0,
+              63,
+              63
+            ]
+          ]
+        }
+      }
+    },
+    "desert-house": {
+      "kind": "prop",
+      "frame": [
+        128,
+        192
+      ],
+      "foot": [
+        64,
+        171
+      ],
+      "hitbox": [
+        82,
+        42
+      ],
+      "solid": true,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/biomes/desert-house.png",
+          "frames": 1,
+          "fps": 1,
+          "visibleBounds": [
+            [
+              0,
+              0,
+              127,
+              191
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/biomes/desert-house.png",
+          "frames": 1,
+          "fps": 1,
+          "visibleBounds": [
+            [
+              0,
+              0,
+              127,
+              191
+            ]
+          ]
+        }
+      }
+    },
+    "desert-tent": {
+      "kind": "prop",
+      "frame": [
+        128,
+        192
+      ],
+      "foot": [
+        64,
+        171
+      ],
+      "hitbox": [
+        80,
+        35
+      ],
+      "solid": true,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/biomes/desert-tent.png",
+          "frames": 1,
+          "fps": 1,
+          "visibleBounds": [
+            [
+              0,
+              0,
+              127,
+              191
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/biomes/desert-tent.png",
+          "frames": 1,
+          "fps": 1,
+          "visibleBounds": [
+            [
+              0,
+              0,
+              127,
+              191
+            ]
+          ]
+        }
+      }
+    },
+    "desert-temple": {
+      "kind": "prop",
+      "frame": [
+        128,
+        192
+      ],
+      "foot": [
+        64,
+        171
+      ],
+      "hitbox": [
+        90,
+        44
+      ],
+      "solid": true,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/biomes/desert-temple.png",
+          "frames": 1,
+          "fps": 1,
+          "visibleBounds": [
+            [
+              0,
+              0,
+              127,
+              191
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/biomes/desert-temple.png",
+          "frames": 1,
+          "fps": 1,
+          "visibleBounds": [
+            [
+              0,
+              0,
+              127,
+              191
+            ]
+          ]
+        }
+      }
+    },
+    "snow-pine": {
+      "kind": "prop",
+      "frame": [
+        128,
+        192
+      ],
+      "foot": [
+        64,
+        172
+      ],
+      "hitbox": [
+        34,
+        24
+      ],
+      "solid": true,
+      "directional": false,
+      "animations": {
+        "stand": {
+          "image": "tiny-swords/biomes/snow-pine.png",
+          "frames": 1,
+          "fps": 1,
+          "visibleBounds": [
+            [
+              0,
+              0,
+              127,
+              191
+            ]
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/biomes/snow-pine.png",
+          "frames": 1,
+          "fps": 1,
+          "visibleBounds": [
+            [
+              0,
+              0,
+              127,
+              191
+            ]
+          ]
+        }
+      }
     }
   },
   "generation": {
