@@ -5,7 +5,7 @@ RUN npm ci
 COPY index.html tsconfig.json vite.config.ts ./
 COPY src/ ./src/
 COPY public/ ./public/
-COPY scripts/world-data.mjs scripts/darken-grass.mjs ./scripts/
+COPY scripts/world-data.mjs scripts/darken-grass.mjs scripts/path-art.mjs ./scripts/
 COPY editor/ ./editor/
 RUN npm run build
 
