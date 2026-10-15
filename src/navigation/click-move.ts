@@ -11,10 +11,9 @@ let currentEngine:RpgClientEngine|null=null
 let installed=false
 const enhancedKeyboards=new WeakSet<object>()
 const mapIdOf=(engine:RpgClientEngine)=>String(engine.sceneMap.data()?.id??'').replace(/^map-/,'')
-/** CanvasEngine's keyboard recognizes combo names but RPG-JS binds only four.
- * Register four composite bindings that alternate their native cardinal
- * callbacks on consecutive 60Hz input ticks. Both WASD keys stay held, while
- * the native walk animation and authoritative movement pipeline are preserved.
+/** Native RPG-JS vector velocity with zero speed boost.
+ * Movement remains collision-checked and synchronized by the server.
+ * Cardinal input keeps using CanvasEngine's original keyboard callbacks.
  */
 function enableKeyboardDiagonals(engine:RpgClientEngine):void{
   const keyboard=(engine as any).activeKeyboardControls?.()?.keyboard
@@ -28,14 +27,13 @@ function enableKeyboardDiagonals(engine:RpgClientEngine):void{
   for(const [combo,a,b] of diagonalPairs){
     if(original[combo])continue
     if(typeof original[a]?.keyDown!=='function'||typeof original[b]?.keyDown!=='function')continue
-    let toggle=false
     additions[combo]={
       bind:combo,repeat:true,
       keyDown(){
-        toggle=!toggle
-        // Each half-tick uses the same character keyDown as a normal WASD key.
-        // Velocity stays collision-aware; no client-side teleports or dashes.
-        original[toggle?a:b].keyDown()
+        // Only the combo, not both independent cardinal bindings, runs.
+        const dx=b==='left'?-1:1
+        const dy=a==='up'?-1:1
+        applyDiagonal(engine,dx,dy,'keyboard')
       }
     }
   }
@@ -61,6 +59,28 @@ function enableKeyboardDiagonals(engine:RpgClientEngine):void{
     const horizontal=pressed('left')?'left':pressed('right')?'right':null
     return vertical&&horizontal?`${vertical}_${horizontal}`:'none'
   }
+}
+
+const diagonalRate=new WeakMap<RpgClientEngine,number>()
+const DIAGONAL_INTERVAL_MS=65
+const DIAGONAL_HOLD_MS=110
+
+/** Real 45° velocity, handled by RPG-JS's authoritative vector-movement
+ * physics. No extra speed is applied (additionalSpeed = 0). */
+function applyDiagonal(engine:RpgClientEngine,dx:number,dy:number,source:'mouse'|'keyboard'):void{
+  if(!dx||!dy)return
+  const now=performance.now()
+  if(now-(diagonalRate.get(engine)??-Infinity)<DIAGONAL_INTERVAL_MS)return
+  const player=engine.getCurrentPlayer() as any
+  if(!player||player.knockbackActive?.()||((document.querySelector('#nobby-hud') as HTMLElement|null)?.hidden))return
+  diagonalRate.set(engine,now)
+  void engine.processDash({
+    direction:{x:Math.sign(dx),y:Math.sign(dy)},
+    additionalSpeed:0,cooldown:0,duration:DIAGONAL_HOLD_MS
+  })
+  window.dispatchEvent(new CustomEvent('nobby:diagonal-input',{
+    detail:{dx:Math.sign(dx),dy:Math.sign(dy),source,mode:'normalized-vector'}
+  }))
 }
 
 function nativeControls(engine:RpgClientEngine):any{
@@ -180,13 +200,16 @@ function driveRoute(engine:RpgClientEngine,state:State):boolean{
     state.path.shift()
   if(!state.path.length){release(state);return false}
   const next=state.path[0],dx=next.x-at.x,dy=next.y-at.y
-  // Diagonal route segments alternate the two native controls on adjacent
-  // physics frames. This approximates a straight 45° trajectory at 60Hz,
-  // while keeping the exact foot-step animation of ordinary WASD movement.
   const ax=Math.abs(dx),ay=Math.abs(dy)
-  const horizontal=dx>0?'right':'left',vertical=dy>0?'down':'up'
-  const direction=ax>ay+2?horizontal:ay>ax+2?vertical:
-    state.held===horizontal?vertical:horizontal
+  // A* emits straight 45° segments. Small sub-tile offsets are normal after
+  // the previous waypoint and should not turn a diagonal into a staircase.
+  const diagonal=Math.min(ax,ay)>=8&&Math.max(ax,ay)<=Math.min(ax,ay)*2.5
+  if(diagonal){
+    release(state)
+    applyDiagonal(engine,dx,dy,'mouse')
+    return true
+  }
+  const direction=ax>ay?(dx>0?'right':'left'):(dy>0?'down':'up')
   if(!hold(engine,state,direction)){cancel(state);return false}
   return true
 }
