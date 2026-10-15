@@ -160,6 +160,9 @@ prop('desert-house','biomes/desert-house.png',[128,192],1,[64,171],[82,42],true,
 prop('desert-tent','biomes/desert-tent.png',[128,192],1,[64,171],[80,35],true,1)
 prop('desert-temple','biomes/desert-temple.png',[128,192],1,[64,171],[90,44],true,1)
 prop('snow-pine','biomes/snow-pine.png',[128,192],1,[64,172],[34,24],true,1)
+prop('desert-agave','biomes/desert-agave.png',[64,64],1,[32,56],[26,16],false,1)
+prop('desert-shrub','biomes/desert-shrub.png',[64,64],1,[32,56],[24,16],false,1)
+prop('desert-prickly-pear','biomes/desert-prickly-pear.png',[64,64],1,[32,56],[30,18],true,1)
 for(const asset of Object.values(assets))for(const state of Object.values(asset.animations)){
  const p=read('public/'+state.image),[fw,fh]=asset.frame
  if(p.width!==fw*state.frames||p.height!==fh)throw Error(`${state.image}: expected ${fw*state.frames}×${fh}, got ${p.width}×${p.height}`)
