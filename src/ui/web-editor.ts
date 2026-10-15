@@ -86,6 +86,7 @@ class MapEditor {
  private zoomText=elt<HTMLElement>('span','we-zoom-status','100 %')
  private layerPicker=elt<HTMLSelectElement>('select')
  private layerHelpText=elt<HTMLElement>('div','we-layer-help')
+ private layerField=field('Kachelebene',this.layerPicker)
  private categoryTabs=elt<HTMLElement>('div','we-categories')
  private paletteTabs=elt<HTMLElement>('div','we-tabs')
  private viewport=elt<HTMLElement>('div','we-viewport')
@@ -108,7 +109,7 @@ class MapEditor {
    const el=button(label,()=>this.setTool(id));el.dataset.tool=id;toolbar.append(el)
   }
   this.layerPicker.addEventListener('change',()=>{this.layerIndex=Number(this.layerPicker.value);this.updateLayerHelp();this.redraw()})
-  toolbar.append(field('Ebene',this.layerPicker),
+  toolbar.append(this.layerField,
    button('−',()=>this.zoomAt(.8),'we-zoom-button'),
    this.zoomText,button('+',()=>this.zoomAt(1.25),'we-zoom-button'),
    button('⤢ Einpassen',()=>this.fitMap()),
@@ -116,7 +117,7 @@ class MapEditor {
   const pane=elt('main','we-body')
   this.stage.append(this.canvas);this.viewport.append(this.stage)
   const sidebar=elt('aside','we-sidebar')
-  const toolHelp=elt('p','we-help','Objekte anklicken und ziehen oder eine Kachel aus dem Tileset wählen. Mausrad zoomt, Rechtsklick zieht die Ansicht.')
+  const toolHelp=elt('p','we-help','Bäume, Gebäude und Figuren platzierst du unabhängig von Kachelebenen. Beim Malen wählst du die Ebene und Kacheln. Für begehbares Land im neuen Wasser die rote Sperrfläche entfernen.')
   this.picker.addEventListener('change',()=>{
    this.chosenAsset=this.picker.value;this.refreshGallerySelection()
   })
@@ -176,6 +177,8 @@ class MapEditor {
   this.palette.hidden=tool!=='tile';this.paletteTabs.hidden=tool!=='tile'
   this.objectArea.hidden=tool!=='select'&&tool!=='object'
   this.detail.hidden=tool!=='select'
+  this.layerField.hidden=tool!=='tile'&&tool!=='erase'
+  this.layerHelpText.hidden=tool!=='tile'&&tool!=='erase'
   this.renderCategories();this.filterGallery();this.filterTilesets();this.redraw()
  }
  private renderCategories(){
@@ -211,8 +214,16 @@ class MapEditor {
   })
   const current=this.sheet.findIndex(s=>this.chosenGid>=s.first&&this.chosenGid<s.first+s.count)
   if(first>=0&&(current<0||
-   (this.activeCategory!=='Alle'&&tilesetCategory(this.sheet[current].source)!==this.activeCategory)))
-   this.showSheet(first)
+   (this.activeCategory!=='Alle'&&tilesetCategory(this.sheet[current].source)!==this.activeCategory))){
+   let index=first
+   // Prefer blue background water over the collision-only water tile.
+   if(this.activeCategory==='Wasser'){
+    const water=this.sheet.findIndex(s=>s.source==='water-background.tsx')
+    if(water>=0)index=water
+   }
+   this.chosenGid=this.sheet[index].first
+   this.showSheet(index)
+  }
  }
  private async load(){
   try{
