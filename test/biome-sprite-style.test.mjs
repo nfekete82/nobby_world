@@ -4,6 +4,7 @@ import fs from 'node:fs'
 import {PNG} from 'pngjs'
 import {BIOME_PROP_SPECS,ensureBiomeProps} from '../scripts/biome-props.mjs'
 import {styledBiomeProps} from '../scripts/biome-props-style.mjs'
+import {ORIGINAL_GREEN_BUILDINGS,renderOriginalGreenBuilding} from '../scripts/green-native-buildings.mjs'
 
 test('the ten biome props use the shared pixel renderer and native frames',()=>{
  ensureBiomeProps()
@@ -35,7 +36,25 @@ test('the ten biome props use the shared pixel renderer and native frames',()=>{
 test('generated artwork is deterministic and pixel-perfect',()=>{
  for(const [id,[width,height]] of Object.entries(BIOME_PROP_SPECS)){
   const a=new PNG({width,height}),b=new PNG({width,height})
-  styledBiomeProps[id](a);styledBiomeProps[id](b)
+  if(ORIGINAL_GREEN_BUILDINGS[id]){
+   a.data.set(renderOriginalGreenBuilding(id).data)
+   b.data.set(renderOriginalGreenBuilding(id).data)
+  }else{
+   styledBiomeProps[id](a);styledBiomeProps[id](b)
+  }
   assert.deepEqual(a.data,b.data,id)
+ }
+})
+
+test('buildings are Pixel Frog originals with recolored blue roofs, not generated geometry',()=>{
+ ensureBiomeProps()
+ const ids=Object.keys(ORIGINAL_GREEN_BUILDINGS)
+ assert.deepEqual(ids.sort(),['desert-house','desert-temple','desert-tent'])
+ for(const id of ids){
+  const native=renderOriginalGreenBuilding(id)
+  const generated=PNG.sync.read(fs.readFileSync('public/tiny-swords/biomes/'+id+'.png'))
+  assert.deepEqual(generated.data,native.data,id+' differs from native source transformation')
+  assert.equal(generated.width,ORIGINAL_GREEN_BUILDINGS[id].width)
+  assert.equal(generated.height,ORIGINAL_GREEN_BUILDINGS[id].height)
  }
 })
