@@ -99,8 +99,8 @@ test('editor exposes category tabs, readable layer help and deferred refresh',()
 
 test('Vite 8 suppresses managed map HMR while the editor save is in flight',()=>{
  const vite=fs.readFileSync('vite.config.ts','utf8')
- assert.match(vite,/hotUpdate\\(ctx\\) \\{[\\s\\S]*?ignoreEditorFileChange\\(ctx\\.file\\)/)
- assert.match(vite,/handleHotUpdate\\(ctx\\) \\{[\\s\\S]*?ignoreEditorFileChange\\(ctx\\.file\\)/)
+ assert.match(vite,/hotUpdate\(ctx\) \{[\s\S]*?ignoreEditorFileChange\(ctx\.file\)/)
+ assert.match(vite,/handleHotUpdate\(ctx\) \{[\s\S]*?ignoreEditorFileChange\(ctx\.file\)/)
 })
 
 test('save roundtrip on the real authored map dimensions, without changing user files',async()=>{
@@ -114,12 +114,12 @@ test('save roundtrip on the real authored map dimensions, without changing user 
  assert.ok(layers.length>=6,'actual scene must retain its game layers')
  const desert=layers.find(layer=>layer._attributes.name==='Wüste')
  assert.ok(desert,'new layered desert tile exists')
- const sourceCells=String(desert.data._text).trim().split(/\\s*,\\s*/)
+ const sourceCells=String(desert.data._text).trim().split(/\s*,\s*/)
  const before=sourceCells[0]
  sourceCells[0]=before==='228'?'229':'228'
- desert.data._text='\\n'+Array.from({length:height},(_,y)=>sourceCells.slice(y*width,(y+1)*width).join(',')).join(',\\n')+'\\n'
+ desert.data._text='\n'+Array.from({length:height},(_,y)=>sourceCells.slice(y*width,(y+1)*width).join(',')).join(',\n')+'\n'
  const updated=xml.js2xml({map},{compact:true})
- const edited='<?xml version="1.0" encoding="UTF-8"?>\\n'+updated+'\\n'
+ const edited='<?xml version="1.0" encoding="UTF-8"?>\n'+updated+'\n'
  assert.deepEqual(validateEditorMap(original,edited),{width,height,layers:layers.length})
  const tempDir=fs.mkdtempSync(path.join(os.tmpdir(),'nobby-editor-full-map-'))
  try{
