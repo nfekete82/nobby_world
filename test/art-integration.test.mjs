@@ -71,3 +71,24 @@ test('actual water/cliff tiles and object footprints leave every encounter and p
   }
  }
 })
+
+test('Nobby and Mira use idle poses with stable horizontal centers',()=>{
+ for(const [id,frames] of [['hero',[1,3]],['female',[3,5]]]){
+  const asset=art.assets[id],bounds=asset.animations.stand.visibleBounds
+  const centers=frames.map(i=>(bounds[i][0]+bounds[i][2])/2)
+  assert.ok(Math.max(...centers)-Math.min(...centers)<=2,id+' idle jumps horizontally')
+  assert.ok(centers.every(x=>Math.abs(x-asset.foot[0])<=3),id+' idle is off-center')
+ }
+})
+test('generated click navigation matches both Tiled maps and allows each start',()=>{
+ for(const w of compileWorlds()){
+  const n=w.navigation
+  assert.equal(n.cell,16)
+  assert.equal(n.cols,Math.ceil(w.width/16))
+  assert.equal(n.rows,Math.ceil(w.height/16))
+  const bytes=Buffer.from(n.blocked,'hex')
+  const ix=Math.round(w.start.y/16)*n.cols+Math.round(w.start.x/16)
+  assert.equal(bytes[ix>>3]&(1<<(ix&7)),0,w.id+' spawn blocked')
+  assert.ok(bytes.some(b=>b!==0),w.id+' has no blocked cells')
+ }
+})
