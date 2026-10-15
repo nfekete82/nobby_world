@@ -8,6 +8,9 @@ export function worldEvent(object: any): EventDefinition {
     if (object.kind === 'monster') return {
         name: object.name,
         onInit() {
+            // Stable authored ID survives RPG-JS dynamic event creation.
+            // Used only server-side to resolve and authorize spell targets.
+            ;(this as any).nobbyWorldObjectId=object.id
             const graphic=object.enemy==='berserker'?'enemy-berserker':'enemy-warrior'
             this.setGraphic(graphic)
             this.setHitbox(...ART.actorHitbox as [number,number])
@@ -16,7 +19,7 @@ export function worldEvent(object: any): EventDefinition {
             this.allRecovery()
             new BattleAi(this, {
                 enemyType: object.enemy === 'berserker' ? EnemyType.Berserker : EnemyType.Aggressive,
-                dodgeChance: 0, visionRange: object.vision, attackRange: 60, attackCooldown: 1400,
+                dodgeChance: 0, visionRange: object.vision, attackRange: 60, attackCooldown: 1050, fleeThreshold: 0,
                 attackPatterns: [AttackPattern.Melee],
                 animations: { ...combatOptions.animations, attack: { graphic, animationName: 'attack' } },
                 rewards: { exp: 15 * object.level, gold: 5 * object.level },

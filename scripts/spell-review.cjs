@@ -52,11 +52,18 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
    const p=window.__spellReview.engine.getCurrentPlayer();
    return p&&Math.abs(p.x()-expected.x)<8&&Math.abs(p.y()-expected.y)<8&&p.spSignal()===100
   },start,{timeout:12000});
+  // The authoritative map is the one the attacking player belongs to,
+  // not necessarily server.subRoom (which may be a transfer wrapper).
   const before=await page.evaluate(targetId=>{
-   const s=window.__spellReview.server.subRoom;
-   const target=s.events()[targetId],p=Object.values(s.players())[0];
-   if(!target)throw Error('target event not present in server room');
-   return {hp:target.hp,mana:p.sp,from:{x:p.x(),y:p.y()},to:{x:target.x(),y:target.y()}};
+   const s=window.__spellReview.server.subRoom,p=Object.values(s.players())[0];
+   const map=p.getCurrentMap(),events=map?.events?.()??{};
+   const enemy=map?.getEvent?.(targetId) ??
+     Object.values(events).find(e=>e.nobbyWorldObjectId===targetId);
+   if(!enemy)throw Error('target not present in authoritative player map: '+
+     JSON.stringify({targetId,mapId:map?.id,serverSubRoomId:s.id,
+       authoredTargetKeys:Object.keys(events).slice(0,6)}));
+   return {hp:enemy.hp,mana:p.sp,
+     actualId:enemy.id,from:{x:p.x(),y:p.y()},to:{x:enemy.x(),y:enemy.y()}};
   },foe.id);
   assert.equal(before.mana,100);
   const click=await page.evaluate(targetId=>{
@@ -76,20 +83,37 @@ const ensureDevServer=require('./ensure-dev-server.cjs');
   assert.equal(await page.evaluate(()=>document.querySelectorAll('.nobby-arcane-orb').length),1,
     'magical orb was not drawn in the game');
   await page.waitForFunction(({targetId,hp})=>{
-   const s=window.__spellReview.server.subRoom;
-   const enemy=s.events()[targetId];
-   return !enemy||enemy.hp<hp;
-  },{targetId:foe.id,hp:before.hp},{timeout:5000});
+   const player=Object.values(window.__spellReview.server.subRoom.players())[0];
+   const map=player.getCurrentMap();
+   const enemy=map?.getEvent(targetId) ??
+     Object.values(map?.events?.()??{}).find(e=>e.nobbyWorldObjectId===targetId);
+   return enemy?.hp<hp;
+  },{targetId:foe.id,hp:before.hp},{timeout:6000}).catch(async()=>{
+   const details=await page.evaluate(targetId=>{
+     const player=Object.values(window.__spellReview.server.subRoom.players())[0];
+     const map=player.getCurrentMap(),enemy=map?.getEvent(targetId) ??
+       Object.values(map?.events?.()??{}).find(e=>e.nobbyWorldObjectId===targetId);
+     return {mapId:map?.id,playerMana:player.sp,enemyHp:enemy?.hp,
+       enemyRuntimeId:enemy?.id,ai:enemy?.battleAi?.getState?.(),
+       target:enemy?.battleAi?.getTarget?.()?.id,events:Object.keys(map?.events?.()??{}).slice(0,8)};
+   },foe.id);
+   throw new Error('Server did not apply spell damage: '+JSON.stringify(details));
+  });
   const after=await page.evaluate(targetId=>{
-   const s=window.__spellReview.server.subRoom,p=Object.values(s.players())[0];
-   const target=s.events()[targetId];
-   return {hp:target?.hp??0,mana:p.sp,fx:window.__spellFX};
+   const p=Object.values(window.__spellReview.server.subRoom.players())[0];
+   const m=p.getCurrentMap(),target=m?.getEvent(targetId) ??
+     Object.values(m?.events?.()??{}).find(e=>e.nobbyWorldObjectId===targetId);
+   return {hp:target?.hp??0,mana:p.sp,fx:window.__spellFX,
+     ai:target?.battleAi?.getState?.(),aggro:target?.battleAi?.getTarget?.()?.id,
+     visionRange:target?.battleAi?.visionRange,playerId:p.id};
   },foe.id);
   assert.equal(after.mana,before.mana-ARCANE_MANA,'mana spent by authoritative server');
   assert.ok(after.hp<before.hp,'ActionBattle damage actually hit the enemy');
+  assert.equal(after.aggro,after.playerId,'Wounded enemy must target the attacker immediately');
+  assert.ok(after.visionRange>=440,'Wounded enemy must chase beyond normal sight range');
   await page.waitForFunction(()=>window.__spellFX.some(e=>e.phase==='impact'),{},{timeout:5000});
   assert.deepEqual(errors,[],'no browser exceptions');
-  console.log('Mage combat browser review passed:',{enemy:foe.id,from:before.from,to:before.to,initialHp:before.hp,finalHp:after.hp,manaSpent:ARCANE_MANA});
+  console.log('Mage combat browser review passed:',{enemy:foe.id,from:before.from,to:before.to,initialHp:before.hp,finalHp:after.hp,manaSpent:ARCANE_MANA,aggro:after.aggro,ai:after.ai});
  }finally{
   if(browser)await browser.close();
   await stop();
