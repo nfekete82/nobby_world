@@ -11,8 +11,8 @@ const xml=require('xml-js')
  try{
   browser=await chromium.launch({...(process.env.CI?{}:{channel:'chrome'}),
    headless:true,args:['--enable-unsafe-swiftshader']})
-  const context=await browser.newContext({acceptDownloads:true,viewport:{width:1920,height:1200}})
-  const page=await context.newPage();page.setDefaultTimeout(15000)
+  const context=await browser.newContext({acceptDownloads:true,viewport:process.env.CI?{width:1400,height:900}:{width:1920,height:1200}})
+  const page=await context.newPage();page.setDefaultTimeout(process.env.CI?45000:15000)
   // Relay only this disposable fixture's API requests through the unchanged
   // localhost:5173 authority guard; never contact the user's actual server.
   await page.route('**/__nobby-editor/**',async route=>{const response=await route.fetch({headers:{...route.request().headers(),host:'127.0.0.1:5173',origin:'http://127.0.0.1:5173'}});if(route.request().url().endsWith('/assets/save')&&delayAssetSave){delayAssetSave=false;await new Promise(r=>setTimeout(r,1200))}await route.fulfill({response})})
@@ -40,7 +40,7 @@ const xml=require('xml-js')
   await launch.waitFor({state:'visible',timeout:12000})
   await launch.click()
   const editor=page.getByRole('dialog',{name:'Nobby World Karteneditor'})
-  await editor.waitFor();console.log('Editor open')
+  await editor.waitFor();await page.waitForSelector('.we-overlay[data-ready="true"]',{timeout:45000});console.log('Editor ready')
   const stage=editor.locator('canvas.we-map')
   // Do not assume a fresh 40x32 map: user-authored islands can be 100x40.
   const localMap=xml.xml2js(fs.readFileSync('src/tiled/simplemap.tmx','utf8'),{compact:true}).map

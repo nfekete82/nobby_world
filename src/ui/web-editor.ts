@@ -284,6 +284,7 @@ class MapEditor {
   }
  }
  private async load(){
+  this.root.setAttribute('aria-busy','true');this.mapPane.inert=true;this.mapToolbar.inert=true
   try{
    const live=String(this.engine?.sceneMap?.data?.()?.id||'simplemap').replace(/^map-/,'')
    this.id=/^[a-zA-Z0-9_-]+$/.test(live)?live:'simplemap'
@@ -320,8 +321,10 @@ class MapEditor {
    this.buildPalettes()
    this.fitMap()
    this.redraw()
+   this.root.dataset.ready='true'
    this.status(this.id+' · '+this.w/64+' × '+this.h/64+' Kacheln · 64 px Raster')
   }catch(error){this.status('Fehler: '+String(error));this.root.querySelectorAll('button').forEach(b=>{if(b.textContent?.includes('Speichern'))b.disabled=true})}
+  finally{this.root.setAttribute('aria-busy','false');this.mapPane.inert=false;this.mapToolbar.inert=false}
  }
  private async loadExtraPathTilesets(map:Element){
   // No on-disk TMX migration: older 100x40 user maps remain untouched until
@@ -449,7 +452,8 @@ class MapEditor {
    if(cached)draw(cached)
    else void image(pathUrl(src)).then(img=>{
     this.spriteCache.set(src,img);draw(img)
-    if(img.naturalWidth)this.redraw()
+    // Gallery-only thumbnails do not change map pixels. Redrawing the full
+    // native-size map for every decoded thumbnail stalls software-rendered CI.
    })
   }
   this.refreshGallerySelection()
