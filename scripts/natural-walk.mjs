@@ -1,4 +1,5 @@
 import { PNG } from 'pngjs'
+import { alternateShamanFeet } from './shaman-gait.mjs'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -51,7 +52,9 @@ export function stabilizeShamanWalk(standing, walking) {
    }
   }
  }
- return result
+ // Horizontal jitter is corrected above; the separate gait compositor
+ // now makes the two feet alternate which leg plants on the ground.
+ return alternateShamanFeet(result)
 }
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..')
