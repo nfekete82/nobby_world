@@ -2,10 +2,10 @@
 set -e
 cd "${0:A:h}"
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
-preview_page=$(curl -fsS --max-time 2 'http://localhost:5173' 2>/dev/null || true)
-if [[ "$preview_page" == *'<title>Nobby World'* ]]; then
-  open 'http://localhost:5173'
-  echo 'Die Nobby-Spielvorschau läuft bereits.'
-  exit 0
+if ! command -v docker >/dev/null 2>&1; then
+  echo 'Docker / OrbStack fehlt. Bitte installieren oder starten.'
+  read '?Enter zum Schließen …'
+  exit 1
 fi
-npm run dev -- --host 127.0.0.1 --port 5173 --strictPort --open
+docker compose up -d --remove-orphans game
+open 'http://localhost:8088/'

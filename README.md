@@ -14,51 +14,46 @@ Beim ersten Start stehen Magier und Schamane zur Wahl. Der Schamane beschwört m
 
 [Bedienung, Architektur, Speicherstände und Docker-Start](docs/SHAMAN_AND_BIOMES.md) · [Grafikquellen und Promptset](docs/EXPANSION_ART_PROMPTS.md) · [Abnahme](docs/SHAMAN_ACCEPTANCE.md)
 
-## Spielen
+## Nobby World Studio · nur localhost:8088
 
-Node.js 24 LTS verwenden:
-
-```sh
-npm ci
-npm start
-```
-
-Öffnen: http://localhost:8088. Mit Docker:
+Spiel, Karteneditor, Grafik-/Animationseditor und dauerhaftes Speichern laufen
+in **einem einzigen Docker-Service** auf http://localhost:8088. Es ist weder
+eine separate Entwickler-URL noch ein zweiter Container erforderlich.
 
 ```sh
-docker compose up -d --build --force-recreate
+docker compose up -d --remove-orphans game
+docker compose ps game
 ```
 
-Die Docker-Version auf Port 8088 ist ein fertiger Build und übernimmt Änderungen
-nach einem Neubau. Das Spiel benötigt im Einzelspielermodus keinen externen Server.
+Im Spiel **Esc → Karteneditor → Grafiken & Animationen** auswählen.
+Alle Änderungen werden direkt in die **Arbeitskopie, aus der Docker Compose
+gestartet wurde**, geschrieben: `src/tiled/` (Karten), `art/user-assets/`
+und `public/tiny-swords/user/` (Assets), `art/map-backups/` (Sicherungen)
+und `art/editor-history/` (Journal). Die Mac-Arbeitskopie ist als
+`./:/app` eingebunden; Abhängigkeiten bleiben in einem Docker-Volume.
+Bei geändertem `package-lock.json` wird `npm ci` automatisch ausgeführt.
+Speichern und kontrolliertes Aktualisieren bleiben erhalten.
 
-### OrbStack · einmal einrichten, danach ohne Terminal spielen und Karten bearbeiten
+**Achtung Worktrees:** Ein Start aus `~/Projects/nobby_world-shaman-check`
+speichert ausschließlich dort. Der andere Worktree `~/Projects/nobby_world`
+bleibt unverändert. Vor einer Umstellung Entwürfe sichern und eine
+dauerhafte Arbeitskopie festlegen. `--remove-orphans` entfernt beim
+Umstieg den vorherigen separaten Editor-Container; alte Browser-Entwürfe
+von Port 5173 werden wegen des anderen Origins nicht automatisch übernommen.
 
-OrbStack führt bereits den Spielcontainer mit `restart: unless-stopped` aus.
-Für Kartenänderungen und automatische Live-Aktualisierung ist jetzt zusätzlich
-ein **Editor-Container** vorgesehen. Einmalig im Projektverzeichnis:
+Die Oberfläche wird ausschließlich auf `127.0.0.1:8088` veröffentlicht.
+**Nicht** ins LAN, Internet oder hinter einen Reverse Proxy freigeben.
+Editor-API prüft lokalen Host und Origin, Editor-Header und Sitzungstoken.
+Der unveränderte `Dockerfile` kann separat weiterhin einen statischen
+Nginx-Produktionsbuild erstellen; er wird nicht für das lokale Studio genutzt.
 
 ```sh
-docker compose --profile editor up -d editor
+docker compose logs -f game
 ```
 
-Danach einfach **http://localhost:5173** öffnen. Auf diesem Port läuft das
-Spiel inklusive Esc-Karteneditor, **direktem Speichern in `src/tiled/`**, 
-Hot-Reload und Backup. Die macOS-Projektdateien sind in den Container eingebunden;
-Abhängigkeiten liegen separat in einem OrbStack-/Docker-Volume und werden nur
-bei Änderung der `package-lock.json` neu installiert.
-
-Der Container wird nach Docker-Neustarts automatisch wiederhergestellt, solange
-du ihn nicht manuell stoppst; dafür muss OrbStack laufen (optional **Start on login**
-in den OrbStack-Einstellungen aktivieren). Der Editor ist aus Sicherheitsgründen
-nur auf `127.0.0.1:5173` am Mac veröffentlicht. Prüfen mit
-`docker compose --profile editor ps`, bei Bedarf Logs mit
-`docker compose --profile editor logs -f editor`.
-
-**Unterschied:** `localhost:5173` ist immer die Live-Entwicklerversion;
-`localhost:8088` ist der separate, gebaute Release-Container. Für neue Versionen
-auf 8088 einmal `docker compose up -d --build game` ausführen, für Arbeiten im
-Karteneditor ist das nicht nötig.
+`Spielvorschau.command` startet/öffnet ebenfalls das einheitliche Studio.
+`npm run dev` ohne Parameter startet weiterhin auf Vites Test-/Legacy-Port
+5173; der reguläre Docker-Studiobetrieb verwendet nur 8088.
 
 | Eingabe | Aktion |
 | --- | --- |
@@ -81,7 +76,7 @@ Pixelgröße; transparente Ränder werden über zentrale Fußpunkte ausgeglichen
 ## Eigene Karten · ohne Studio, Konto oder Cloud
 
 `Karteneditor.command` öffnet Tiled und das vorbereitete Projekt.
-`Spielvorschau.command` startet die Live-Vorschau unter http://localhost:5173.
+`Spielvorschau.command` öffnet das Studio unter http://localhost:8088.
 In Tiled speichern → die Vorschau lädt die Karte neu. Tiled liegt lokal unter
 `.tools/` und wird nicht mit Git/Docker verteilt. Auf einem neuen Mac (macOS 13+):
 `npm run editor:setup`.

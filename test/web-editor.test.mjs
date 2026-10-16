@@ -150,3 +150,17 @@ test('static asset library continues rendering when a generated animation is mis
  assert.match(editor,/Port 8088 ist schreibgeschützt/)
  assert.match(editor,/Vorschaubild fehlt – Asset bleibt auswählbar/)
 })
+
+test('single-port Studio is loopback-bound and opens both game and editor at 8088',()=>{
+ const compose=fs.readFileSync('compose.yaml','utf8')
+ assert.match(compose,/127\.0\.0\.1:8088:8088/)
+ assert.match(compose,/nobby_world_studio_modules:\/app\/node_modules/)
+ assert.match(compose,/- \.\/:\/app/)
+ assert.match(compose,/--port 8088 --strictPort/)
+ assert.match(compose,/NOBBY_EDITOR_READ_ONLY: "0"/)
+ assert.doesNotMatch(compose,/127\.0\.0\.1:5173:5173/)
+ const api=fs.readFileSync('scripts/web-editor-api.mjs','utf8')
+ assert.match(api,/localAuthority=/)
+ assert.match(api,/origin!==/)
+ assert.match(fs.readFileSync('src/ui/web-editor.ts','utf8'),/Nobby World Studio aktiv/)
+})
