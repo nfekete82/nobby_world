@@ -8,7 +8,7 @@ export const STABLE_IDLE_FRAMES=Object.freeze({
   // remain unchanged in the registry and sprite atlas for combat/save compatibility.
   hero:Object.freeze([1,3]),
   female:Object.freeze([3,5]),
-  shaman:Object.freeze([0,1,2,3,4,5,6,7]),
+  shaman:Object.freeze([0,1,2,3,4,5]),
   skeleton:Object.freeze([0,2])
 })
 
