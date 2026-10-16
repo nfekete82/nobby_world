@@ -136,7 +136,8 @@ test('sheep walking contains actual alternating hoof movement with an unmoving b
   let diff=0
   for(let y=0;y<128;y++)for(let x=0;x<128;x++){
    const at=(y*original.width+x)*4,b=(y*output.width+f*128+x)*4
-   if(y<69) assert.deepEqual([...output.data.subarray(b,b+4)],
+   // Hooves lift up to two rows (69 -> 67); upper fleece stays fixed.
+   if(y<67) assert.deepEqual([...output.data.subarray(b,b+4)],
     [...original.data.subarray(at,at+4)],'upper body moved frame '+f)
    if(y>=67&&([...output.data.subarray(b,b+4)].some((v,k)=>v!==original.data[at+k]))) diff++
   }
