@@ -30,7 +30,8 @@
     "test:expansion": "node scripts/expansion-review.cjs",
     "test:aggro": "node scripts/nearest-hostile-review.cjs",
     "art:style:check": "node scripts/preflight-art.mjs && node scripts/check-art-direction.mjs",
-    "art:references": "node scripts/art-reference-sheet.mjs"
+    "art:references": "node scripts/art-reference-sheet.mjs",
+    "preart:style:check": "node scripts/world-data.mjs"
   },
   "keywords": [],
   "author": "",
