@@ -23,8 +23,8 @@ test('shaman, skeleton and biome enemies ship complete native animations with bi
      assert.ok(x>0&&x<191&&y>0&&y<191,id+'/'+state+' cropped frame')
     }
     assert.ok(painted>100,id+'/'+state+' empty frame')
-    assert.ok(id==='shaman'?bottom>=130&&bottom<=133:Math.abs(bottom-a.foot[1])<=1,
-     id+'/'+state+' unstable ground baseline '+bottom)
+    assert.ok(id==='shaman'?(state==='death'?bottom>=130&&bottom<=180:bottom===136):Math.abs(bottom-a.foot[1])<=1,
+     id+'/'+state+' invalid ground/pose bounds '+bottom)
    }
   }
  }

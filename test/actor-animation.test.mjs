@@ -24,7 +24,7 @@ test('all playable classes and skeletons have calm, fixed-foot standing sequence
   assert.ok(Math.max(...centers)-Math.min(...centers)<=2,id+' shifts horizontally between standing poses')
   assert.ok(centers.every(x=>Math.abs(x-actor.foot[0])<=3),id+' off-center standing pose')
  }
- assert.equal(registry.assets.shaman.animations.stand.fps,0.5)
+ assert.equal(registry.assets.shaman.animations.stand.fps,5)
  assert.equal(registry.assets.shaman.animations.walk.fps,12)
 })
 
@@ -52,9 +52,11 @@ test('actor cells stay full-size; trim only non-actor props',()=>{
  assert.match(runtime,/frames\.length\*60\/state\.fps/)
 })
 
-test('native shaman compilation retains calm idle and all original Monk run poses',()=>{
+test('the native Monk fallback is retained while the playable shaman uses the authored paint-over',()=>{
  assert.equal(NATIVE_SHAMAN_STATES.stand.fps,0.5)
  assert.deepEqual(NATIVE_SHAMAN_STATES.walk.poses,[0,1,2,3])
+ assert.equal(registry.assets.shaman.animations.stand.frames,8)
+ assert.equal(registry.generation.shaman.source,'art/generated-source/expansion/shaman-reference-frame.png')
  const source=fs.readFileSync('scripts/expansion-art.mjs','utf8')
  assert.match(source,/if\(id==='shaman'\)\{ensureNativeShaman\(registry\);continue\}/)
 })
