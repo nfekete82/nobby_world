@@ -13,6 +13,7 @@ import { ensureSheepGraze, ensureSheepWalk } from './sheep-art.mjs'
 import {ensureUserAssetRegistry} from './user-assets.mjs'
 import { ensureNaturalShamanWalk } from './natural-walk.mjs'
 import {ensureReferenceShaman,SHAMAN_REFERENCE} from './reference-shaman.mjs'
+import {atomicWrite} from './editor-storage.mjs'
 
 export const projectRoot=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..')
 // Prepare the authored shaman sheet before the registry is read by Vite/tests.
@@ -22,7 +23,7 @@ if(fs.existsSync(paintover)){
  const base=JSON.parse(fs.readFileSync(baseFile,'utf8'))
  ensureReferenceShaman(base)
  const content=JSON.stringify(base,null,2)+'\n'
- if(fs.readFileSync(baseFile,'utf8')!==content)fs.writeFileSync(baseFile,content)
+ if(fs.readFileSync(baseFile,'utf8')!==content)atomicWrite(baseFile,content)
 }
 const art=ensureUserAssetRegistry(projectRoot)
 const list=value=>value==null?[]:Array.isArray(value)?value:[value]

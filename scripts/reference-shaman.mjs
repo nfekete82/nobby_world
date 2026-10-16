@@ -5,6 +5,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {PNG} from 'pngjs'
+import {atomicWrite} from './editor-storage.mjs'
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..')
 export const SHAMAN_REFERENCE='art/generated-source/expansion/shaman-reference-frame.png'
 const FRAME=192,BASE=path.join(ROOT,SHAMAN_REFERENCE)
@@ -100,7 +101,7 @@ export function ensureReferenceShaman(registry){
    const full=path.join(ROOT,'public',dest)
    if(fs.existsSync(full)&&fs.readFileSync(full).equals(bytes))continue
    fs.mkdirSync(path.dirname(full),{recursive:true})
-   fs.writeFileSync(full,bytes)
+   atomicWrite(full,bytes)
   }
   const visibleBounds=Array.from({length:spec.frames},(_,i)=>visible(out,out.width,i,0))
   animations[state]={image,frames:spec.frames,fps:spec.fps,rows:2,visibleBounds}
