@@ -15,7 +15,8 @@ const xml=require('xml-js')
   const errors=[]
   page.on('pageerror',e=>errors.push(e.message))
   page.on('dialog',d=>void d.accept())
-  await page.goto('http://127.0.0.1:5173/')
+  await page.goto(('http://127.0.0.1:'+(process.env.NOBBY_TEST_PORT||5173)+'/'))
+ await require('./ensure-dev-server.cjs').chooseMage(page);
   await page.waitForSelector('#nobby-hud:not([hidden])',{timeout:20000})
   // Give the standalone game focus before dispatching the same Escape
   // action a player uses. Some headless Chrome runs begin without canvas focus.
@@ -55,7 +56,7 @@ const xml=require('xml-js')
   const gallery=editor.locator('.we-object-gallery .we-object-card')
   await page.waitForFunction(()=>document.querySelectorAll('.we-object-card').length>=8)
   assert.ok((await gallery.count())>=8,'visual object preview should list the available sprites')
-  await editor.getByRole('button',{name:'Wald',exact:true}).click()
+  await editor.locator('.we-category').filter({hasText:/^Wald$/}).click()
   assert.ok((await gallery.filter({visible:true}).count())>=3,'forest category shows only matching trees and bushes')
   await editor.getByRole('button',{name:'Wasserobjekte',exact:true}).click()
   assert.ok((await gallery.filter({visible:true}).count())>=2,'water props have their own category')
@@ -63,7 +64,7 @@ const xml=require('xml-js')
   await editor.getByRole('searchbox',{name:'Objekte suchen'}).fill('tree')
   assert.ok((await gallery.filter({visible:true}).count())>=2,'object thumbnails should be searchable')
   await editor.getByRole('searchbox',{name:'Objekte suchen'}).fill('')
-  await gallery.first().click()
+  await gallery.filter({visible:true}).first().click()
   assert.ok(await editor.locator('[data-tool="object"]').evaluate(el=>el.classList.contains('we-active')),
    'choosing an object from the gallery should enable placement')
   const firstPlace=await stage.boundingBox()

@@ -1,0 +1,36 @@
+name: Nobby World art direction
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - feat/player-level-progression
+      - feat/shaman-biome-expansion
+      - chore/nobby-world-art-style-system
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  art-direction:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Validate asset sizes, maps, pack originals and art references
+        run: npm run art:style:check
+      - name: Generate visual reference gallery
+        run: npm run art:references
+      - name: Upload gallery for human visual review
+        uses: actions/upload-artifact@v4
+        with:
+          name: nobby-world-style-gallery
+          path: artifacts/art-direction/style-reference.html

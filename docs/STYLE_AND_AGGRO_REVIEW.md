@@ -1,0 +1,31 @@
+# Grafikabgleich und nächste feindliche Ziele
+
+Die Überarbeitung baut auf PR #8 auf. Originale Tiny-Swords-Bäume, Gebäude und Magiergrafiken bleiben unverändert. Der [Vergleich](../artifacts/expansion/style-comparison-v2.png) zeigt Originalreferenz, bisherigen Stand (`eed21da`) und neue Version bei nativer Pixelgröße. Er lässt sich mit `node scripts/style-comparison.cjs` erneut erzeugen.
+
+## Grafik
+
+Neun Rasterquellen wurden mit dem integrierten Imagegen-Werkzeug neu gezeichnet: Skelett und Rückenanimationen, Schnee- und Dschungelpflanzen, Kakteen, Wüstengebäude, Skorpion, Schlange und Eisbär (die beiden Skelettdateien bilden einen Charakter). Die Original-PNGs Tree1, Tree2, Tower, Castle und Warrior_Idle wurden direkt als Stilreferenzen verwendet. Sichtbare Verbesserungen: dunkelblaue Konturen, größere Farbflächen, reduzierte kleinteilige Modellierung und klarere Figuren. Die Wüstengebäude behalten ihre IDs, Framegrößen, Fußanker und Kollisionen. Die neuen großen Biombäume orientieren sich mit maximal 183 sichtbaren Pixeln an Tree1; Windposen dürfen geringfügig niedriger sein.
+
+Die endgültigen Quellen stehen unter `art/generated-source/expansion/`; der deterministische Compiler `scripts/expansion-art.mjs` schreibt transparente PNG-Sheets nach `public/tiny-swords/expansion/` und aktualisiert die bestehende Registry. Kein Build benötigt Zugriff auf Imagegen. Alle Skelettzustände besitzen nun eine eigene Rückenreihe. Die Quellen haben semantische statt perfekt gleichmäßiger Abstände; der Compiler trennt Gebäude an transparenten Spaltengassen, Pflanzen/Charaktere an Zeilengassen und verwendet für den hinteren Skeletttod ausdrücklich die vier Kollapsbilder. Spiegelung der hinteren Aktionsposen hält die Schild-/Schwertseite konsistent. Die alte Illustration bleibt als ungenutzte Quelle erhalten.
+
+### Verwendeter Prompt-Satz
+
+Gemeinsame Vorgaben: „EXACT native Tiny Swords style“, direkte Original-PNG-Referenzen, kräftige dunkelblaue Konturen, große klare Pixelgruppen, drei bis vier Farbstufen je Material, Licht von links oben, transparente PNGs mit vollständigen Silhouetten und großzügigen Zwischenräumen; kein Text, Hintergrundrechteck, Blur, Antialiasing, 3D-Rendering oder kleinteiliges Bildrauschen. Bestehende Erweiterungsquellen waren jeweils das Bearbeitungsziel.
+
+- `skeleton.png`: stämmiger freundlicher Chibi-Skelettkrieger, elfenbeinfarbener Schädel, sichtbare Rippen, petrolfarbener Hüftstoff, kleines Schild und Schwert, dezente grüne Augen. Sechs Spalten; Reihen Idle, Walk, Attack, grüner Summon, zwei Hit plus vier Death, Back-Walk. Native Warrior- und Tree1-Referenzen.
+- `skeleton-back.png`: derselbe Krieger ausschließlich von hinten, Hinterkopf ohne Gesicht, gleiche Ausrüstung und Proportionen. Sechs Spalten und sechs Zustandsreihen; die Ausgabe lieferte die brauchbaren Hit-/Death-Bilder gemeinsam in Reihe fünf, was der Compiler ausdrücklich berücksichtigt.
+- `snow-props.png`: vier Windposen je Reihe, Tree1 mit Schnee auf den ursprünglichen Astetagen, flache blaue Kristallflächen, kleiner verschneiter Beerenbusch. Native Tree1-/Tower-Referenzen, keine plastische Weihnachtsbaumform.
+- `jungle-props.png`: vier Posen je Reihe, gebogene Palme mit breiten Wedeln, tropischer Laubbaum mit kräftigem verzweigtem Stamm und wenigen Ranken, Farn. Native Tree1-/Tree2-/Tower-Referenzen; große grün-petrolfarbene Blattgruppen.
+- `cactus-props.png`: vier sanfte Windposen je Reihe, hoher Saguaro, kleiner blühender Kaktus, dreigliedrige Opuntie. Große jade-/petrolfarbene Flächen, wenige cremefarbene Dornengruppen, rote Blüten, feste Fußsteine. Native Tree1-/Tree2-Referenzen.
+- `desert-buildings.png`: drei freigestellte Gebäude nebeneinander: Lehmhaus mit hellem Vordach, roter Marktstand/Zelt, größerer Tempel mit Leiter und türkisfarbenen Akzenten. Goldener Sandstein, kräftige Blockkonturen, drei bis vier Materialfarben. Native Tower-/Castle-Referenzen und bisherige drei Wüstenillustrationen als Bearbeitungsziele.
+- `desert-serpent.png`, `desert-scorpion.png`, `snow-polar-bear.png`: jeweils sechs Spalten und vier Reihen: Idle, Walk, Attack, zwei Hit plus vier Death. Dieselbe erkennbare Tierform mit klareren dunklen Konturen und weniger plastischer Modellierung. Schlange in Gold/Ocker mit großen Rostflecken und cremefarbenem Bauch, Skorpion mit großen Scheren und erhobenem segmentiertem Schwanz, gedrungener Eisbär mit elfenbeinfarbenem Fell und flachen petrolblauen Schatten. Native Warrior-/Tree1-Referenzen.
+
+## Kampf
+
+Alle 250 ms wählt der Server je authored Monster das nächste lebende, erreichbare feindliche Ziel innerhalb seiner aktuellen Sichtweite (einschließlich der bestehenden 440px-Fernkampf-Retaliation nach Arkantreffern). Kandidaten sind ausschließlich Spieler des aktuellen Raums und freundliche Skelette. Andere Gegner, neutrale Tiere, Pflanzen und freundliche NPCs sind ausgeschlossen. Ein partieller A*-Pfad genügt nicht als Erreichbarkeitsnachweis; sein Ende muss das Ziel tatsächlich erreichen. Gleichstände werden deterministisch nach ID aufgelöst.
+
+Die vorhandenen öffentlichen `BattleAi.onDetectOutShape`-/`onDetectInShape`-Hooks führen den Wechsel aus. Die native Engine behält Bewegung, Angriff, Schaden, Threat und Tod. Die bestehende globale Zielberechtigung verhindert, dass weiter entfernter Schadensverursacher beziehungsweise XP-Empfänger die Auswahl überschreibt. Skelettschaden wird weiterhin genau einmal dem Besitzer für native Belohnungen zugerechnet. Beim nativen Skeletttod entfernt ausschließlich BattleAi die Figur nach ihrer Animation; das verhindert doppelte Proxy-Löschungen. Timeout und Portal-Cleanup bleiben Aufgabe des Begleitercontrollers.
+
+## Prüfung
+
+`npm run test:aggro` überprüft in echtem Chrome tatsächlichen Skelettschaden, keinen Schaden am weiter entfernten Schamanen, Wechsel und Schaden am näheren Spieler sowie nativen Skeletttod mit einmaligem Cleanup. Bericht: [nearest-hostile-report.json](../artifacts/expansion/nearest-hostile-report.json); [Screenshot](../artifacts/expansion/nearest-skeleton.png). Node-Tests ergänzen neutrale Ziele, Reichweite, unerreichbare Ziele hinter einer geschlossenen Wand, Pfadöffnung, veraltete Ziele und einmalige Besitzerzuordnung. Asset-Tests prüfen zusätzlich native Baumgröße, gepolsterte Gebäude, transparente Frames und echten Knochenhaufen am Ende beider Todesrichtungen.

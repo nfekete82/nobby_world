@@ -26,7 +26,7 @@ const setProp=(el:Element,name:string,value:string,kind='string')=>{
 }
 const getObj=(el:Element):EditObject=>{
  const kind=el.getAttribute('class')||'prop'
- const asset=kind==='prop'?prop(el,'asset'):kind==='npc'?'female':kind==='monster'?(prop(el,'enemy')==='berserker'?'enemy-berserker':'enemy-warrior'):'portal-marker'
+ const asset=kind==='prop'?prop(el,'asset'):kind==='npc'?'female':kind==='monster'?enemyGraphic(prop(el,'enemy')):'portal-marker'
  return {node:el,x:Number(el.getAttribute('x')||0),y:Number(el.getAttribute('y')||0),
   w:Number(el.getAttribute('width')||32),h:Number(el.getAttribute('height')||24),asset,kind}
 }
@@ -243,7 +243,7 @@ class MapEditor {
    let index=first
    // Selecting a biome should open its landscape, not generic background water.
    if(this.activeCategory==='Alle'){
-    const preferred=this.biome==='Wüste'?'desert.tsx':this.biome==='Schnee'?'snow.tsx':'grass.tsx'
+    const preferred=this.biome==='Wüste'?'desert.tsx':this.biome==='Schnee'?'snow.tsx':this.biome==='Dschungel'?'jungle.tsx':'grass.tsx'
     const found=this.sheet.findIndex(s=>s.source===preferred)
     if(found>=0)index=found
    }
@@ -295,7 +295,7 @@ class MapEditor {
   // No on-disk TMX migration: older 100x40 user maps remain untouched until
   // they explicitly paint and save. Tiled refs are added only in editor memory.
   let gid=Math.max(1,...this.sheet.map(s=>s.first+s.count))
-  for(const source of ['desert-path.tsx','snow-path.tsx']){
+  for(const source of ['desert-path.tsx','snow-path.tsx','jungle.tsx']){
    if(this.sheet.some(sheet=>sheet.source===source))continue
    const url=pathUrl('map/'+source)
    const response=await fetch(url)
@@ -313,6 +313,14 @@ class MapEditor {
    map.insertBefore(ref,map.querySelector(':scope > layer'))
    this.sheet.push({first:gid,count,cols,img,source,title:definition.getAttribute('name')||source})
    gid+=count
+  }
+  if(!map.querySelector(':scope > layer[name="Dschungel"]')){
+   const layer=this.document.createElement('layer'),data=this.document.createElement('data')
+   const next=Number(map.getAttribute('nextlayerid'))||100
+   layer.setAttribute('id',String(next));map.setAttribute('nextlayerid',String(next+1))
+   layer.setAttribute('name','Dschungel');layer.setAttribute('width',String(this.w/64));layer.setAttribute('height',String(this.h/64))
+   data.setAttribute('encoding','csv');data.textContent=Array(this.w*this.h/4096).fill(0).join(',')
+   layer.append(data);map.insertBefore(layer,map.querySelector(':scope > layer[name="Wege"]'))
   }
  }
  private parseLayers(){
@@ -346,7 +354,7 @@ class MapEditor {
    const o=elt<HTMLOptionElement>('option','',id);o.value=id;this.picker.append(o)
   }
   for(const [value,label] of [['npc:mira','NPC · Mira'],['monster:ritter','Gegner · Ritter'],
-   ['monster:berserker','Gegner · Berserker'],['portal:map','Kartenportal']]){
+   ['monster:berserker','Gegner · Berserker'],...Object.entries(ENEMIES).filter(([id])=>!['ritter','berserker'].includes(id)).map(([id,spec])=>['monster:'+id,'Gegner · '+spec.name]),['portal:map','Kartenportal']]){
    const option=elt<HTMLOptionElement>('option','',label);option.value=value;this.picker.append(option)
   }
   this.picker.value=this.chosenAsset
@@ -367,6 +375,7 @@ class MapEditor {
    {id:'npc:mira',label:'Mira (NPC)',asset:art.assets.female,group:'NPCs',biome:'Alle'},
    {id:'monster:ritter',label:'Ritter (Gegner)',asset:art.assets['enemy-warrior'],group:'Gegner',biome:'Alle'},
    {id:'monster:berserker',label:'Berserker (Gegner)',asset:art.assets['enemy-berserker'],group:'Gegner',biome:'Alle'},
+   ...Object.entries(ENEMIES).filter(([id])=>!['ritter','berserker'].includes(id)).map(([id,spec])=>({id:'monster:'+id,label:spec.name+' (Gegner)',asset:(art.assets as any)[spec.graphic],group:'Gegner',biome:spec.biome})),
    {id:'portal:map',label:'Kartenportal',asset:art.assets['portal-marker'],group:'Portale',biome:'Alle'}
   ]
   return [...props,...actors].sort((a,b)=>OBJECT_CATEGORIES.indexOf(a.group)-OBJECT_CATEGORIES.indexOf(b.group))
@@ -621,7 +630,7 @@ class MapEditor {
   const kind=choice.startsWith('npc:')?'npc':choice.startsWith('monster:')?'monster':
    choice.startsWith('portal:')?'portal':'prop'
   const asset=kind==='prop'?choice:kind==='npc'?'female':kind==='monster'?
-   (choice==='monster:berserker'?'enemy-berserker':'enemy-warrior'):'portal-marker'
+   enemyGraphic(choice.slice('monster:'.length)):'portal-marker'
   const definition=(art.assets as any)[asset]
   const el=this.document.createElement('object')
   const name=kind==='npc'?'Dorfbewohner':kind==='monster'?'Gegner':kind==='portal'?'Kartenportal':asset
@@ -632,7 +641,7 @@ class MapEditor {
   if(kind==='prop')setProp(el,'asset',asset)
   if(kind==='npc')setProp(el,'text','Hallo, nobby!')
   if(kind==='monster'){
-   setProp(el,'enemy',choice==='monster:berserker'?'berserker':'ritter')
+   setProp(el,'enemy',choice.slice('monster:'.length))
    setProp(el,'level','1','int');setProp(el,'hp','0','int');setProp(el,'vision','110','int')
   }
   if(kind==='portal')setProp(el,'target',this.id==='wald'?'simplemap':'wald')
@@ -817,3 +826,4 @@ export function ensureEditorMenu(engine:any){
  }
  addEditorMenuEntry()
 }
+import { ENEMIES, enemyGraphic } from '../art/enemies.mjs'

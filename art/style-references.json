@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "masterStyle": "Pixel Frog Tiny Swords — native pixel-art, dark slate outlines, upper-left lighting",
+  "registry": "src/art/registry.json",
+  "nativeTileSize": 64,
+  "references": [
+    {
+      "id": "tree-oak",
+      "role": "Master — large tree silhouette, organic foliage and pixel clusters",
+      "origin": "pack",
+      "group": "Forest & foliage"
+    },
+    {
+      "id": "tree-small",
+      "role": "Master — small tree size and low-detail canopy",
+      "origin": "pack",
+      "group": "Forest & foliage"
+    },
+    {
+      "id": "bush",
+      "role": "Master — native bush and contour density",
+      "origin": "pack",
+      "group": "Forest & foliage"
+    },
+    {
+      "id": "tower",
+      "role": "Master — architecture perspective, stone, roof and shading",
+      "origin": "pack",
+      "group": "Buildings"
+    },
+    {
+      "id": "castle",
+      "role": "Master — large building silhouette and scale",
+      "origin": "pack",
+      "group": "Buildings"
+    },
+    {
+      "id": "enemy-warrior",
+      "role": "Master — actor proportions, animation and silhouette",
+      "origin": "pack",
+      "group": "Actors"
+    },
+    {
+      "id": "hero",
+      "role": "Approved identity — Nobby mage, not a replacement style master",
+      "origin": "authored",
+      "group": "Actors"
+    },
+    {
+      "id": "shaman",
+      "role": "Approved identity — Nobby shaman, preserve beard/man bun and equipment",
+      "origin": "authored",
+      "group": "Actors"
+    },
+    {
+      "id": "skeleton",
+      "role": "Approved extension — allied summoning and two facing directions",
+      "origin": "authored",
+      "group": "Actors"
+    },
+    {
+      "id": "desert-cactus",
+      "role": "Approved extension — warm-desert foliage; compare with tree masters",
+      "origin": "authored",
+      "group": "Biomes"
+    },
+    {
+      "id": "desert-house",
+      "role": "Approved extension — desert settlement; compare with native tower",
+      "origin": "authored",
+      "group": "Biomes"
+    },
+    {
+      "id": "snow-fir",
+      "role": "Approved extension — snow foliage; compare native tree oak",
+      "origin": "authored",
+      "group": "Biomes"
+    },
+    {
+      "id": "jungle-tree",
+      "role": "Approved extension — tropical tree; compare native tree oak",
+      "origin": "authored",
+      "group": "Biomes"
+    }
+  ]
+}

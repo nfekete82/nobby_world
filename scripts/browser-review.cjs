@@ -12,6 +12,7 @@ const fs=require('node:fs');
   const url=process.env.REVIEW_URL||'http://localhost:8088/';
   fs.mkdirSync('artifacts/rpgjs',{recursive:true});
   await page.goto(url);
+ await require('./ensure-dev-server.cjs').chooseMage(page);
   await page.waitForSelector('canvas');
   await page.waitForTimeout(2000);
   assert.equal(await page.title(),'Nobby World — RPG-JS');

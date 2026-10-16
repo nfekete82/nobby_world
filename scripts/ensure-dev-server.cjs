@@ -7,7 +7,8 @@ const { setTimeout: sleep } = require('node:timers/promises');
 const { join } = require('node:path');
 const http = require('node:http');
 
-const ADDRESS = 'http://127.0.0.1:5173/';
+const TEST_PORT=String(process.env.NOBBY_TEST_PORT||5173);
+const ADDRESS = 'http://127.0.0.1:'+TEST_PORT+'/'
 
 // Node 25 on macOS can crash inside undici's socket.setTypeOfService()
 // even when a fetch rejection is caught. Use Node's HTTP client here.
@@ -36,7 +37,7 @@ async function isReady() {
 
 module.exports = async function ensureDevServer() {
   if (await isReady()) {
-    console.log('Using existing Nobby World development server on port 5173.');
+    console.log('Using existing Nobby World development server on port '+TEST_PORT+'.');
     return async () => {};
   }
 
@@ -52,7 +53,7 @@ module.exports = async function ensureDevServer() {
   const child = spawn(
     process.execPath,
     [join(process.cwd(), 'node_modules/vite/bin/vite.js'),
-      '--host', '127.0.0.1', '--port', '5173', '--strictPort'],
+      '--host', '127.0.0.1', '--port', TEST_PORT, '--strictPort'],
     { cwd: process.cwd(), stdio: 'inherit' },
   );
   let exited = false;
@@ -71,7 +72,7 @@ module.exports = async function ensureDevServer() {
       if (spawnError) throw spawnError;
       if (exited) throw new Error('Vite stopped before the visual review could start.');
       if (await isReady()) {
-        console.log('Nobby World test preview is ready on port 5173.');
+        console.log('Nobby World test preview is ready on port '+TEST_PORT+'.');
         return stop;
       }
       await sleep(100);
@@ -82,3 +83,11 @@ module.exports = async function ensureDevServer() {
     throw error;
   }
 };
+
+// Regression scripts explicitly choose the legacy mage on a clean profile.
+module.exports.chooseMage=async function chooseMage(page){
+ await page.waitForFunction(()=>document.querySelector('#nobby-character-select[open]')||document.querySelector('#nobby-hud:not([hidden])'),{},{timeout:20000})
+ const choice=page.locator('#nobby-character-select[open] [data-class="mage"]')
+ if(await choice.isVisible())await choice.click()
+ await page.waitForSelector('#nobby-hud:not([hidden])',{timeout:15000})
+}

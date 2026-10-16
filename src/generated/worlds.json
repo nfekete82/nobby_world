@@ -1,5 +1,208 @@
 [
   {
+    "id": "frostwild",
+    "title": "Frostpranken-Pass",
+    "width": 2048,
+    "height": 1664,
+    "start": {
+      "x": 400,
+      "y": 832
+    },
+    "objects": [
+      {
+        "id": "object-2",
+        "kind": "portal",
+        "name": "Zurück zur ersten Insel",
+        "x": 336,
+        "y": 960,
+        "target": "simplemap"
+      },
+      {
+        "id": "object-3",
+        "kind": "portal",
+        "name": "Zum nächsten Biom",
+        "x": 1744,
+        "y": 960,
+        "target": "verdant"
+      },
+      {
+        "id": "object-4",
+        "kind": "npc",
+        "name": "Wegweiser",
+        "x": 528,
+        "y": 960,
+        "text": "Willkommen, nobby! Frostpranken-Pass: Die Reisesteine führen zur Insel und ins nächste Biom."
+      },
+      {
+        "id": "object-5",
+        "kind": "prop",
+        "name": "snow-crystals",
+        "x": 656,
+        "y": 576,
+        "asset": "snow-crystals"
+      },
+      {
+        "id": "object-6",
+        "kind": "prop",
+        "name": "snow-fir",
+        "x": 336,
+        "y": 448,
+        "asset": "snow-fir"
+      },
+      {
+        "id": "object-7",
+        "kind": "prop",
+        "name": "snow-shrub",
+        "x": 464,
+        "y": 576,
+        "asset": "snow-shrub"
+      },
+      {
+        "id": "object-8",
+        "kind": "prop",
+        "name": "snow-fir",
+        "x": 784,
+        "y": 384,
+        "asset": "snow-fir"
+      },
+      {
+        "id": "object-9",
+        "kind": "prop",
+        "name": "rock",
+        "x": 976,
+        "y": 512,
+        "asset": "rock"
+      },
+      {
+        "id": "object-10",
+        "kind": "prop",
+        "name": "snow-fir",
+        "x": 1168,
+        "y": 384,
+        "asset": "snow-fir"
+      },
+      {
+        "id": "object-11",
+        "kind": "prop",
+        "name": "snow-shrub",
+        "x": 1616,
+        "y": 448,
+        "asset": "snow-shrub"
+      },
+      {
+        "id": "object-12",
+        "kind": "prop",
+        "name": "snow-fir",
+        "x": 1744,
+        "y": 576,
+        "asset": "snow-fir"
+      },
+      {
+        "id": "object-13",
+        "kind": "prop",
+        "name": "snow-fir",
+        "x": 400,
+        "y": 1216,
+        "asset": "snow-fir"
+      },
+      {
+        "id": "object-14",
+        "kind": "prop",
+        "name": "snow-fir",
+        "x": 656,
+        "y": 1344,
+        "asset": "snow-fir"
+      },
+      {
+        "id": "object-15",
+        "kind": "prop",
+        "name": "snow-crystals",
+        "x": 912,
+        "y": 1216,
+        "asset": "snow-crystals"
+      },
+      {
+        "id": "object-16",
+        "kind": "prop",
+        "name": "snow-shrub",
+        "x": 1104,
+        "y": 1344,
+        "asset": "snow-shrub"
+      },
+      {
+        "id": "object-17",
+        "kind": "prop",
+        "name": "snow-crystals",
+        "x": 1616,
+        "y": 1280,
+        "asset": "snow-crystals"
+      },
+      {
+        "id": "object-18",
+        "kind": "prop",
+        "name": "snow-shrub",
+        "x": 1808,
+        "y": 1152,
+        "asset": "snow-shrub"
+      },
+      {
+        "id": "object-19",
+        "kind": "monster",
+        "name": "Frostpranke",
+        "x": 976,
+        "y": 960,
+        "enemy": "polar-bear",
+        "level": 2,
+        "hp": 0,
+        "vision": 190
+      },
+      {
+        "id": "object-20",
+        "kind": "monster",
+        "name": "Frostpranke",
+        "x": 1168,
+        "y": 1152,
+        "enemy": "polar-bear",
+        "level": 3,
+        "hp": 0,
+        "vision": 190
+      },
+      {
+        "id": "object-21",
+        "kind": "monster",
+        "name": "Frostpranke",
+        "x": 1680,
+        "y": 768,
+        "enemy": "polar-bear",
+        "level": 4,
+        "hp": 0,
+        "vision": 190
+      },
+      {
+        "id": "object-22",
+        "kind": "monster",
+        "name": "Frostpranke",
+        "x": 1616,
+        "y": 1088,
+        "enemy": "polar-bear",
+        "level": 5,
+        "hp": 0,
+        "vision": 190
+      }
+    ],
+    "navigation": {
+      "cell": 16,
+      "cols": 128,
+      "rows": 104,
+      "blocked": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0f000080ffffffffffffffffffffffff0f000080ffffffffffffffffffffffff0f000080ffffffffffffffffffffffff0f000080ffffffffffffffffffff0f0000000000f8ffffffffffffffffff0f0000000000f8ffffffffffffffffff0f0000000000f8ffffffffffffffffff0f0000000000f8ffffffffffff0f0000000000000000f80f000080ffff0f0000000000000000f80f000080ffff0f0000000000000000f80f000080ffff0f0000000000000000f80f000080ffff0f0000000000000000f80f000080ffff0f0000000000000000f80f000080ffff0f0000000000000000f80f000080ffff0f0000000000000000f80f000080ffff0f0000000000000000f80f000080ffff0f0000000000000000f80f000080ffff0f0000000000000000f80f000080ffff0f000000000f00000ff80f000080ffff00000000000f00000ff80f000080ffff00000000000f00000ff80f000080ffff000000000000000000f80f000080ffff00f000000000000000f80f0000f8ffff00f000000000000000f80f0000f8ffff00f000000000000000f80f0000f8ffff000000000000000000f80f0000f8ffff000000000000f00000f80f0000f8ff0f000000000000f00000f80f0000f8ff0f000000000000f00000f80f0000f8ff0f000000000000000000f80f0000f8ff0f000000000f00000000f80f00f0f8ff0f000000000f00000000f80f00f0f8ff0f000000000f00000000f80f00f0f8ff0f000000000000000000f80f0000f8ff0f000000000000000000f80f0080ffff0f000000000000000000f80f0080ffff0f000000000000000000f80f0080ffff0f000000000000000000f80f0080ffff0f000000000000000000f80f0080ffff0f000000000000000000f80f0080ffff0f000000000000000000f80f0080ffff0f000000000000000000f80f0080ffffff000000000000000000f80f0080ffffff000000000000000000f80f0080ffffff000000000000000000f80f0080ffffff000000000000000000f80f0080ffffff000000000000000000f80f0080ffffff00000000000000000000000080ffffff00000000000000000000000080ffffff00000000000000000000000080ffffff0f000000000000000000000080ffffff0f000000000000000000000080ffffff0f000000000000000000000080ffffff0f000000000000000000000080ffffff0f0000000000000000f80f0080ffffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f0000f8ffff000000000000000000f80f000080ffff000000000000000000f80f000080ffff000000000000000000f80f000080ffff00000f0000000f0000f80f000080ffff00000f0000000f0000f80f000080ffff00000f0000000f0000f80f000080ffff000000000000000000f80f000080ffff000000000000000000f80ff00080ff0f000000000000000000f80ff00080ff0f000000000000000000f80ff00080ff0f000000000000000000f80f000080ff0f000000000f00000000f80f000080ff0f000000000f00000000f80f000080ff0f000000000f00000000f80f000080ff0f000000000000000000f80f000080ff0f00000080ffff0f0000f80ff8ffffff0f00000080ffff0f0000f80ff8ffffff0f00000080ffff0f0000f80ff8ffffff0f00000080ffff0f0000f80ff8ffffffff0000f8ffffffffff00f8ffffffffffff0000f8ffffffffff00f8ffffffffffff0000f8ffffffffff00f8ffffffffffff0000f8ffffffffff00f8ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+    },
+    "pasture": {
+      "width": 32,
+      "height": 26,
+      "bits": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+    }
+  },
+  {
     "id": "simplemap",
     "title": "Die erste Insel",
     "width": 2560,
@@ -781,6 +984,457 @@
       "cols": 160,
       "rows": 128,
       "blocked": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000080ffffffffffffff0000f8ffffffffffffff000080ffffffffffffff0000f8ffffffffffffff000080ffffffffffffff0000f8ffffffffffffff000080ffffffffffffff0000f8ffffffffff0f000000000080ffffff0000000080ffffffffff0f000000000080ffffff0000000080ffffffffff0f000000000080ffffff0000000080ffffffffff0f007c00000080ffffff0000000080ffff0f000000007c0000000000f80f0000000080ffff0f000000007c0000000000f8cf030080ef81ffffcf0700000000000000c003f8cf030080ef81ffffcf0700000000000000c003f8cf0300000080ffffcf0700000000000000c003f80f0000000080ffff0f00000000000000000000f80f0000000080ffff0f00000000000000000000f80f0000000080ffff0f000000000080ff7f0000f80f00f8010080ffff0f000000000080ff7f0000f80f00f8010080ffff0f000000000080ff7f0000f80f00f8010080ffff0f000000000080ff7f0000f80f00f8010080ffff0f000000000080ff7f0080ff0f00000000f8ffff0f000000000080ff7f0080ff0f00000000fcffff0f00000000000000000080ff8f07000000fcffff0f3c000000000000800f00f88f07008007fcffff0f3c000000000000800f00f88f07008007f8ffff003cf00000000000000000f80f00008007f8ffff0000f00000000000000000f80f00000000f8ffff0000f00000000000000000f80f00000000f8ffff0000000000000000000080ff0ff80ff8ffffffff0000000000000000000080ff00f80ff8ffffffff0000000000000000000080ff00f80ff8ffffffff0000000000000000000080ff00f80ff8ffffffff0000000000000000000080ff00f80ff8fffffffff800000000000000000080ff00f80ff8fffffffff800000000000000000080ff00f80ff8fffffffff800000000000000000080ff00f80ff8ffffffff0080ff0100000080ff0180ff00f80ff8ffffff0f0080ff0100000080ff0180ff0000000080ffff0f0080ff0100000080ff0180ff0000000080ffff0f0080ff0100000080ff0180ff0000000080ffff0f0080ff0100000080ff01f8ff0000000080ffff0f00000000000000000000f80f0000e00380ffff0f00000000000000000000f80f0000e00380ffff0f000000001f0000000000f80ff000e00380ffff0f000000001f0000000000f80ff0000000c0ffff0f000000001f0000000000f80ff0000000c0ffff0f00000000000000000000f80f00000000c0ffff0f78001e00000000000000f80f0000000000f8ff0f78001e00000000000000f80f0000000000f8ff0f78001e00000000000000f80f0000000000f8ff0f00000000000000000000f80f0000000000f8ff0f00000000000000000000f80f000000c003f8ff0f000000001e0000000000f87f00e001c003f8ff0f000000001e0000000000f87f00e001000080ff0f00000000000000000000f80f0000000000bcff0f00000000000000000000f80f0000000000bcffff0000803f0000f8030000ff0f0000000000bcffff0000803f0000f8030000ff0f000000000080ffff0000803f0000f8030000ff0f000000000080ffff0000803f0000f8030000f80f000000000080ffff00000000000000000000f80f000000000080ffff000000000000000000000000000000000080ffff000000000000000000000000000000000080ffff000000000000000000000000000000000080ffff000000000000000000000000000000000080ffff000000000000000000000000000000000080ffff000000000000000000000000000000000080ffff000000000000000000000000000000000080ffff0f00000000000000000080ff0000000000f8ffff0f00000000000000000080ff0000000000f8ffff0f00000000000000000080ff0000000000f8ffff0f00000000000000000080ff0000000000f8ffff0f0000000000f000000080ff0000000000f8ffff0f0000000000f000000080ff0000000000ffffffff0000000000f00000009eff0000000000ffffffff0000000000000000009eff0000000000ffffffff0000000000000000009eff0f00000080ffffff0f00000000000000000000f80f00000080ffffff0f00000000000000000000f80f00000080ffffff0f00000000000000000000f80f00008087ffffff0f00803f000000f8030000f80f00008087ffffff0f00803f000000f8030000fe0f00008087ffffff0f00803f000000f8030000fe0f00800780ffffff0f00803f000000f8030000feff00800780ffffff0f00000000000000000000f8ff00800780ffffff0f00000000000000000000f8ff00000080ffffff0f00000000000000000000f80f00000080ffffff0f00000000000000000000f80f00000080ffffff0f00000000000000000000f80f80ffffefffffff0000000000000000000000f80fe0ffffefffffff0000000000000000000000f80fe0ffffefffffff0000000000000000000000f80fe0ffff8fffffff0000000000000000000080ff0ff8ffffffffffff000000000f000000000080ff0ff8ffffffffffff000000000f000000000080ff0ff8ffffffffffff000000000f000000000000f80ff8ffffffffffff0000000000000000000000f80ff8ffffffffff0f0000000000000000000000f80ff8fffffff8ff0f000000000000e00100f000f80ff8fffffff8ff0f780000000000e08107f000f80ff8fffffff8ff0f780000000000e081070080ff0ff8fffffff8ff0f0000000000000080070080ff00f8fffffff8ff0f0000000000000000000080ff00f8ffffffffff0f0000000000000000000080ff00f8ffffffffff0f000000000000000000c083ff3cf8ffffffffff0f000000000000000000c083ff3c80ffff0f80ff0f00000000000000007cc083ff3c80ffff0f80ff0f00000000000000007c0080ff0080ffff0f80ff0f000000000080ffffff0f80ff0080ffff8fffff0f000000e00180ffffff0f80ff000000c083ffff0f0000f0e00180ffffff0fc0ff000000c083ffff0fc003f0000080ffffff0fc0ff00e001c083ffffffc0030080ffffffffffffffff00e081ffffffffffc0030080ffffffffffffff0f00e081ffffffffff00000080ffffffffffffff0f000080ffffffffff00000080ffffffffffffff0f000080ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+    },
+    "pasture": {
+      "width": 40,
+      "height": 32,
+      "bits": "000000000000f003001f00fe3ff03ff8fffff93ff8fffff93ff8fffff93ff8cffff91ffccffff91ffc0f000000fc0f000000fecffffc0ffecf7ffe0ffecf7ffe1ffecf7ffe1ffecf7ffe3ffccf7ffe3f0c000000200c00000020f8cffffc1ff8cffffc1ff8cffff90ff8cffff90ff80f80f90ffc0f803908fccfff1900fecfff1910fecfff1c10fecfff3c38fe0fe0fc0ffc0300fe0000000000000000000000"
+    }
+  },
+  {
+    "id": "sunscar",
+    "title": "Goldsand-Oase",
+    "width": 2048,
+    "height": 1664,
+    "start": {
+      "x": 400,
+      "y": 832
+    },
+    "objects": [
+      {
+        "id": "object-2",
+        "kind": "portal",
+        "name": "Zurück zur ersten Insel",
+        "x": 336,
+        "y": 960,
+        "target": "simplemap"
+      },
+      {
+        "id": "object-3",
+        "kind": "portal",
+        "name": "Zum nächsten Biom",
+        "x": 1744,
+        "y": 960,
+        "target": "frostwild"
+      },
+      {
+        "id": "object-4",
+        "kind": "npc",
+        "name": "Wegweiser",
+        "x": 528,
+        "y": 960,
+        "text": "Willkommen, nobby! Goldsand-Oase: Die Reisesteine führen zur Insel und ins nächste Biom."
+      },
+      {
+        "id": "object-5",
+        "kind": "prop",
+        "name": "desert-house",
+        "x": 656,
+        "y": 576,
+        "asset": "desert-house"
+      },
+      {
+        "id": "object-6",
+        "kind": "prop",
+        "name": "desert-cactus",
+        "x": 336,
+        "y": 448,
+        "asset": "desert-cactus"
+      },
+      {
+        "id": "object-7",
+        "kind": "prop",
+        "name": "desert-rock",
+        "x": 464,
+        "y": 576,
+        "asset": "desert-rock"
+      },
+      {
+        "id": "object-8",
+        "kind": "prop",
+        "name": "desert-cactus",
+        "x": 784,
+        "y": 384,
+        "asset": "desert-cactus"
+      },
+      {
+        "id": "object-9",
+        "kind": "prop",
+        "name": "desert-shrub",
+        "x": 976,
+        "y": 512,
+        "asset": "desert-shrub"
+      },
+      {
+        "id": "object-10",
+        "kind": "prop",
+        "name": "desert-cactus",
+        "x": 1168,
+        "y": 384,
+        "asset": "desert-cactus"
+      },
+      {
+        "id": "object-11",
+        "kind": "prop",
+        "name": "desert-agave",
+        "x": 1616,
+        "y": 448,
+        "asset": "desert-agave"
+      },
+      {
+        "id": "object-12",
+        "kind": "prop",
+        "name": "desert-cactus",
+        "x": 1744,
+        "y": 576,
+        "asset": "desert-cactus"
+      },
+      {
+        "id": "object-13",
+        "kind": "prop",
+        "name": "desert-cactus-small",
+        "x": 400,
+        "y": 1216,
+        "asset": "desert-cactus-small"
+      },
+      {
+        "id": "object-14",
+        "kind": "prop",
+        "name": "desert-cactus-small",
+        "x": 656,
+        "y": 1344,
+        "asset": "desert-cactus-small"
+      },
+      {
+        "id": "object-15",
+        "kind": "prop",
+        "name": "desert-prickly-pear",
+        "x": 912,
+        "y": 1216,
+        "asset": "desert-prickly-pear"
+      },
+      {
+        "id": "object-16",
+        "kind": "prop",
+        "name": "desert-agave",
+        "x": 1104,
+        "y": 1344,
+        "asset": "desert-agave"
+      },
+      {
+        "id": "object-17",
+        "kind": "prop",
+        "name": "desert-prickly-pear",
+        "x": 1616,
+        "y": 1280,
+        "asset": "desert-prickly-pear"
+      },
+      {
+        "id": "object-18",
+        "kind": "prop",
+        "name": "desert-rock",
+        "x": 1808,
+        "y": 1152,
+        "asset": "desert-rock"
+      },
+      {
+        "id": "object-19",
+        "kind": "monster",
+        "name": "Sandstachel",
+        "x": 976,
+        "y": 960,
+        "enemy": "scorpion",
+        "level": 2,
+        "hp": 0,
+        "vision": 190
+      },
+      {
+        "id": "object-20",
+        "kind": "monster",
+        "name": "Dünenwächter",
+        "x": 1168,
+        "y": 1152,
+        "enemy": "serpent",
+        "level": 3,
+        "hp": 0,
+        "vision": 190
+      },
+      {
+        "id": "object-21",
+        "kind": "monster",
+        "name": "Sandstachel",
+        "x": 1680,
+        "y": 768,
+        "enemy": "scorpion",
+        "level": 4,
+        "hp": 0,
+        "vision": 190
+      },
+      {
+        "id": "object-22",
+        "kind": "monster",
+        "name": "Dünenwächter",
+        "x": 1616,
+        "y": 1088,
+        "enemy": "serpent",
+        "level": 5,
+        "hp": 0,
+        "vision": 190
+      },
+      {
+        "id": "object-100",
+        "kind": "prop",
+        "name": "desert-snake",
+        "x": 1104,
+        "y": 1216,
+        "asset": "desert-snake"
+      },
+      {
+        "id": "object-101",
+        "kind": "prop",
+        "name": "desert-palm",
+        "x": 1072,
+        "y": 384,
+        "asset": "desert-palm"
+      },
+      {
+        "id": "object-102",
+        "kind": "prop",
+        "name": "desert-palm",
+        "x": 1776,
+        "y": 1152,
+        "asset": "desert-palm"
+      },
+      {
+        "id": "object-103",
+        "kind": "prop",
+        "name": "desert-temple",
+        "x": 720,
+        "y": 448,
+        "asset": "desert-temple"
+      },
+      {
+        "id": "object-104",
+        "kind": "prop",
+        "name": "desert-tent",
+        "x": 784,
+        "y": 640,
+        "asset": "desert-tent"
+      }
+    ],
+    "navigation": {
+      "cell": 16,
+      "cols": 128,
+      "rows": 104,
+      "blocked": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0f000080ffffffffffffffffffffffff0f000080ffffffffffffffffffffffff0f000080ffffffffffffffffffffffff0f000080ffffffffffffffffffff0f0000000000f8ffffffffffffffffff0f0000000000f8ffffffffffffffffff0f0000000000f8ffffffffffffffffff0f0000000000f8ffffffffffff0f0000000000000000f80f000080ffff0f0000000000000000f80f000080ffff0f0000000000000000f80f000080ffff0f0000000000000000f80f000080ffff0f0000000000000000f80f000080ffff0f0000000000000000f80f000080ffff0f0000000000000000f80f000080ffff0f0000000000000000f80f000080ffff0f0000000000000000f80f000080ffff0f0000000000000000f80f000080ffff0f0000000000000000f80f000080ffff0f0000000007003c07f80f000080ffff000000000007003c07f80f000080ffff000000000007003c07f80f000080ffff000000000000000000f80f000080ffff00700000f03f000000f80f0000f8ffff00700000f03f000000f80f0000f8ffff00700000f03f000000f80f0000f8ffff00000000f03f000000f80f0000f8ffff00000000f03f000000f80f0000f8ff0f000000000000000000f80f0000f8ff0f000000000000000000f80f0000f8ff0f000000000000000000f80f0000f8ff0f0000f0007f00000000f80f0070f8ff0f0000f0007f00000000f80f0070f8ff0f0000f0007f00000000f80f0070f8ff0f000000007f00000000f80f0000f8ff0f00000000003f000000f80f0080ffff0f00000000003f000000f80f0080ffff0f00000000003f000000f80f0080ffff0f00000000003f000000f80f0080ffff0f000000000000000000f80f0080ffff0f000000000000000000f80f0080ffff0f000000000000000000f80f0080ffff0f000000000000000000f80f0080ffffff000000000000000000f80f0080ffffff000000000000000000f80f0080ffffff000000000000000000f80f0080ffffff000000000000000000f80f0080ffffff000000000000000000f80f0080ffffff00000000000000000000000080ffffff00000000000000000000000080ffffff00000000000000000000000080ffffff0f000000000000000000000080ffffff0f000000000000000000000080ffffff0f000000000000000000000080ffffff0f000000000000000000000080ffffff0f0000000000000000f80f0080ffffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f00c0ffffff000000000000000000f80f00c08fffff000000000000000000f80f00c08fffff000000000000000000f80f000080ffff000007000000070000f80f000080ffff000007000000070000f80f000080ffff000000000000070000f80f000080ffff000000000000000000f80f000080ffff000000000000000000f80f700080ff0f000000000000000000f80f700080ff0f000000000000000000f80f700080ff0f000000000000000000f80f000080ff0f000000000700000000f80f000080ff0f000000000700000000f80f000080ff0f000000000000000000f80f000080ff0f000000000000000000f80f000080ff0f00000080ffff0f0000f80ff8ffffff0f00000080ffff0f0000f80ff8ffffff0f00000080ffff0f0000f80ff8ffffff0f00000080ffff0f0000f80ff8ffffffff0000f8ffffffffff00f8ffffffffffff0000f8ffffffffff00f8ffffffffffff0000f8ffffffffff00f8ffffffffffff0000f8ffffffffff00f8ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+    },
+    "pasture": {
+      "width": 32,
+      "height": 26,
+      "bits": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+    }
+  },
+  {
+    "id": "verdant",
+    "title": "Smaragd-Dschungel",
+    "width": 2048,
+    "height": 1664,
+    "start": {
+      "x": 400,
+      "y": 832
+    },
+    "objects": [
+      {
+        "id": "object-2",
+        "kind": "portal",
+        "name": "Zurück zur ersten Insel",
+        "x": 336,
+        "y": 960,
+        "target": "simplemap"
+      },
+      {
+        "id": "object-3",
+        "kind": "portal",
+        "name": "Zum nächsten Biom",
+        "x": 1744,
+        "y": 960,
+        "target": "sunscar"
+      },
+      {
+        "id": "object-4",
+        "kind": "npc",
+        "name": "Wegweiser",
+        "x": 528,
+        "y": 960,
+        "text": "Willkommen, nobby! Smaragd-Dschungel: Die Reisesteine führen zur Insel und ins nächste Biom."
+      },
+      {
+        "id": "object-5",
+        "kind": "prop",
+        "name": "jungle-tree",
+        "x": 656,
+        "y": 576,
+        "asset": "jungle-tree"
+      },
+      {
+        "id": "object-6",
+        "kind": "prop",
+        "name": "jungle-palm",
+        "x": 336,
+        "y": 448,
+        "asset": "jungle-palm"
+      },
+      {
+        "id": "object-7",
+        "kind": "prop",
+        "name": "jungle-tree",
+        "x": 464,
+        "y": 576,
+        "asset": "jungle-tree"
+      },
+      {
+        "id": "object-8",
+        "kind": "prop",
+        "name": "jungle-palm",
+        "x": 784,
+        "y": 384,
+        "asset": "jungle-palm"
+      },
+      {
+        "id": "object-9",
+        "kind": "prop",
+        "name": "jungle-fern",
+        "x": 976,
+        "y": 512,
+        "asset": "jungle-fern"
+      },
+      {
+        "id": "object-10",
+        "kind": "prop",
+        "name": "jungle-palm",
+        "x": 1168,
+        "y": 384,
+        "asset": "jungle-palm"
+      },
+      {
+        "id": "object-11",
+        "kind": "prop",
+        "name": "jungle-fern",
+        "x": 1616,
+        "y": 448,
+        "asset": "jungle-fern"
+      },
+      {
+        "id": "object-12",
+        "kind": "prop",
+        "name": "jungle-palm",
+        "x": 1744,
+        "y": 576,
+        "asset": "jungle-palm"
+      },
+      {
+        "id": "object-13",
+        "kind": "prop",
+        "name": "jungle-tree",
+        "x": 400,
+        "y": 1216,
+        "asset": "jungle-tree"
+      },
+      {
+        "id": "object-14",
+        "kind": "prop",
+        "name": "jungle-tree",
+        "x": 656,
+        "y": 1344,
+        "asset": "jungle-tree"
+      },
+      {
+        "id": "object-15",
+        "kind": "prop",
+        "name": "jungle-palm",
+        "x": 912,
+        "y": 1216,
+        "asset": "jungle-palm"
+      },
+      {
+        "id": "object-16",
+        "kind": "prop",
+        "name": "jungle-fern",
+        "x": 1104,
+        "y": 1344,
+        "asset": "jungle-fern"
+      },
+      {
+        "id": "object-17",
+        "kind": "prop",
+        "name": "jungle-palm",
+        "x": 1616,
+        "y": 1280,
+        "asset": "jungle-palm"
+      },
+      {
+        "id": "object-18",
+        "kind": "prop",
+        "name": "jungle-tree",
+        "x": 1808,
+        "y": 1152,
+        "asset": "jungle-tree"
+      },
+      {
+        "id": "object-19",
+        "kind": "monster",
+        "name": "Dünenwächter",
+        "x": 976,
+        "y": 960,
+        "enemy": "serpent",
+        "level": 2,
+        "hp": 0,
+        "vision": 190
+      },
+      {
+        "id": "object-20",
+        "kind": "monster",
+        "name": "Dünenwächter",
+        "x": 1168,
+        "y": 1152,
+        "enemy": "berserker",
+        "level": 3,
+        "hp": 0,
+        "vision": 190
+      },
+      {
+        "id": "object-21",
+        "kind": "monster",
+        "name": "Dünenwächter",
+        "x": 1680,
+        "y": 768,
+        "enemy": "serpent",
+        "level": 4,
+        "hp": 0,
+        "vision": 190
+      },
+      {
+        "id": "object-22",
+        "kind": "monster",
+        "name": "Dünenwächter",
+        "x": 1616,
+        "y": 1088,
+        "enemy": "berserker",
+        "level": 5,
+        "hp": 0,
+        "vision": 190
+      }
+    ],
+    "navigation": {
+      "cell": 16,
+      "cols": 128,
+      "rows": 104,
+      "blocked": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0f000080ffffffffffffffffffffffff0f000080ffffffffffffffffffffffff0f000080ffffffffffffffffffffffff0f000080ffffffffffffffffffff0f0000000000f8ffffffffffffffffff0f0000000000f8ffffffffffffffffff0f0000000000f8ffffffffffffffffff0f0000000000f8ffffffffffff0f0000000000000000f80f000080ffff0f0000000000000000f80f000080ffff0f0000000000000000f80f000080ffff0f0000000000000000f80f000080ffff0f0000000000000000f80f000080ffff0f0000000000000000f80f000080ffff0f0000000000000000f80f000080ffff0f0000000000000000f80f000080ffff0f0000000000000000f80f000080ffff0f0000000000000000f80f000080ffff0f0000000000000000f80f000080ffff0f000000000f00000ff80f000080ffff00000000000f00000ff80f000080ffff00000000000f00000ff80f000080ffff000000000000000000f80f000080ffff00f000000000000000f80f0000f8ffff00f000000000000000f80f0000f8ffff00f000000000000000f80f0000f8ffff000000000000000000f80f0000f8ffff000000000000000000f80f0000f8ff0f000000000000000000f80f0000f8ff0f000000000000000000f80f0000f8ff0f000000000000000000f80f0000f8ff0f0000f0000f00000000f80f00f0f8ff0f0000f0000f00000000f80f00f0f8ff0f0000f0000f00000000f80f00f0f8ff0f000000000000000000f80f0000f8ff0f000000000000000000f80f0080ffff0f000000000000000000f80f0080ffff0f000000000000000000f80f0080ffff0f000000000000000000f80f0080ffff0f000000000000000000f80f0080ffff0f000000000000000000f80f0080ffff0f000000000000000000f80f0080ffff0f000000000000000000f80f0080ffffff000000000000000000f80f0080ffffff000000000000000000f80f0080ffffff000000000000000000f80f0080ffffff000000000000000000f80f0080ffffff000000000000000000f80f0080ffffff00000000000000000000000080ffffff00000000000000000000000080ffffff00000000000000000000000080ffffff0f000000000000000000000080ffffff0f000000000000000000000080ffffff0f000000000000000000000080ffffff0f000000000000000000000080ffffff0f0000000000000000f80f0080ffffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f0000f8ffff0f0000000000000000f80f0000ffffff000000000000000000f80f00008fffff000000000000000000f80f00008fffff000000000000000000f80f000080ffff00000f0000000f0000f80f000080ffff00000f0000000f0000f80f000080ffff00000f0000000f0000f80f000080ffff000000000000000000f80f000080ffff000000000000000000f80ff00080ff0f000000000000000000f80ff00080ff0f000000000000000000f80ff00080ff0f000000000000000000f80f000080ff0f000000000f00000000f80f000080ff0f000000000f00000000f80f000080ff0f000000000f00000000f80f000080ff0f000000000000000000f80f000080ff0f00000080ffff0f0000f80ff8ffffff0f00000080ffff0f0000f80ff8ffffff0f00000080ffff0f0000f80ff8ffffff0f00000080ffff0f0000f80ff8ffffffff0000f8ffffffffff00f8ffffffffffff0000f8ffffffffff00f8ffffffffffff0000f8ffffffffff00f8ffffffffffff0000f8ffffffffff00f8ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+    },
+    "pasture": {
+      "width": 32,
+      "height": 26,
+      "bits": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
     }
   },
   {
@@ -1853,6 +2507,11 @@
       "cols": 192,
       "rows": 152,
       "blocked": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000080ffffffffffffff000080ffffffffffffffffffffff000080ffffffffffffff000080ffffffffffffffffffffff000080ffffffffffffff000080ffffffffffffffffffffff000080ffffffffffffff000080ffffffffffffffffff0f000000000080ffffff000000000000f8ffffffffffffff0f000000000080ffffff000000000000f8ffffffffffffff0f000000000080ffffff000000000000f8ffffffffffffff0f000000000080ffffff000000000000f8ffffffff0f000000000000000000000000001f00f00000000080ffff0f7ce00300000000000000f000001f00f00000000080ffff0f7ce00300000000800f00f0f0001f00f00000000080ffff0f7ce00300c00300800f00f0f0000000000000000080ffff0f00000000c0033e800f0000f000000000f001000080ffff0f00000000c0033e000000000000000000f001000080ffff0f0000000000003e000000000000000000f001000080ffff0f0000000f0000000000000000000000000000000080ffff0f0000000f0000000000000000000000000000000080ffff0f0000000f00000000003e0000000000000000000080ffff0f0000000000000000003e0000000000000000000080ffff0f0000000000000000003e0000f800f80100000080ffffff0f000000000000000000000000f800f80100007880ffffff0f000000000000000000000000f800f80100007880ffffff0f000000000000001e000000000000f80100007800f8ffff0f00c003000000001e000000000000000000000000f8ffff0000c003000000001e0000000000000000c0030000f8ffff0000c00300000000000000000000000000c0030000f8ffff0000000000000000000080070000000000c0030000f8ffff00000000e003f00100008007000000000000000080ffffff00003c00e003f00100008007000000000000000080ffffff00003c00e003f00100f001000000000000001e0080ffffff00003c000000000000f001000000000000001e0080ffffff000000000000000000f0010000000000f8001e0080ffffff000000000000000000000000000f0000f800000080ffffff000000000000000000000000000f0000f8c0070080fffffff00100000000000000000000000f000000c00700c0fffffff001000000000000000000780000000000c0f700c0ffff0ff00100000000000000000078000000000000f000c0ffff0f0000f0010000c00700000000000000000000f00080ffff0f0000f0010000c00700000000000000000000000080ffff0f0000f0810700c0070000000080ff80ffff0f000080ffff0f00000080070000000000000080ff80ffff0f003c80ffff0f000000800700000000001e0080ff80ffff0f003c80ffff0f000000000000000000001e0080ff80ffff0f003c80ffff0f000000000000000000001e008fff80ffff0f000080ffff0f00000000000000001e0000008fff80ffff0f00003cf8ff0f00000000000000001e0000008fff80ffff0f00003cf8ff0f00000000000000001e00000080ff80ffff0f00003cf8ff0f00000000000000000000000080ff80ffff0f000000f8ff0f000000000000000000000000000000000000000000f8ff0f80073e00000000000000000000000000f800000000f8ff0f80073e00000000000000000000000000f800000000f8ff0f80073e00000000000000000000000000f800000000f8ff0f00000000000000008007000000000000000000000080ff0f000000000000000080070000000000000000000f0080ff0f000000800f00000080070000f0010000003e0f0f0080ffff000000800f00000000000000f0010000003e0f0f00beffff000000800f00000000000000f0010000003e0f0000beffff000000000000000000000000000000000000000000beffff00000000000000f80000000000000000000000000080ffff00003c00000000f80000000000000000000000000080ffff00003c00000000f80000000000000000000000000080ffff00003c00000000000000000000000000000000000080ffff00000000000000000000000000000000000000000080ffff00000000000000000000000000000000000000000080ffffc0070000000000000000000000000000000000000080ffffc0070000000000000000000000000000000000000080ffff00000000000000000000000000000000000000000080ffff0f0000000000000000000000000000000000800f00f8ffff0f0000000000000000000000000000000000800f00f8ffff0f00c0070000000000000000000000000000800f00f8ffff0f00c0070000000000000000000000000000000000f8ffff0f00c0070000000000000000000000000000000000f8ffff0f0000000000000000000000000000000000000000feffff0f0000000000000000000000000000000000000000feffff0f0000000000000000000000000000000000000000feffff0f000000000000000000000080ffffff0f00000080ffffff0f00000000000000000000e083ffffff0f00000080ffffffff00000000000000e00300e083ffffff0f00f00080ffffffff00000000000000e00300e083ffffffcf07f00080ffffffffc003000000800fe0030000f8ffffffff07f00080ffffff0fc003003e00800f00000000f8ffffffff07000080ffffff0f0000003e00800f00800f00f8ffffffff00000080ffffff0f0000003e00000000800f00f8ffffffff00000080ffffff0f0000000000000000800f80ffffffffff0f000080ffffff0f0000000000000000000080ffffffffff0f00f880ffffff0f0000000000000000000080ffffffffff0f00f880ffffff0f0000000000000000000080ffffffffff0f00f880ffffff0f00803f0000000000000080ffffffffffcf030080ffffff0000803f0000000000000080ffffffffffcf030080ffffffe001803f000000000f000080ffffffffffcf030080ffffffe001803f000000000f000080ffffffffff0f000080ffffffe0010000000000000f000080ffffffffff0f000080ffffff000000000000000000000080ffffffffff0ff00080ffffff000000000000000000000080ffffffffff0ff00080ffffff000000000000000000000080ffffffffff0ff00080ffffff000000000000000000000080ffffffffff0f000080ffff0f000000000000000000000080ffffffffff0f000000f8ff0f0000000000000000000000f8ffffffffff0f000000f8ff0f0000000000000000000000f8ffffffffff0f000000f8ff0f0000000000000000000000f8ffffffffff0f000000f8ff0f000000000000000000000080ffffffffff0f780000f8ff0f000000000000000000000080ffffffffff0f78001ef8ff0f000000000000000000000080ffffffffff0f78001ef8ff0f780000000000000000000080ffffffffff0f00001ef8ff0f780000000000000000000000f8ffffffff0000000080ff0f780000000000000000000000f8ffffffff0000000080ff0f000000000000000000000000f8ffffffff0000000080ff0f000000000000000000000000f8ffffffff0000000080ff0f001ee0010000000000001e0080ffffff0f0000000080ff0f001ee0010000000000001e0080ffffff0f0000000080ff0f001ee0010000000000001e8087ffffff0f0000000080ff0f0000000000000000003c008087ffffff0f0000000080ff0f0000000000000000003c00800700800ff00000000080ff0f0000001e00000000003c00000078800ff00000000080ff0f0000001e00000000000000000078800ff00000000080ff0f0000001e0000c0070000000000780000000000000080ff0f000000000000c00700000000000000000000e0030080ff0f00f000000000c00700000000000000000000e0030080ff0f00f000000000000000000000000000000000e0030080ffff000000000000000000000000000000000000000000f8ffff000000000000000000000000000000000000000000f8ffff000000000000000000000000000000000000000000f8ffff000000000000000000000000000000000000000000f8ffff00000000000000000000007800001e000000000000f8ffff00000000000000000000007800001e0000e0010000f8ffffc0070000000000000000007800001e0000e0010078f8ffffc007000000000000000000000000000000e0010078f8ffffcf0700000000000000000000000000003c000000f8ffffff0f0000000000000000000000000000003c00000080ffffff0f0000000000000000000000001f00003c00000080ffffff0f0000000000000000000000001f00000000800f80ffffff0f0000000080ffffff0f0000001f000080ffffffffffffff0f00000f0080ffffff0f00000000000080ffffffffffffff0f00000f0080ffffffef03000000000080ffffffffffffff0f00000f7c80ffffffef03800700000080ffffffffffffff0f000080ffffffffffffff8f070080ffffffffffffffffff0f000080ffffffffffffff8f070080ffffffffffffffffff0f000080ffffffffffffff0f000080ffffffffffffffffff0f000080ffffffffffffff0f000080ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+    },
+    "pasture": {
+      "width": 48,
+      "height": 38,
+      "bits": "00000000000000f003003f0000fe3ff0ff01f8ffffffff3ff8ffffffff3ff8ffffffff3ff8ffffffff1ffcffffffff1ffcffffffff0ffccfff7ffe0ffecfff7ffe0ffecfff0fe00ffecfff0fe01ffecfff7ffe1ffecfff7ffe3ffccfff7ffe3ffccfff7ffe3ffc0f0000e03ff80f0000e01ff8cfffffff1ff8cfff0ff80ff8cfff07f00ff8cfff03e00ffccfff03e00ffccfff03e00f1e000003e01f1e000003e01ffecfff07f03ffecfff0ff83ffecfffffff3ffecfffffff3ffc0f00ffff1ffc0f00ffff1ff8cfffffff0ff83fe0ff0f00f80300fe0000000000000000000000000000"
     }
   }
 ]

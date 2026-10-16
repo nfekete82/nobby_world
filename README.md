@@ -2,11 +2,17 @@
 
 **Entwicklungsstand: v0.2.0-dev.0** · lokaler Art-Direction-Review. Noch kein finales Release.
 
-Ein vollständig lokales 2D-RPG auf RPG-JS 5.0: zwei größere, in Tiled bearbeitbare
+Ein vollständig lokales 2D-RPG auf RPG-JS 5.0: fünf in Tiled bearbeitbare
 Welten mit Nobby, Mira, Nahkampfgegnern, Kartenportalen und nativen Speicherständen.
 Grafikbasis ist der bereitgestellte **Tiny Swords Free Pack von Pixel Frog**.
 Nobby behält braunes Haar, Bart und seine blaue Robe; Mira blondes Haar und Grün.
 Die früheren Pipoya-Grafiken wurden aus dem laufenden Spiel entfernt.
+
+## Charaktere und neue Biome
+
+Beim ersten Start stehen Magier und Schamane zur Wahl. Der Schamane beschwört mit **R** oder Touch bis zu drei kämpfende Skelette für je **10 Mana**. Ein Reisestein nahe dem Inselstart führt zu Goldsand-Oase, Frostpranken-Pass und Smaragd-Dschungel. Neue Gegner, animierte Vegetation und transparente Agaven sind auch im Karteneditor verfügbar. Bestehende Spielstände laden als Magier; manuelle Karten werden nicht migriert.
+
+[Bedienung, Architektur, Speicherstände und Docker-Start](docs/SHAMAN_AND_BIOMES.md) · [Grafikquellen und Promptset](docs/EXPANSION_ART_PROMPTS.md) · [Abnahme](docs/SHAMAN_ACCEPTANCE.md)
 
 ## Spielen
 
@@ -404,3 +410,24 @@ vorhandenen Schafgrafik in einem ignorierten Ausgabeverzeichnis.
 Er öffnet die echte Startwelt, wartet auf die serverseitigen Schaf-Events,
 beobachtet ihre Positionen ca. 22 Sekunden und prüft den Gras- und
 Bewegungsradius. Der Test ändert keine Karten und legt keine Objekte an.
+
+## Consistent pixel-art graphics (Codex)
+
+Art production for this project follows `AGENTS.md` and the master
+[style guide](docs/ART_STYLE.md). `art/style-references.json` records original
+Pixel Frog / Tiny Swords master sprites and approved Nobby/biome extensions.
+New graphics are based on those references, with a fixed 64px terrain grid,
+native actor/prop frames, dark slate outlines and nearest-neighbor scaling.
+
+```sh
+npm ci
+npm run art:style:check     # existing map/spritesheet preflight + art contract
+npm run art:references      # self-contained visual gallery
+open artifacts/art-direction/style-reference.html
+npm test
+npm run build
+```
+
+Automated checks validate originals/metadata; inspect the HTML gallery and
+real gameplay screenshots for actual *visual* consistency. The reference
+sheet is generated locally (not tracked); no proprietary asset pack is duplicated.

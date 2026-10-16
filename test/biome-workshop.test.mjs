@@ -4,7 +4,7 @@ import {BIOMES,BIOME_TILE_CATEGORIES,BIOME_OBJECT_CATEGORIES,objectBiome,tileset
 import {walkabilityChanges,repairPaintedWalkways} from '../src/ui/terrain-rules.mjs'
 const L=(name,gids)=>({name,gids})
 test('biome palette categories are scoped',()=>{
- assert.deepEqual(BIOMES,['Wald','Wüste','Schnee'])
+ assert.deepEqual(BIOMES,['Wald','Wüste','Schnee','Dschungel'])
  assert.ok(BIOME_TILE_CATEGORIES.Wüste.includes('Übergänge'))
  assert.ok(BIOME_OBJECT_CATEGORIES.Wüste.includes('Kakteen'))
  assert.equal(objectBiome('desert-cactus'),'Wüste')

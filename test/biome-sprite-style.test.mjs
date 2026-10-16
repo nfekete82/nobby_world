@@ -30,7 +30,10 @@ test('all biome sprite frames are native-sized, transparent, shaded and register
   const asset=registry.assets[id]
   assert.equal(asset.kind,'prop')
   assert.deepEqual(asset.frame,[w,h])
-  assert.equal(asset.animations.stand.image,'tiny-swords/biomes/'+id+'.png')
+  assert.ok(fs.existsSync('public/'+asset.animations.stand.image))
+  const animated=load('public/'+asset.animations.stand.image)
+  assert.equal(animated.width,w*asset.animations.stand.frames)
+  assert.equal(animated.height,h)
   let painted=0,transparent=0
   const colors=new Set()
   for(let i=0;i<image.data.length;i+=4){

@@ -1,0 +1,8 @@
+{
+  "checks": [
+    "enemy attacks closer skeleton; distant shaman takes no damage despite owner XP attribution",
+    "enemy switches and damages player when player becomes nearer than skeleton",
+    "dead skeleton is removed and enemy resumes nearest living hostile"
+  ],
+  "errors": []
+}

@@ -20,8 +20,12 @@ src/tiled/tiny-swords/path-details.png
 src/tiled/tiny-swords/desert.png
 src/tiled/tiny-swords/rocky.png
 src/tiled/tiny-swords/snow.png
+src/tiled/tiny-swords/jungle.png
 
 # More derived biome art (source scripts regenerate these during pretest/prebuild)
 src/tiled/tiny-swords/desert-path.png
 src/tiled/tiny-swords/snow-path.png
 public/tiny-swords/biomes/
+
+# Locally rendered style reference gallery (reproducible)
+artifacts/art-direction/

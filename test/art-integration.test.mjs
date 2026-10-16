@@ -15,7 +15,7 @@ test('every registered animation has exact native cells, valid feet and nonempty
   assert.ok(a.foot[0]>=0&&a.foot[0]<=w&&a.foot[1]>=0&&a.foot[1]<=h,id)
   for(const [name,s]of Object.entries(a.animations)){
    const p=PNG.sync.read(fs.readFileSync('public/'+s.image))
-   assert.equal(p.width,w*s.frames,`${id}/${name} width`);assert.equal(p.height,h,`${id}/${name} height`)
+   assert.equal(p.width,w*s.frames,`${id}/${name} width`);assert.equal(p.height,h*(s.rows??1),`${id}/${name} height`)
    for(let f=0;f<s.frames;f++){
     let pixels=0
     for(let y=0;y<h;y++)for(let x=0;x<w;x++)if(p.data[(y*p.width+f*w+x)*4+3]>0)pixels++

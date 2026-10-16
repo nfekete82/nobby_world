@@ -69,7 +69,7 @@ function enemies(engine:RpgClientEngine,id:string):Foe[]{
   if(!actor)return null
   const x=Number(actor.x()),y=Number(actor.y())
   const syncedHp=Number(actor.hpSignal?.())
-  const sprite=art.assets[o.enemy==='berserker'?'enemy-berserker':'enemy-warrior']
+  const sprite=(art.assets as any)[enemyGraphic(o.enemy)]
   // The sprite can be rendered before its HP signal arrives. Never make a
   // locally stale 0/undefined HP prevent clicking a visible monster: only
   // the authoritative server decides whether it is alive and can be hit.
@@ -173,3 +173,4 @@ export function needsApproach(engine:RpgClientEngine,mapId:string,foeId:string,n
  const a=pos(player),b={x:foe.x,y:foe.y}
  return distance(a,b)>ARCANE_RANGE||!clearShot(nav,a,b)?b:null
 }
+import { enemyGraphic } from '../art/enemies.mjs'

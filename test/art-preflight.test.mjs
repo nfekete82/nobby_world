@@ -6,7 +6,8 @@ test('all shipped Tiny Swords sprites and map tile IDs are structurally valid', 
   const result = preflight()
   assert.ok(result.assets >= 21, 'expected all configured actor and prop types')
   assert.ok(result.animations >= result.assets, 'each asset requires at least one animation')
-  assert.deepEqual(result.maps.map(m => m.name), ['simplemap.tmx', 'wald.tmx'])
+  for(const name of ['simplemap.tmx','wald.tmx','sunscar.tmx','frostwild.tmx','verdant.tmx'])
+    assert.ok(result.maps.some(m=>m.name===name))
   assert.ok(result.maps.every(m => m.layers >= 5))
 })
 

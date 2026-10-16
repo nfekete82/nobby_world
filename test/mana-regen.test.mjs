@@ -63,11 +63,12 @@ test('lag is clamped to one second, and rewinding time is safe',()=>{
  assert.equal(tick(p,c,100),0)
  assert.equal(tick(p,c,200),0)
 })
-test('authoritative player integration owns one timer and disposes it on disconnect',()=>{
+test('authoritative player integration uses the native simulation loop and disposes clocks on disconnect',()=>{
  const source=fs.readFileSync('src/modules/main/player.ts','utf8')
- assert.match(source,/regenerateIdleMana\(player,clock,Number\(player\.param\[MAXSP\]\)\)/)
+ assert.match(source,/regenerateIdleMana\(player,entry\.clock,Number\(player\.param\[MAXSP\]\),now\)/)
  assert.match(source,/onMove\(player: RpgPlayer\)/)
  assert.match(source,/onDisconnected\(player: RpgPlayer\)/)
- assert.match(source,/clearInterval\(entry\.timer\)/)
+ assert.match(source,/manaTimers\.delete\(player\.id\)/)
+ assert.doesNotMatch(source,/setInterval\(/)
  assert.match(source,/noteAction\(player\)/)
 })

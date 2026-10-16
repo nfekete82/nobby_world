@@ -11,21 +11,21 @@ export function sheepEvent(object:any, world:any):EventDefinition{
  return {
   name:object.name,
   pushable:false,
-  mass:0,
+  mass:100,
   onInit(){
    const sheep=this as any
    sheep.setGraphic('sheep')
    sheep.setHitbox(...ART.assets.sheep.hitbox as [number,number])
    sheep.through=true // Players can pass through sheep; never trap the hero.
    sheep.pushable=false
-   sheep.setMass(0)
+   sheep.setMass(100)
    sheep.canMove=true
    sheep.speed=1.2
    if(!pasture)return
    let seed=seedSheep(world.id+':'+object.id),step=0
    const directions={
-    left:Move.tileLeft,right:Move.tileRight,
-    up:Move.tileUp,down:Move.tileDown
+    left:()=>Move.tileLeft(),right:()=>Move.tileRight(),
+    up:()=>Move.tileUp(),down:()=>Move.tileDown()
    }
    sheep.infiniteMoveRoute([(animal:any)=>{
     const position={
@@ -36,12 +36,12 @@ export function sheepEvent(object:any, world:any):EventDefinition{
      mask:pasture,nav,home:{x:object.x,y:object.y},position,seed,step:step++
     })
     seed=action.seed
-    if(action.kind==='walk')return directions[action.direction as keyof typeof directions]()
+    if(action.kind==='walk')return directions[action.direction as keyof typeof directions]()(animal,animal.getCurrentMap())
     // The grazing animation takes place while the engine's route is waiting.
     // Any overlapping animation is transient and reverts to idle afterward.
-    if(typeof animal.setAnimation==='function')
+    if(typeof animal.setGraphicAnimation==='function')
      {
-      const animation=animal.setAnimation('graze',1,{durationMs:Math.round(action.duration*1000)})
+      const animation=animal.setGraphicAnimation('graze',1)
       if(animation&&typeof animation.catch==='function')void animation.catch(()=>{})
      }
     return Move.wait(action.duration)

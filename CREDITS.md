@@ -22,3 +22,22 @@
 Pipoya starter graphics and the old SVG portal have been removed from the running
 project. Historical screenshots deliberately retain the previous appearance.
 The original 3D game remains in its separate Git archive branch.
+
+Shaman, skeleton companions, scorpion, serpent, polar bear and animated desert,
+winter and jungle scenery were created with built-in OpenAI ImageGen against
+project style references. Source atlases and deterministic native sprite packing
+are included in `art/generated-source/expansion/` and `scripts/expansion-art.mjs`.
+The supplied portrait was used only as a character reference, not bundled.
+See `docs/EXPANSION_ART_PROMPTS.md` for the prompt set and provenance.
+
+The shaman's revised six-phase run uses locally hand-authored native pixel
+legs/heels and the existing character's upper-body pixels. Editable sources,
+reference comparisons and provenance are documented in
+`docs/SHAMAN_RUN_REVIEW.md`; no additional external artwork was imported.
+
+The current shaman is rebuilt from the supplied Pixel Frog Blue Monk
+Idle/Run/Heal poses, with locally edited brown hair, beard, bun, sea-green
+costume and wooden staff. Run/Heal were recovered from the project's original
+reference extraction; their unmodified PNG hashes are pinned in the pack
+manifest. The earlier generated-body leg edits remain historical sources only.
+See `docs/SHAMAN_NATIVE_MONK_REBUILD.md` for provenance and visual review.

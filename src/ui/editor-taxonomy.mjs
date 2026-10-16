@@ -15,10 +15,13 @@ const layers={
 export const layerLabel=name=>layers[name]?.[0]??name
 export const layerHelp=name=>layers[name]?.[1]??'Sichtbare Kachelebene aus Tiled'
 export function objectCategory(id){
+ if(id==='desert-snake')return 'Tiere'
  if(id.startsWith('desert-cactus')||id==='desert-prickly-pear')return 'Kakteen'
  if(['desert-house','desert-tent','desert-temple'].includes(id))return 'Gebäude'
  if(id==='desert-rock')return 'Felsen'
  if(id.startsWith('snow-pine'))return 'Wald'
+ if(id==='snow-fir'||id==='jungle-palm'||id==='jungle-tree')return 'Wald'
+ if(id==='snow-crystals')return 'Felsen'
  if(id.startsWith('npc:'))return 'NPCs'
  if(id.startsWith('monster:'))return 'Gegner'
  if(id.startsWith('portal:'))return 'Portale'
@@ -35,6 +38,7 @@ export function tilesetCategory(source){
  if(value.includes('desert'))return 'Wüste'
  if(value.includes('rocky'))return 'Felsboden'
  if(value.includes('snow'))return 'Schnee'
+ if(value.includes('jungle'))return 'Gelände'
  if(value.includes('water')||value.includes('foam'))return 'Wasser'
  if(value.includes('bridge'))return 'Brücken'
  if(value.includes('path-details'))return 'Details'
@@ -52,23 +56,29 @@ export function layerForTileset(source){
  if(file==='desert-path.tsx'||file==='snow-path.tsx')return 'Wege'
  if(file==='foam.tsx')return 'Uferwellen'
  if(file==='water.tsx')return 'Wasser und Klippen · Kollision'
+ if(file==='jungle.tsx')return 'Dschungel'
  return layerForTileCategory(tilesetCategory(source))
 }
 
-export const BIOMES=['Wald','Wüste','Schnee']
+export const BIOMES=['Wald','Wüste','Schnee','Dschungel']
 export const BIOME_TILE_CATEGORIES={
  Wald:['Alle','Gelände','Felsboden','Wege','Wasser','Brücken','Details'],
  Wüste:['Alle','Wüste','Wege','Übergänge','Wasser','Brücken','Details'],
- Schnee:['Alle','Schnee','Wege','Übergänge','Wasser','Brücken','Details']
+ Schnee:['Alle','Schnee','Wege','Übergänge','Wasser','Brücken','Details'],
+ Dschungel:['Alle','Gelände','Wege','Wasser','Brücken','Details']
 }
 export const BIOME_OBJECT_CATEGORIES={
  Wald:OBJECT_CATEGORIES,
- Wüste:['Alle','Kakteen','Gebäude','Felsen','Deko','NPCs','Gegner','Portale'],
- Schnee:['Alle','Wald','Gebäude','Felsen','Deko','NPCs','Gegner','Portale']
+ Wüste:['Alle','Kakteen','Gebäude','Felsen','Deko','Tiere','NPCs','Gegner','Portale'],
+ Schnee:['Alle','Wald','Gebäude','Felsen','Deko','Tiere','NPCs','Gegner','Portale'],
+ Dschungel:OBJECT_CATEGORIES
 }
 export function objectBiome(id){
  if(id.startsWith('desert-'))return 'Wüste'
  if(id.startsWith('snow-'))return 'Schnee'
+ if(id.startsWith('jungle-'))return 'Dschungel'
+ if(id==='monster:scorpion'||id==='monster:serpent')return 'Wüste'
+ if(id==='monster:polar-bear')return 'Schnee'
  if(id.startsWith('npc:')||id.startsWith('monster:')||id.startsWith('portal:'))return 'Alle'
  return 'Wald'
 }
@@ -76,6 +86,7 @@ export function tilesetBiome(source){
  const file=String(source).toLowerCase()
  if(file.includes('desert'))return 'Wüste'
  if(file.includes('snow'))return 'Schnee'
+ if(file.includes('jungle'))return 'Dschungel'
  if(file.includes('water')||file.includes('foam')||file.includes('bridge')||file.includes('path'))return 'Alle'
  return 'Wald'
 }

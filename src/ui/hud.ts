@@ -2,12 +2,15 @@ import type { RpgClientEngine } from '@rpgjs/client'
 import worlds from '../generated/worlds.json'
 import art from '../art/registry.json'
 import { ensureEditorMenu } from './web-editor'
+import { updateCharacterSelect } from './character-select'
 
 let root: HTMLElement, hp: HTMLElement, mana: HTMLElement, xp: HTMLElement
 let title: HTMLElement, region: HTMLElement, gold: HTMLElement
 let statsPanel: HTMLElement, pointsLabel: HTMLElement, statsButton: HTMLButtonElement
 let healButton: HTMLButtonElement
+let summonButton: HTMLButtonElement
 let lastUpdate=0
+let activeEngine:RpgClientEngine
 const choices=[
  {key:'health',label:'Vitalität',bonus:'+10 max. Leben',field:'nobbyStatHealth'},
  {key:'mana',label:'Mana',bonus:'+10 max. Mana',field:'nobbyStatMana'},
@@ -28,6 +31,11 @@ function mount(engine: RpgClientEngine){
  portrait.style.backgroundSize=`${hero.frame[0]*hero.animations.stand.frames*portraitScale}px ${hero.frame[1]*portraitScale}px`
  portrait.style.backgroundPosition=`${40-hero.foot[0]*portraitScale}px ${98-hero.foot[1]*portraitScale}px`
  healButton=root.querySelector<HTMLButtonElement>('button[data-action="heal"]')!
+ summonButton=document.createElement('button')
+ summonButton.type='button';summonButton.dataset.action='nobby:summon'
+ summonButton.innerHTML='<span class="summon-icon" aria-hidden="true"></span><span>Skelett erwecken</span><small>10 Mana · <b>0/3</b></small><kbd>R</kbd>'
+ summonButton.title='R · Skelett sofort erwecken · 10 Mana · 120 Sekunden · maximal 3'
+ root.querySelector('.nobby-actions')!.insertBefore(summonButton,healButton)
  hp=root.querySelector('.hp')!;mana=root.querySelector('.mana')!;xp=root.querySelector('.xp')!
  title=root.querySelector('.nobby-name')!;region=root.querySelector('.nobby-region strong')!;gold=root.querySelector('.nobby-region span')!
  statsPanel=root.querySelector('.nobby-stats-panel')!;pointsLabel=root.querySelector('.nobby-stats-points')!
@@ -38,14 +46,16 @@ function mount(engine: RpgClientEngine){
  statsButton.addEventListener('click',toggle)
  root.querySelector<HTMLButtonElement>('button[data-ui="close-stats"]')!.addEventListener('click',close)
  root.querySelectorAll<HTMLButtonElement>('button[data-stat]').forEach(button=>button.addEventListener('click',()=>{
-     engine.processAction('nobby:allocate-stat',{stat:button.dataset.stat})
+     activeEngine.processAction('nobby:allocate-stat',{stat:button.dataset.stat})
      button.blur()
  }))
- root.querySelectorAll<HTMLButtonElement>('button[data-action]').forEach(b=>b.addEventListener('click',()=>{engine.processAction(b.dataset.action!);b.blur()}))
+ root.querySelectorAll<HTMLButtonElement>('button[data-action]').forEach(b=>b.addEventListener('click',()=>{activeEngine.processAction(b.dataset.action!);b.blur()}))
  document.addEventListener('keydown',(e)=>{
      if(e.repeat||e.altKey||e.ctrlKey||e.metaKey||root.hidden)return
      const target=e.target as HTMLElement
      if(target?.matches?.('input, textarea, select, [contenteditable="true"]'))return
+     if(document.querySelector<HTMLDialogElement>('#nobby-character-select')?.open)return
+     if(e.code==='KeyR'&&!summonButton.hidden&&!summonButton.disabled){e.preventDefault();activeEngine.processAction('nobby:summon')}
      if(e.code==='KeyC'){e.preventDefault();toggle()}
      // Escape is handled by the normal RPG-JS menu if the panel is not open.
      else if(e.key==='Escape'&&!statsPanel.hidden){e.preventDefault();e.stopImmediatePropagation();close()}
@@ -56,18 +66,30 @@ function meter(node:HTMLElement,value:number,max:number,label:string){
  node.querySelector('span')!.textContent=`${label}  ${Math.round(value)} / ${Math.round(max)}`
 }
 export function updateHud(engine:RpgClientEngine){
+ activeEngine=engine
  if(performance.now()-lastUpdate<100)return;lastUpdate=performance.now()
  if(!root)mount(engine)
  ensureEditorMenu(engine)
  const player=engine.getCurrentPlayer() as any
+ updateCharacterSelect(engine,player)
  const modal=Object.values((engine as any).guiService?.gui?.()??{}).some((g:any)=>['rpg-dialog','rpg-main-menu','rpg-shop','rpg-save','rpg-title-screen','rpg-gameover','rpg-input','rpg-character-select'].includes(g.name)&&g.display?.())
- root.hidden=!player||modal
+ const classProp=player?.nobbyClass,selectedClass=typeof classProp==='function'?classProp():classProp
+ root.hidden=!player||modal||!selectedClass
  if(!player||modal){if(statsPanel)statsPanel.hidden=true;return}
  title.textContent=`nobby · Stufe ${player._level()}`
  const params=player._param()
  const currentHp=player.hpSignal(),currentMana=player.spSignal(),maximumHp=params.maxHp||1
  meter(hp,currentHp,maximumHp,'LEBEN');meter(mana,currentMana,params.maxSp||1,'MANA')
  healButton.disabled=!(currentHp>0&&currentHp<maximumHp&&currentMana>=25)
+ summonButton.hidden=selectedClass!=='shaman'
+ const remaining=Math.max(0,readNumber(player,'nobbySummonUntil')-Date.now())
+ const count=readNumber(player,'nobbySkeletons')
+ summonButton.disabled=currentHp<=0||currentMana<10||count>=3||remaining>0
+ summonButton.querySelector('b')!.textContent=`${count}/3${remaining?` · ${(remaining/1000).toFixed(1)} s`:''}`
+ const portrait=root.querySelector<HTMLElement>('.nobby-portrait')!
+ const sprite=selectedClass==='shaman'?art.assets.shaman:art.assets.hero
+ portrait.style.backgroundImage=`url("${import.meta.env.BASE_URL}${sprite.animations.stand.image}")`
+ portrait.style.backgroundSize=`${192*sprite.animations.stand.frames*1.25}px ${192*((sprite.animations.stand as any).rows??1)*1.25}px`
  const currentExp=Number(player._exp?.()??0),floor=readNumber(player,'nobbyXpFloor'),next=readNumber(player,'nobbyXpNext')
  const earned=Math.max(0,currentExp-floor),needed=Math.max(1,next-floor)
  meter(xp,earned,needed,'EP')

@@ -19,7 +19,7 @@ export function makePastureMask(width,height,layers,tilesets){
  for(let i=0;i<width*height;i++){
   const gid=(Number(grass.gids[i])>>>0)&GID_MASK
   if(!ranges.some(r=>gid>=r.start&&gid<r.end))continue
-  if(['Wüste','Felsboden','Schnee','Wege','Brücke','Wasser und Klippen · Kollision']
+  if(['Wüste','Felsboden','Schnee','Dschungel','Wege','Brücke','Wasser und Klippen · Kollision']
    .some(name=>get(name,i)!==0))continue
   allowed[i>>3]|=1<<(i&7)
  }
@@ -53,9 +53,9 @@ export function sheepStep({mask,nav,home,position,seed,step=0,radius=SHEEP_HOME_
  const state=nextSeed(seed)
  const x=tileOf(position.x),y=tileOf(position.y)
  const hx=tileOf(home.x),hy=tileOf(home.y)
- if(!pastureHas(mask,x,y))return {kind:'graze',duration:2.5,seed:state}
+ if(!pastureHas(mask,x,y))return {kind:'graze',duration:4,seed:state}
  // The sheep's quiet rhythm alternates grazing and cautious strolling.
- if(step%3===0||state%10<4)return {kind:'graze',duration:2.1+(state%20)/10,seed:state}
+ if(step%3===0||state%10<4)return {kind:'graze',duration:3.6+(state%12)/10,seed:state}
  const offset=state%4
  for(let i=0;i<4;i++){
   const dir=directions[(offset+i)%4],tx=x+dir.dx,ty=y+dir.dy
@@ -68,5 +68,5 @@ export function sheepStep({mask,nav,home,position,seed,step=0,radius=SHEEP_HOME_
   }
   if(safe)return {kind:'walk',direction:dir.direction,seed:state,duration:0}
  }
- return {kind:'graze',duration:2.5,seed:state}
+ return {kind:'graze',duration:4,seed:state}
 }
