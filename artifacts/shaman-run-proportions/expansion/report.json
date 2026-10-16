@@ -1,0 +1,17 @@
+{
+  "checks": [
+    "mage choice and existing 25-mana healing",
+    "reload restores class without showing selection",
+    "legacy numbered save migrates to mage preserving level, XP and gold",
+    "shaman graphic, R hotkey, green summon and 10-mana cost",
+    "live skeleton follows moving player using navigation and dynamic physics",
+    "live server skeleton attacks authored enemy",
+    "portal map transition keeps class and removes companions",
+    "summoning after portal creates a companion in the new room",
+    "native travel-stone dialog navigates to desert through a real GUI choice",
+    "desert, snow and jungle maps render with native enemies and scenery",
+    "390px touch selection and touch summoning"
+  ],
+  "errors": [],
+  "missing": []
+}

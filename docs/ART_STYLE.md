@@ -108,7 +108,9 @@ check idle/stride/junction transitions in the actual game, not just static PNGs.
   old boots to manufacture new steps. Frames 1/4 plant opposite legs; frames
   2/5 release the other heel; frames 3/6 pass the bent swing leg. The rear
   uses separately painted heels. Keep 192px cells, [96,132] feet and [32,24]
-  hitboxes. Face, beard, bun, robe, arms and staff retain authored motion.
+  hitboxes. Preserve broad, compact trouser legs and short, substantial boots;
+  do not replace the original chibi proportions with narrow exposed shins.
+  Face, beard, bun, robe, arms and staff retain authored motion.
 - Sheep have an **independent eight-frame stepping sheet** from
   `scripts/sheep-art.mjs` (`sheep-walk.png`), which alternates two genuine
   moving hoof regions while fixing the original fleece, head and body.

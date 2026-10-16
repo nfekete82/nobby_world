@@ -4,7 +4,7 @@ const fs=require('node:fs')
 const {PNG}=require('pngjs')
 const ensureDevServer=require('./ensure-dev-server.cjs')
 ;(async()=>{
- const stop=await ensureDevServer(),output='artifacts/shaman-run'
+ const stop=await ensureDevServer(),output=process.env.NOBBY_ARTIFACT_DIR||'artifacts/shaman-run'
  let browser
  const report={checks:[],errors:[],frames:[]}
  try{
@@ -53,7 +53,7 @@ const ensureDevServer=require('./ensure-dev-server.cjs')
   await context.close()
   // Review gallery next to the live screenshots, plus animated sprite previews.
   const gallery=await browser.newPage({viewport:{width:1800,height:1200}})
-  await gallery.goto('file://'+process.cwd()+'/artifacts/shaman-run/index.html')
+  await gallery.goto('file://'+process.cwd()+'/'+output+'/index.html')
   await gallery.screenshot({path:output+'/preview-browser.png'})
   await gallery.goto('file://'+process.cwd()+'/artifacts/art-direction/style-reference.html')
   await gallery.screenshot({path:output+'/style-reference-browser.png',fullPage:true})
