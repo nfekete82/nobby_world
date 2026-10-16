@@ -86,3 +86,14 @@ Props continue to use their historical trim behavior. Walking, fighting,
 casting, summoning and death animations always retain all authored frames.
 When new actor art is introduced, review *both* front and rear frames and
 check idle/stride/junction transitions in the actual game, not just static PNGs.
+
+## Calm wildlife and summon responsiveness
+
+- Shaman idle: **0.5 FPS**, native 192px fixed-foot poses; running and summoning remain quick.
+- Sheep grazing: only the head/neck bows by four original pixels, stays down
+  for four frames, and rises. The wool, torso and feet never bob. The graze route
+  waits for the full ten-frame native-pixel sequence before walking again.
+- Skeletons: instant consecutive summons with no cooldown or AI startup wait,
+  still costing 10 mana each, limited to three companions and one pending server
+  spawn operation. Base health and level scaling are stronger; lifespan is two
+  minutes unless defeated or cleaned up at a map/player transition.

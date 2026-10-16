@@ -2,7 +2,7 @@ import { MAXHP } from '@rpgjs/server'
 import { BattleAi, EnemyType } from '@rpgjs/action-battle/server'
 import worlds from '../../generated/worlds.json'
 import { unpackNavigation } from '../../navigation/pathfinding.mjs'
-import { createSkeletonController, skeletonImpact } from '../../combat/skeletons.mjs'
+import { createSkeletonController, skeletonImpact, skeletonMaxHP } from '../../combat/skeletons.mjs'
 
 const configs=new Map(worlds.map(w=>[w.id,{nav:unpackNavigation(w.navigation),
  monsterIds:new Set(w.objects.filter(o=>o.kind==='monster').map(o=>o.id))}]))
@@ -35,7 +35,7 @@ export function companions(player:any){
      self.nobbyCompanion=true
      self.setGraphic('skeleton')
      self.setHitbox(32,24)
-     self.setParameter(MAXHP,40+player.level*5)
+     self.setParameter(MAXHP,skeletonMaxHP(player.level))
      self.allRecovery()
      self.speed=4;self.pushable=false;self.setMass(100)
      // Companion bodies never trap their owner or other allies. Navigation

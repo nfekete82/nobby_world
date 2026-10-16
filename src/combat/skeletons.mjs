@@ -2,8 +2,17 @@ import { findRoute, isBlocked } from '../navigation/pathfinding.mjs'
 import { clearShot, distance } from './arcane-rules.mjs'
 import { characterClass, readProp, writeProp } from '../progression/character-class.mjs'
 
-export const SUMMON = Object.freeze({ mana: 10, limit: 3, lifetime: 60000, cooldown: 1800,
- startup: 650, attackCooldown: 1050, attackRange: 58, aggro: 300, leash: 480, repath: 650 })
+// Instant, server-authoritative summons: 10 mana, one pending transaction,
+// maximum three companions. Better health and longer lifetime improve survival.
+export const SUMMON = Object.freeze({ mana: 10, limit: 3, lifetime: 120000, cooldown: 0,
+ startup: 0, attackCooldown: 1050, attackRange: 58, aggro: 300, leash: 480, repath: 650 })
+export const SKELETON_BASE_HP=75
+export const SKELETON_HP_PER_LEVEL=10
+export function skeletonMaxHP(level){
+ const value=Number(level)
+ const safe=Number.isFinite(value)?Math.max(1,Math.floor(value)):1
+ return SKELETON_BASE_HP+Math.min(safe,100)*SKELETON_HP_PER_LEVEL
+}
 export const position = e => ({ x: Number(typeof e.x === 'function' ? e.x() : e.x),
  y: Number(typeof e.y === 'function' ? e.y() : e.y) })
 export function companionTargetPermission({attacker,target}){
@@ -74,7 +83,7 @@ export function createSkeletonController(owner, adapter, overrides = {}) {
     return false
    }
    owner.sp-=rules.mana
-   ready=now+rules.cooldown
+   ready=rules.cooldown>0?now+rules.cooldown:0
    active.set(entity.id,{entity,map,expires:now+rules.lifetime,attackAt:now+rules.startup,
     repathAt:0,path:[],target:null,awakeAt:now+rules.startup})
    publish()

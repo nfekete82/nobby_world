@@ -93,19 +93,32 @@ test('grazing sprites preserve frame geometry and render a visible head-dip cycl
  const output=makeSheepGrazingFrames(src)
  assert.equal(output.width,128*SHEEP_GRAZE_FRAMES)
  assert.equal(output.height,128)
- assert.deepEqual(SHEEP_GRAZE_DIP,[0,2,4,5,3,1])
+ assert.deepEqual(SHEEP_GRAZE_DIP,[0,1,3,4,4,4,4,3,1,0])
  for(let n=0;n<SHEEP_GRAZE_FRAMES;n++){
   let alpha=0
   for(let y=0;y<128;y++)for(let x=0;x<128;x++)
    if(output.data[(y*output.width+n*128+x)*4+3]===255)alpha++
   assert.ok(alpha>300,'grazing frame '+n+' must remain visible')
+  // Stationary wool, torso and feet: only the muzzle can move.
+  for(let y=40;y<80;y++)for(let x=41;x<70;x++){
+   const a=(y*src.width+x)*4,b=(y*output.width+n*128+x)*4
+   assert.deepEqual([...output.data.subarray(b,b+4)],[...src.data.subarray(a,a+4)],
+    'whole sheep bobbed at frame '+n+', '+x+','+y)
+  }
+ }
+ // The head remains lowered through four identical contact frames.
+ for(const [a,b]of [[3,4],[4,5],[5,6]]){
+  for(let y=0;y<128;y++)for(let x=0;x<128;x++){
+   const p=(y*output.width+a*128+x)*4,q=(y*output.width+b*128+x)*4
+   assert.deepEqual([...output.data.subarray(p,p+4)],[...output.data.subarray(q,q+4)])
+  }
  }
  ensureSheepGraze()
  const png=PNG.sync.read(fs.readFileSync('public/tiny-swords/biomes/sheep-graze.png'))
  assert.deepEqual([png.width,png.height],[output.width,output.height])
  const registry=JSON.parse(fs.readFileSync('src/art/registry.json','utf8'))
  assert.equal(registry.assets.sheep.animations.graze.fps,3)
- assert.equal(registry.assets.sheep.animations.graze.frames,6)
+ assert.equal(registry.assets.sheep.animations.graze.frames,10)
  const event=fs.readFileSync('src/modules/main/sheep-event.ts','utf8')
  assert.match(event,/infiniteMoveRoute/)
  assert.match(event,/Move\.wait/)

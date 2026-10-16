@@ -15,7 +15,7 @@ test('all playable classes and skeletons have calm, fixed-foot standing sequence
   assert.ok(Math.max(...centers)-Math.min(...centers)<=2,id+' shifts horizontally between standing poses')
   assert.ok(centers.every(x=>Math.abs(x-actor.foot[0])<=3),id+' off-center standing pose')
  }
- assert.equal(registry.assets.shaman.animations.stand.fps,1.5)
+ assert.equal(registry.assets.shaman.animations.stand.fps,0.5)
 })
 
 test('walk and all combat, casting and summoning frames stay complete',()=>{
@@ -43,5 +43,5 @@ test('actor cells stay full-size; trim only non-actor props',()=>{
 
 test('recompiling authored shaman art retains the corrected calm idle rate',()=>{
  const source=fs.readFileSync('scripts/expansion-art.mjs','utf8')
- assert.match(source,/shaman:\{rows:6,height:70,states:\{stand:\[0,6,1\.5\]/)
+ assert.match(source,/shaman:\{rows:6,height:70,states:\{stand:\[0,6,0\.5\]/)
 })

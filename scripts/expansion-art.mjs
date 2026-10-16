@@ -165,7 +165,7 @@ function compileBuildings(registry){
  }
 }
 export const EXPANSION_ACTORS={
- shaman:{rows:6,height:70,states:{stand:[0,6,1.5],walk:[1,6,10],attack:[2,6,16],heal:[3,6,9],hit:[4,2,10],death:[4,4,8,2]}},
+ shaman:{rows:6,height:70,states:{stand:[0,6,0.5],walk:[1,6,10],attack:[2,6,16],heal:[3,6,9],hit:[4,2,10],death:[4,4,8,2]}},
  skeleton:{rows:6,height:66,states:{stand:[0,6,4],walk:[1,6,10],attack:[2,6,16],spawn:[3,6,9],hit:[4,2,10],death:[4,4,8,2]}},
  'desert-scorpion':{rows:4,height:57,states:{stand:[0,6,4],walk:[1,6,10],attack:[2,6,14],hit:[3,2,10],death:[3,4,8,2]}},
  'desert-serpent':{rows:4,height:74,states:{stand:[0,6,4],walk:[1,6,10],attack:[2,6,14],hit:[3,2,10],death:[3,4,8,2]}},
