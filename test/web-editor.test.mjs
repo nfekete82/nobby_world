@@ -139,3 +139,14 @@ test('save roundtrip on the real authored map dimensions, without changing user 
   assert.ok(fs.readdirSync(path.join(tempDir,'art','map-backups')).length>0)
  }finally{fs.rmSync(tempDir,{recursive:true,force:true})}
 })
+
+test('static asset library continues rendering when a generated animation is missing',()=>{
+ const editor=fs.readFileSync('src/ui/asset-editor.ts','utf8')
+ assert.match(editor,/const loadProblems:string\[\]=\[\]/)
+ assert.match(editor,/draft\.loadProblems=loadProblems/)
+ assert.match(editor,/image=null/)
+ assert.match(editor,/usable\.includes\('stand'\)/)
+ assert.match(editor,/ae-load-warning/)
+ assert.match(editor,/Port 8088 ist schreibgeschützt/)
+ assert.match(editor,/Vorschaubild fehlt – Asset bleibt auswählbar/)
+})

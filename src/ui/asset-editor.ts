@@ -51,16 +51,41 @@ export class AssetEditor{
   if(import.meta.env.DEV)return this.client.request('assets/read',{id})
   const entry=this.catalog.assets.find((a:any)=>a.id===id);if(!entry)throw Error('Asset fehlt')
   const draft=clone(entry);draft.asset=draft.definition;delete draft.definition
-  for(const s of Object.values(draft.asset.animations) as any[]){
-   const image=await this.image(fileURL(s.image)),[w,h]=draft.asset.frame;s.cells=Array.from({length:s.rows||1},()=>[])
-   for(let row=0;row<s.cells.length;row++)for(let f=0;f<s.frames;f++){const c=document.createElement('canvas');c.width=w;c.height=h;const ctx=c.getContext('2d')!;ctx.imageSmoothingEnabled=false;ctx.drawImage(image,s.terrainGrid?f%draft.asset.terrainColumns*w:f*w,s.terrainGrid?Math.floor(f/draft.asset.terrainColumns)*h:row*h,w,h,0,0,w,h);s.cells[row].push(c.toDataURL('image/png').split(',')[1])}
+  // The static game must still allow inspecting an actor when just one sheet fails.
+  const loadProblems:string[]=[]
+  for(const [name,s] of Object.entries(draft.asset.animations) as [string,any][]){
+   const [w,h]=draft.asset.frame,rows=s.rows||1,columns=draft.asset.terrainColumns||1
+   const expectedWidth=s.terrainGrid?columns*w:s.frames*w
+   const expectedHeight=s.terrainGrid?Math.ceil(s.frames/columns)*h:rows*h
+   let image:HTMLImageElement|null=null
+   try{
+    image=await this.image(fileURL(s.image))
+    if(image.naturalWidth!==expectedWidth||image.naturalHeight!==expectedHeight)
+     throw Error('Falsches Raster: '+image.naturalWidth+' × '+image.naturalHeight+' statt '+expectedWidth+' × '+expectedHeight)
+   }catch(error){
+    loadProblems.push(name+' ('+s.image+'): '+(error instanceof Error?error.message:String(error)))
+    image=null
+   }
+   s.cells=Array.from({length:rows},()=>[] as string[])
+   for(let row=0;row<rows;row++)for(let f=0;f<s.frames;f++){
+    const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h
+    if(image){
+     const ctx=canvas.getContext('2d')!;ctx.imageSmoothingEnabled=false
+     const sx=s.terrainGrid?f%columns*w:f*w
+     const sy=s.terrainGrid?Math.floor(f/columns)*h:row*h
+     ctx.drawImage(image,sx,sy,w,h,0,0,w,h)
+    }
+    s.cells[row].push(canvas.toDataURL('image/png').split(',')[1])
+   }
    s.frameDurations||=Array(s.frames).fill(1000/s.fps);s.loop=s.loop!==false
-  }return {draft,revision:this.catalog.revision}
+  }
+  draft.loadProblems=loadProblems
+  return {draft,revision:this.catalog.revision}
  }
  private message(text:string){this.status.textContent=text}
  private changed(){this.version++;this.dirty=true;this.message('Ungespeichert · '+(this.scope==='variant'?'neue Objektvariante':'gilt für alle Instanzen von '+this.id));const recovery={draft:this.draft,scope:this.scope,version:this.version,pending:this.pending,id:this.id};void writeDraft('asset:'+this.id,recovery);void writeDraft('asset:last',recovery);this.hooks.dirty()}
  private async image(src:string){if(!this.images.has(src))this.images.set(src,await decode(src));return this.images.get(src)!}
- private thumb(target:HTMLCanvasElement,src:string,fw:number,fh:number,sx=0,sy=0){const ctx=target.getContext('2d')!;ctx.imageSmoothingEnabled=false;void this.image(src).then(img=>{ctx.clearRect(0,0,target.width,target.height);const scale=Math.min(target.width/fw,target.height/fh);ctx.drawImage(img,sx,sy,fw,fh,(target.width-fw*scale)/2,(target.height-fh*scale)/2,fw*scale,fh*scale)}).catch(()=>{ctx.clearRect(0,0,target.width,target.height);target.title='Datei fehlt oder ist beschädigt'})}
+ private thumb(target:HTMLCanvasElement,src:string,fw:number,fh:number,sx=0,sy=0){const ctx=target.getContext('2d')!;ctx.imageSmoothingEnabled=false;void this.image(src).then(img=>{ctx.clearRect(0,0,target.width,target.height);const scale=Math.min(target.width/fw,target.height/fh);ctx.drawImage(img,sx,sy,fw,fh,(target.width-fw*scale)/2,(target.height-fh*scale)/2,fw*scale,fh*scale)}).catch(()=>{ctx.clearRect(0,0,target.width,target.height);ctx.fillStyle='#a33125';ctx.font='bold 28px sans-serif';ctx.fillText('!',(target.width-8)/2,(target.height+16)/2);target.title='Vorschaubild fehlt – Asset bleibt auswählbar'})}
  private renderList(){
   this.list.replaceChildren();const term=this.search.value.toLowerCase()
   for(const a of this.catalog.assets){
@@ -81,8 +106,13 @@ export class AssetEditor{
    const response=await this.readAsset(id);if(sequence!==this.chooseSequence)return;this.draft=response.draft;this.id=id;this.scope='global';this.version=0;this.dirty=false;this.pending=null
    const recovery:any=await readDraft('asset:'+id)
    if(recovery?.draft&&confirm('Ein lokaler ungespeicherter Entwurf für '+id+' ist vorhanden. Wiederherstellen?')){this.draft=recovery.draft;this.scope=recovery.scope||'global';this.dirty=true;this.version=recovery.version;this.pending=recovery.pending||null}
-   this.catalog.revision=response.revision;this.state=this.draft.asset.animations.walk?'walk':'stand';this.row=0;this.frame=0;this.playing=false
-   this.renderList();this.render();this.message(this.dirty?'Lokaler Entwurf wiederhergestellt · ungespeichert':'Geladen · Änderungen betreffen alle Instanzen dieses Assets.');if(import.meta.env.DEV)void this.showUsage()
+   this.catalog.revision=response.revision
+   const usable=Object.keys(this.draft.asset.animations).filter(name=>!(this.draft.loadProblems||[]).some((p:string)=>p.startsWith(name+' (')))
+   this.state=usable.includes('walk')?'walk':usable.includes('stand')?'stand':usable[0]||'stand'
+   this.row=0;this.frame=0;this.playing=false
+   this.renderList();this.render()
+   this.message(this.draft.loadProblems?.length?'Grafikdateien fehlen: '+this.draft.loadProblems.join(' · '):this.dirty?'Lokaler Entwurf wiederhergestellt · ungespeichert':'Geladen · Änderungen betreffen alle Instanzen dieses Assets.')
+   if(import.meta.env.DEV)void this.showUsage()
   }catch(e){if(sequence===this.chooseSequence)this.message(String(e))}finally{if(sequence===this.chooseSequence)this.detail.inert=false}
  }
  private current(){return this.draft?.asset.animations[this.state]}
@@ -124,7 +154,11 @@ export class AssetEditor{
   else this.details.append(el('small','','Pflichtanimation geschützt: '+this.state))
   this.renderMetadata();this.renderImport()
   const layout=el('div','ae-editor-layout'),main=el('div','ae-preview-column');main.append(this.buttons,label('Direkter Vergleich',compare),this.stage,this.timeline)
-  layout.append(main,this.details);this.detail.append(title,scopeNotice,this.tabs,layout,this.usage)
+  layout.append(main,this.details)
+  this.detail.append(title)
+  if(!import.meta.env.DEV)this.detail.append(el('p','ae-readonly-note','Nur Vorschau: Port 8088 ist schreibgeschützt. Zum Bearbeiten den lokalen Entwicklungseditor auf Port 5173 starten.'))
+  if(this.draft.loadProblems?.length)this.detail.append(el('p','ae-load-warning','Nicht alle Animationen konnten geladen werden: '+this.draft.loadProblems.join(' · ')))
+  this.detail.append(scopeNotice,this.tabs,layout,this.usage)
   this.renderTimeline();void this.draw()
   if(!import.meta.env.DEV){for(const control of [...actions.querySelectorAll('button'),...this.details.querySelectorAll('input,select,button'),scope] as (HTMLInputElement|HTMLButtonElement|HTMLSelectElement)[])control.disabled=true;this.message('Schreibgeschützte Spielversion · Bearbeiten im lokalen Editor auf localhost:5173')}
  }
