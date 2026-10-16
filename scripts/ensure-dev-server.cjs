@@ -37,6 +37,7 @@ async function isReady() {
 
 module.exports = async function ensureDevServer() {
   if (await isReady()) {
+    if(process.env.NOBBY_EDITOR_FIXTURE)throw Error('Fixture port is occupied. Refusing to reuse a running server for mutating tests. Choose another NOBBY_TEST_PORT.');
     console.log('Using existing Nobby World development server on port '+TEST_PORT+'.');
     return async () => {};
   }
@@ -56,6 +57,8 @@ module.exports = async function ensureDevServer() {
       '--host', '127.0.0.1', '--port', TEST_PORT, '--strictPort'],
     { cwd: process.cwd(), stdio: 'inherit' },
   );
+  const terminateOnExit=()=>{if(child.pid)try{child.kill('SIGTERM')}catch{}};
+  process.once('exit',terminateOnExit);
   let exited = false;
   let spawnError;
   child.once('error', (error) => { spawnError = error; });
@@ -65,6 +68,7 @@ module.exports = async function ensureDevServer() {
     child.kill('SIGTERM');
     for (let i = 0; i < 30 && !exited; i++) await sleep(100);
     if (!exited) child.kill('SIGKILL');
+    process.removeListener('exit',terminateOnExit);
   };
 
   try {

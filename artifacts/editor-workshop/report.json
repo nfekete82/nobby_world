@@ -1,0 +1,24 @@
+{
+  "isolated": true,
+  "map": {
+    "width": 100,
+    "height": 40
+  },
+  "checks": [
+    "direct shaman selection",
+    "map save",
+    "PNG Walk frame 4 replacement",
+    "native frame bytes preserved",
+    "all states/directions retained",
+    "sheep duplicate",
+    "frame duplicate/reorder/remove",
+    "animation add/remove",
+    "later edits stay dirty during save",
+    "trash/restore",
+    "controlled full reload",
+    "game scene rendered",
+    "actual runtime uses saved sheet",
+    "art:prepare retains user overlay"
+  ],
+  "errors": []
+}

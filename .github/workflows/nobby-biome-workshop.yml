@@ -4,9 +4,11 @@ on:
   pull_request:
     branches:
       - feat/player-level-progression
+      - feat/shaman-biome-expansion
   push:
     branches:
       - feat/player-level-progression
+      - feat/shaman-biome-expansion
   workflow_dispatch:
 
 permissions:
@@ -42,3 +44,11 @@ jobs:
         env:
           CI: 'true'
         run: npm run test:aggro
+
+      - name: Upload editor review screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integrated-editor-review
+          path: artifacts/editor-workshop/
+          if-no-files-found: ignore

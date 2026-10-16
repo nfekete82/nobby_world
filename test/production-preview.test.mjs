@@ -73,6 +73,7 @@ test('production previews serve maps and the UI theme at root and subpath', asyn
         assert.equal(mapResponse.status, 200, `${variant.name} map status`)
         assert.match(await mapResponse.text(), /<map\b/)
 
+        const catalogResponse=await fetch(new URL(`${variant.route}editor-catalog.json`,origin));assert.equal(catalogResponse.status,200);const catalog=await catalogResponse.json();assert.ok(catalog.assets.some(a=>a.id==='shaman'));assert.ok(catalog.assets.some(a=>a.category==='Gelände'))
         const localStylesheets = stylesheetUrls(builtHtml, indexUrl)
         assert(localStylesheets.length > 0, `${variant.name} emitted no local stylesheets`)
         let fetchedTheme = false
