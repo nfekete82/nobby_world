@@ -136,3 +136,14 @@ Alle vorgefundenen lokalen Karten-, Weltdatei- und Screenshotänderungen wurden
 vorher/nachher per SHA-256 verglichen und sind unverändert. Sie gehören nicht
 zum Commit dieses Fixes. Ein perfektes stilistisches Gleichziehen mit dem
 Ritter wird wegen des bewusst erhaltenen Oberkörpers nicht behauptet.
+
+## GitHub-Status
+
+PR: https://github.com/nfekete82/nobby_world/pull/14
+
+Der erste GitHub-Actions-Lauf `38873652593` konnte **keinen Runner starten**.
+GitHub meldete: fehlgeschlagene Kontozahlungen oder ein zu erhöhendes
+Ausgabenlimit. Der Job hatte keine ausgeführten Steps und keine Logs.
+Dies ist keine bestandene CI-Prüfung und kein gemeldeter Code-/Art-Testfehler.
+Die oben genannten Prüfergebnisse stammen aus den vollständig erfolgreichen
+lokalen Läufen. Billing-Einstellungen wurden nicht verändert.
