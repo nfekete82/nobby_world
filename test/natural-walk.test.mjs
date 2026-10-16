@@ -3,26 +3,18 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import {PNG} from 'pngjs'
 import {ensureNaturalShamanWalk,WALK_CADENCE_FPS} from '../scripts/natural-walk.mjs'
+import {NATIVE_SHAMAN_STATES} from '../scripts/native-shaman.mjs'
 import registry from '../src/art/registry.json' with {type:'json'}
 
-test('normal build copies the authored twelve poses exactly to both game paths',()=>{
+test('normal build copies all reviewed native character states unchanged',()=>{
  ensureNaturalShamanWalk()
- const source=PNG.sync.read(fs.readFileSync('art/generated-source/expansion/shaman-run.png'))
- for(const file of ['public/tiny-swords/expansion/shaman-walk.png','public/'+registry.assets.shaman.animations.walk.image])
-  assert.deepEqual(PNG.sync.read(fs.readFileSync(file)).data,source.data)
- assert.equal(registry.assets.shaman.animations.walk.fps,WALK_CADENCE_FPS)
- const upper=PNG.sync.read(fs.readFileSync('art/generated-source/expansion/shaman-run-upper.png'))
- for(let row=0;row<2;row++){
-  const silhouettes=new Set()
-  for(let f=0;f<6;f++){
-   const signature=[]
-   for(let y=0;y<110;y++)for(let x=0;x<192;x++){
-    const i=((row*192+y)*source.width+f*192+x)*4
-    assert.deepEqual(source.data.subarray(i,i+4),upper.data.subarray(i,i+4),'identity pixels changed')
-    if(source.data[i+3])signature.push(x,y,source.data[i])
-   }
-   silhouettes.add(signature.join(','))
-  }
-  assert.equal(silhouettes.size,6,'secondary motion was frozen')
+ for(const [state,spec] of Object.entries(NATIVE_SHAMAN_STATES)){
+  const source=PNG.sync.read(fs.readFileSync('art/generated-source/expansion/'+(state==='walk'?'shaman-run.png':`shaman-native-${state}.png`)))
+  const asset=registry.assets.shaman.animations[state]
+  assert.equal(asset.frames,spec.poses.length)
+  assert.deepEqual(PNG.sync.read(fs.readFileSync('public/'+asset.image)).data,source.data)
  }
+ assert.equal(registry.assets.shaman.animations.walk.fps,WALK_CADENCE_FPS)
+ const raw=PNG.sync.read(fs.readFileSync('public/tiny-swords/expansion/shaman-walk.png'))
+ assert.deepEqual(raw.data,PNG.sync.read(fs.readFileSync('art/generated-source/expansion/shaman-run.png')).data)
 })

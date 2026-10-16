@@ -100,17 +100,15 @@ check idle/stride/junction transitions in the actual game, not just static PNGs.
 
 ## Natural walking (shaman and sheep)
 
-- Shaman walks at **12 FPS** through six individually painted full poses in
-  each facing row. `art/generated-source/expansion/shaman-run.png` is the
-  reviewed native 1152×384 source; `scripts/natural-walk.mjs` copies it without
-  transforms into both production paths. Its editable pixel layers and
-  preserved upper-body pixels are alongside it. Never mirror, shift or crop
-  old boots to manufacture new steps. Frames 1/4 plant opposite legs; frames
-  2/5 release the other heel; frames 3/6 pass the bent swing leg. The rear
-  uses separately painted heels. Keep 192px cells, [96,132] feet and [32,24]
-  hitboxes. Preserve broad, compact trouser legs and short, substantial boots;
-  do not replace the original chibi proportions with narrow exposed shins.
-  Face, beard, bun, robe, arms and staff retain authored motion.
+- Shaman uses the **four original Monk Run.png poses at 12 FPS**, in native
+  192px cells with a fixed [96,132] anchor and [32,24] hitbox. The native robe,
+  sleeves, arms and feet keep their original poses. Do not draw substitute
+  legs, mirror a boot patch or stretch the figure. Brown hair/beard/bun,
+  sea-green clothing and a staff are native pixel edits. Stand uses Monk Idle;
+  healing/summoning uses all eleven Monk Heal frames. Rear heads are separately
+  drawn; the supplied pack has no rear Monk animation. See
+  `docs/SHAMAN_NATIVE_MONK_REBUILD.md`. The earlier six-frame generated-body
+  experiments and their reviews are historical, not the current pipeline.
 - Sheep have an **independent eight-frame stepping sheet** from
   `scripts/sheep-art.mjs` (`sheep-walk.png`), which alternates two genuine
   moving hoof regions while fixing the original fleece, head and body.
@@ -122,9 +120,9 @@ check idle/stride/junction transitions in the actual game, not just static PNGs.
 
 ## Knight-reference gait and companion combat focus
 
-- **Shaman walking:** use native `Warrior_Run.png` as the six-phase movement
-  reference at 12 FPS. Do not freeze the torso or normalize individual poses
-  during compilation. See the authored source and `docs/SHAMAN_RUN_REVIEW.md`.
+- **Shaman walking:** use the actual native `Monk/Run.png` as the source,
+  with `Warrior_Run.png` as a secondary native motion reference. Keep the
+  Monk's complete four poses and their original lower-body silhouettes.
 - **Skeleton combat:** once engaged, a skeleton keeps its live enemy target
   even when Nobby moves far away. Never replace it with a nearer target
   while still alive and within the bounded per-skeleton `leash`. Acquire
@@ -132,11 +130,10 @@ check idle/stride/junction transitions in the actual game, not just static PNGs.
   Follow the owner only when no valid combat target remains. Neutral animals,
   other players, friendly skeletons and unreachable tiles are never targets.
 
-### Authored shaman gait regression coverage
+### Native shaman gait regression coverage
 
-Frame count, FPS and changed pixels do not prove alternating legs. The tests
-inspect independently reviewed visible toe/sole coordinates in the real game
-PNG, test lifted versus grounded feet in both views, reject a deliberately
-repeated leading-leg cycle, check boot separation and check the 6→1 wrap.
-Open `artifacts/shaman-run/index.html` for the animated side-by-side reference
-and inspect actual movement screenshots before accepting future edits.
+Frame count and FPS alone do not prove alternating legs. Tests inspect actual
+native toe positions: right contact in pose 1, left contact in pose 3, plus
+the passing phases and 4→1 wrap. They reject a repeated leading boot and
+compare every lower robe/boot pixel with the original Monk source. Inspect
+`artifacts/shaman-native-monk/index.html` next to actual game captures.

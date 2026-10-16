@@ -4,7 +4,7 @@ const fs=require('node:fs')
 const {PNG}=require('pngjs')
 const ensureDevServer=require('./ensure-dev-server.cjs')
 ;(async()=>{
- const stop=await ensureDevServer(),output=process.env.NOBBY_ARTIFACT_DIR||'artifacts/shaman-run'
+ const stop=await ensureDevServer(),output=process.env.NOBBY_ARTIFACT_DIR||'artifacts/shaman-native-monk'
  let browser
  const report={checks:[],errors:[],frames:[]}
  try{

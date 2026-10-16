@@ -2985,229 +2985,247 @@
           "image": "tiny-swords/expansion/shaman-stand.png",
           "frames": 6,
           "fps": 0.5,
+          "rows": 2,
           "visibleBounds": [
             [
-              64,
-              64,
-              129,
-              132
-            ],
-            [
-              62,
-              65,
-              130,
-              132
-            ],
-            [
-              66,
-              63,
-              127,
-              132
-            ],
-            [
-              67,
-              64,
-              125,
-              132
-            ],
-            [
-              65,
-              63,
-              127,
-              132
-            ],
-            [
-              65,
-              65,
-              128,
-              132
-            ]
-          ],
-          "rows": 2
-        },
-        "walk": {
-          "image": "tiny-swords/biomes/shaman-natural-walk.png",
-          "frames": 6,
-          "fps": 12,
-          "visibleBounds": [
-            [
-              61,
-              61,
-              131,
-              132
-            ],
-            [
-              62,
-              60,
-              131,
-              132
-            ],
-            [
-              59,
-              63,
-              134,
-              131
-            ],
-            [
-              60,
-              62,
+              72,
+              57,
               132,
               132
             ],
             [
-              57,
-              62,
-              135,
+              70,
+              58,
+              132,
               132
             ],
             [
+              69,
+              59,
+              132,
+              132
+            ],
+            [
+              70,
+              59,
+              132,
+              132
+            ],
+            [
+              72,
               58,
-              62,
-              134,
-              131
+              132,
+              132
+            ],
+            [
+              73,
+              57,
+              132,
+              132
             ]
-          ],
-          "rows": 2
+          ]
+        },
+        "walk": {
+          "image": "tiny-swords/biomes/shaman-natural-walk.png",
+          "frames": 4,
+          "fps": 12,
+          "rows": 2,
+          "visibleBounds": [
+            [
+              56,
+              56,
+              136,
+              133
+            ],
+            [
+              55,
+              55,
+              136,
+              130
+            ],
+            [
+              56,
+              56,
+              136,
+              133
+            ],
+            [
+              56,
+              55,
+              137,
+              130
+            ]
+          ]
         },
         "attack": {
           "image": "tiny-swords/expansion/shaman-attack.png",
           "frames": 6,
           "fps": 16,
+          "rows": 2,
           "visibleBounds": [
             [
-              68,
-              56,
-              124,
-              132
-            ],
-            [
-              56,
-              59,
-              137,
-              132
-            ],
-            [
-              57,
-              57,
-              136,
-              132
-            ],
-            [
-              55,
+              70,
               58,
-              137,
+              132,
               132
             ],
             [
-              56,
-              65,
-              136,
-              132
-            ],
-            [
-              68,
+              61,
               63,
-              124,
+              132,
+              131
+            ],
+            [
+              45,
+              62,
+              145,
+              131
+            ],
+            [
+              41,
+              61,
+              149,
+              130
+            ],
+            [
+              49,
+              61,
+              139,
+              130
+            ],
+            [
+              73,
+              58,
+              132,
               132
             ]
-          ],
-          "rows": 2
+          ]
         },
         "heal": {
           "image": "tiny-swords/expansion/shaman-heal.png",
-          "frames": 6,
+          "frames": 11,
           "fps": 9,
+          "rows": 2,
           "visibleBounds": [
             [
-              65,
-              57,
-              128,
+              70,
+              58,
+              132,
               132
             ],
             [
+              61,
+              63,
+              132,
+              131
+            ],
+            [
+              45,
               62,
+              145,
+              131
+            ],
+            [
+              41,
+              61,
+              149,
+              130
+            ],
+            [
+              37,
+              61,
+              153,
+              131
+            ],
+            [
+              35,
+              61,
+              155,
+              130
+            ],
+            [
+              41,
+              61,
+              149,
+              131
+            ],
+            [
+              49,
+              61,
+              139,
+              130
+            ],
+            [
+              48,
+              61,
+              141,
+              131
+            ],
+            [
+              48,
+              62,
+              141,
+              130
+            ],
+            [
+              73,
               58,
-              130,
-              132
-            ],
-            [
-              58,
-              52,
-              134,
-              132
-            ],
-            [
-              58,
-              50,
-              135,
-              132
-            ],
-            [
-              55,
-              53,
-              137,
-              132
-            ],
-            [
-              65,
-              67,
-              128,
+              132,
               132
             ]
-          ],
-          "rows": 2
+          ]
         },
         "hit": {
           "image": "tiny-swords/expansion/shaman-hit.png",
           "frames": 2,
           "fps": 10,
+          "rows": 2,
           "visibleBounds": [
             [
-              66,
-              66,
-              126,
+              72,
+              57,
+              132,
               132
             ],
             [
-              69,
-              72,
-              124,
+              70,
+              58,
+              132,
               132
             ]
-          ],
-          "rows": 2
+          ]
         },
         "death": {
           "image": "tiny-swords/expansion/shaman-death.png",
           "frames": 4,
           "fps": 8,
+          "rows": 2,
           "visibleBounds": [
             [
-              63,
-              68,
-              129,
+              72,
+              57,
+              132,
               132
             ],
             [
-              62,
-              86,
-              130,
+              70,
+              58,
+              132,
               132
             ],
             [
-              60,
-              85,
-              133,
+              69,
+              70,
+              143,
               132
             ],
             [
-              62,
-              91,
-              130,
+              69,
+              70,
+              143,
               132
             ]
-          ],
-          "rows": 2
+          ]
         }
       }
     },
@@ -4905,8 +4923,11 @@
       ]
     },
     "shaman": {
-      "source": "art/generated-source/expansion/shaman.png",
-      "scale": 0.4294478527607362,
+      "source": "public/tiny-swords/Units/Blue Units/Monk/Idle.png",
+      "walkSource": "public/tiny-swords/Units/Blue Units/Monk/Run.png",
+      "healSource": "public/tiny-swords/Units/Blue Units/Monk/Heal.png",
+      "identitySource": "art/generated-source/expansion/shaman-native-patches.json",
+      "scale": 1,
       "footPixels": [
         [
           96,
@@ -4932,8 +4953,7 @@
           96,
           132
         ]
-      ],
-      "walkSource": "art/generated-source/expansion/shaman-run.png"
+      ]
     },
     "skeleton": {
       "source": "art/generated-source/expansion/skeleton.png",

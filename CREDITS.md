@@ -34,3 +34,10 @@ The shaman's revised six-phase run uses locally hand-authored native pixel
 legs/heels and the existing character's upper-body pixels. Editable sources,
 reference comparisons and provenance are documented in
 `docs/SHAMAN_RUN_REVIEW.md`; no additional external artwork was imported.
+
+The current shaman is rebuilt from the supplied Pixel Frog Blue Monk
+Idle/Run/Heal poses, with locally edited brown hair, beard, bun, sea-green
+costume and wooden staff. Run/Heal were recovered from the project's original
+reference extraction; their unmodified PNG hashes are pinned in the pack
+manifest. The earlier generated-body leg edits remain historical sources only.
+See `docs/SHAMAN_NATIVE_MONK_REBUILD.md` for provenance and visual review.

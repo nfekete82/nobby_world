@@ -4,124 +4,57 @@ import fs from 'node:fs'
 import {PNG} from 'pngjs'
 import {copyAuthoredShamanWalk,GAIT_PHASES} from '../scripts/shaman-gait.mjs'
 import registry from '../src/art/registry.json' with {type:'json'}
-
 const read=file=>PNG.sync.read(fs.readFileSync(file))
 const actual=()=>read('public/'+registry.assets.shaman.animations.walk.image)
 const pixel=(p,f,r,x,y)=>Array.from(p.data.subarray(((r*192+y)*p.width+f*192+x)*4,((r*192+y)*p.width+f*192+x)*4+4))
-const outline=[24,24,32,255],sole=[32,32,40,255]
-// Independently reviewed screen-space toe windows and ground/lift heights.
-// These are assertions about visible pixels, not generated phase labels.
-const feet=[
- {left:[78,89,124],right:[101,112,132]},
- {left:[82,93,124],right:[97,108,132]},
- {left:[84,92,127],right:[93,103,131]},
- {left:[90,101,132],right:[102,113,124]},
- {left:[86,97,132],right:[102,110,124]},
- {left:[82,92,131],right:[102,112,128]}
-]
-function inspectFeet(sheet){
- for(let r=0;r<2;r++)for(let f=0;f<6;f++)for(const side of ['left','right']){
-  const [lo,hi,bottom]=feet[f][side]
-  const hits=y=>Array.from({length:hi-lo+1},(_,i)=>pixel(sheet,f,r,lo+i,y))
-  assert.ok(hits(bottom).filter(p=>p.every((v,i)=>v===outline[i])).length>=3,`missing ${side} toe contour ${r}/${f}`)
-  assert.ok(hits(bottom-1).filter(p=>p.every((v,i)=>v===sole[i])).length>=3,`missing ${side} sole ${r}/${f}`)
-  assert.ok(hits(bottom+1).every(p=>p[3]===0),`foot slides below reviewed contact ${r}/${f}/${side}`)
+const outline=[22,28,46,255]
+function contactOracle(p){
+ for(let row=0;row<2;row++){
+  // Independently reviewed original Monk contacts: front-right in pose 1,
+  // front-left in pose 3. Passing poses have the native short airborne phase.
+  for(const [frame,lo,hi] of [[0,106,110],[2,90,94]])
+   for(let x=lo;x<=hi;x++)assert.deepEqual(pixel(p,frame,row,x,133),outline,'wrong contact toe '+row+'/'+frame)
+  for(let x=78;x<=99;x++)assert.equal(pixel(p,0,row,x,133)[3],0,'left boot stayed planted in right contact')
+  for(let x=100;x<=118;x++)assert.equal(pixel(p,2,row,x,133)[3],0,'right boot stayed planted in left contact')
+  for(const frame of [1,3])for(let x=76;x<=118;x++)
+   assert.equal(pixel(p,frame,row,x,131)[3],0,'passing foot forced onto ground')
  }
 }
-
-test('real compiled boots alternate contact and lift in both views',()=>inspectFeet(actual()))
-test('foot oracle rejects the previous fixed-leading-leg defect',()=>{
- const bad=actual()
- for(let r=0;r<2;r++)for(const f of [3,4,5])
-  for(let y=120;y<136;y++)for(let x=72;x<120;x++){
-   const from=((r*192+y)*bad.width+x)*4,to=((r*192+y)*bad.width+f*192+x)*4
-   bad.data.set(bad.data.subarray(from,from+4),to)
-  }
- assert.throws(()=>inspectFeet(bad))
+test('real native Monk toes alternate right/left contact in both facing rows',()=>contactOracle(actual()))
+test('contact oracle rejects a repeated leading-foot defect',()=>{
+ const p=actual()
+ for(let row=0;row<2;row++)for(let y=120;y<=135;y++)for(let x=76;x<=118;x++){
+  const from=((row*192+y)*p.width+x)*4,to=((row*192+y)*p.width+384+x)*4
+  p.data.set(p.data.subarray(from,from+4),to)
+ }
+ assert.throws(()=>contactOracle(p))
 })
-test('every painted knee, calf and boot survives composition; no intersecting boots',()=>{
- const {poses,rearPoses,palette,rearPalette}=JSON.parse(fs.readFileSync('art/generated-source/expansion/shaman-run-pixels.json'))
- const sheet=actual()
- for(let r=0;r<2;r++)for(let f=0;f<6;f++){
-  const masks={left:new Set(),right:new Set()}
-  for(const side of ['left','right']){
-   const [ox,oy,lines]=(r?rearPoses:poses)[f][side]
-   let visible=0
-   for(let y=0;y<lines.length;y++)for(let x=0;x<lines[y].length;x++){
-    if(!'dbhso'.includes(lines[y][x]))continue
-    const px=ox+x,py=oy+y
-    if(py<120)continue
-    masks[side].add(py*192+px)
-    const expected=[...(r?rearPalette:palette)[lines[y][x]]]
-    if(pixel(sheet,f,r,px,py).every((v,i)=>v===expected[i]))visible++
-   }
-   assert.ok(visible>=masks[side].size*.9,`occluded or disconnected boot ${r}/${f}/${side}`)
-   assert.ok(visible>=20,'missing calf/boot')
-  }
-  assert.ok([...masks.left].every(i=>!masks.right.has(i)),`boots intersect in ${r}/${f}`)
+test('every native robe/boot pixel keeps original shape and pose, with palette edits only',()=>{
+ const source=read('public/tiny-swords/Units/Blue Units/Monk/Run.png'),p=actual()
+ const palette=JSON.parse(fs.readFileSync('art/generated-source/expansion/shaman-native-patches.json')).palette
+ const recolor={'72,88,132':palette.d,'70,151,172':palette.t,'94,84,85':palette.b,'151,123,107':palette.h}
+ for(let row=0;row<2;row++)for(let f=0;f<4;f++)for(let y=119;y<=135;y++)for(let x=76;x<=118;x++){
+  const original=pixel(source,f,0,x,y),expected=original[3]===255?(recolor[original.slice(0,3).join(',')]||original):[0,0,0,0]
+  const got=pixel(p,f,row,x,y)
+  if(!expected[3])assert.equal(got[3],0,'silhouette changed')
+  else assert.deepEqual(got,expected,`native lower pose modified ${row}/${f}/${x}/${y}`)
  }
 })
-test('reviewed physical support sequence and native geometry remain fixed',()=>{
- assert.deepEqual(GAIT_PHASES.map(p=>p.support),['right','right','right','left','left','left'])
- const sheet=actual(),a=registry.assets.shaman
- assert.deepEqual([sheet.width,sheet.height],[1152,384])
- assert.deepEqual(a.foot,[96,132]);assert.deepEqual(a.hitbox,[32,24])
- assert.equal(a.animations.walk.fps,12)
- assert.deepEqual(copyAuthoredShamanWalk(sheet).data,sheet.data)
+test('original four-pose Monk geometry and unchanged collision/anchor survive compilation',()=>{
+ const p=actual(),a=registry.assets.shaman
+ assert.deepEqual([p.width,p.height],[768,384])
+ assert.deepEqual(a.frame,[192,192]);assert.deepEqual(a.foot,[96,132]);assert.deepEqual(a.hitbox,[32,24])
+ assert.equal(a.animations.walk.frames,4);assert.equal(a.animations.walk.fps,12)
+ assert.deepEqual(GAIT_PHASES.map(p=>p.lead),['right','passing','left','passing'])
+ assert.deepEqual(copyAuthoredShamanWalk(p).data,p.data)
  assert.throws(()=>copyAuthoredShamanWalk(new PNG({width:192,height:192})))
 })
-
-test('six-to-one wrap lands the swinging right foot and releases left support',()=>{
- const sheet=actual()
- for(let r=0;r<2;r++){
-  // Toe/sole markers in the real image before and after the wrap.
-  assert.deepEqual(pixel(sheet,5,r,107,127),sole)
-  assert.deepEqual(pixel(sheet,0,r,107,131),sole)
-  assert.deepEqual(pixel(sheet,5,r,87,130),sole)
-  assert.deepEqual(pixel(sheet,0,r,82,123),sole)
-  // Both half-cycles have the same planted boot shape, on the opposite hip.
-  for(let y=125;y<=132;y++)for(let x=101;x<=112;x++)
-   assert.deepEqual(pixel(sheet,0,r,x,y),pixel(sheet,3,r,x-11,y))
- }
-})
-
-test('each visible sole remains connected through calf and knee to the torso',()=>{
- const sheet=actual()
- for(let r=0;r<2;r++)for(let f=0;f<6;f++){
-  const opaque=(x,y)=>pixel(sheet,f,r,x,y)[3]===255
-  const seen=new Set(),queue=[]
-  for(let x=90;x<=105;x++)if(opaque(x,100)){queue.push([x,100]);seen.add(100*192+x)}
-  for(let i=0;i<queue.length;i++){
-   const [x,y]=queue[i]
-   for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
-    const nx=x+dx,ny=y+dy,key=ny*192+nx
-    if(nx<0||nx>=192||ny<0||ny>=192||seen.has(key)||!opaque(nx,ny))continue
-    seen.add(key);queue.push([nx,ny])
-   }
-  }
-  for(const side of ['left','right']){
-   const [lo,hi,bottom]=feet[f][side]
-   const contacts=[]
-   for(let x=lo;x<=hi;x++)if(pixel(sheet,f,r,x,bottom-1).every((v,i)=>v===sole[i]))contacts.push((bottom-1)*192+x)
-   assert.ok(contacts.length>=3&&contacts.every(i=>seen.has(i)),`detached ${side} boot ${r}/${f}`)
-  }
- }
-})
-
-test('stance legs retain broad cloth calves and short leather boots',()=>{
- const sheet=actual()
- const supportWindows=[[99,114],[94,110],[93,106],[88,101],[83,99],[82,95]]
- const cloth=[[16,56,64,255],[24,72,72,255]]
- const leather=[[56,40,32,255],[80,48,32,255],[104,72,40,255],[88,56,40,255]]
- const is=(p,colors)=>colors.some(c=>p.every((v,i)=>v===c[i]))
- for(let r=0;r<2;r++)for(let f=0;f<6;f++){
-  const [lo,hi]=supportWindows[f]
-  let calf=0,minLeather=192,maxLeather=-1
-  for(let x=lo;x<=hi;x++)if(is(pixel(sheet,f,r,x,122),cloth))calf++
-  assert.ok(calf>=7,`calf narrowed into a stick in ${r}/${f}: ${calf}`)
-  for(let y=120;y<=132;y++)for(let x=lo;x<=hi;x++)if(is(pixel(sheet,f,r,x,y),leather)){
-   minLeather=Math.min(minLeather,y);maxLeather=Math.max(maxLeather,y)
-  }
-  assert.ok(minLeather>=125&&maxLeather-minLeather<=6,`long exposed leather shin in ${r}/${f}`)
+test('4→1 wrap restores right contact after the left passing phase',()=>{
+ const p=actual()
+ for(let row=0;row<2;row++){
+  assert.deepEqual(pixel(p,3,row,110,130),outline)
+  assert.deepEqual(pixel(p,0,row,108,133),outline)
+  assert.equal(pixel(p,3,row,108,133)[3],0)
+  assert.equal(pixel(p,0,row,92,133)[3],0)
  }
 })
