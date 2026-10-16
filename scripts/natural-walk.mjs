@@ -1,4 +1,7 @@
 import { PNG } from 'pngjs'
+import fs from 'node:fs'
+import path from 'node:path'
+import {fileURLToPath} from 'node:url'
 
 /**
  * Calm six-frame two-direction walk from the authored 192px Nobby shaman art.
@@ -24,4 +27,23 @@ export function stabilizeShamanWalk(standing,walking) {
    result.data.set(source.data.subarray(at,at+4),dst)
   }
  return result
+}
+
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..')
+const standSource=path.join(root,'public/tiny-swords/expansion/shaman-stand.png')
+const walkSource=path.join(root,'public/tiny-swords/expansion/shaman-walk.png')
+const naturalOutput=path.join(root,'public/tiny-swords/biomes/shaman-natural-walk.png')
+
+/** Produce a derived sprite in the already-ignored biome directory.
+ * Never mutate the original tracked standing/running files during builds. */
+export function ensureNaturalShamanWalk(){
+ if(!fs.existsSync(standSource)||!fs.existsSync(walkSource))
+  throw Error('Source shaman animation sprites missing')
+ fs.mkdirSync(path.dirname(naturalOutput),{recursive:true})
+ const newest=Math.max(fs.statSync(standSource).mtimeMs,fs.statSync(walkSource).mtimeMs,
+  fs.statSync(fileURLToPath(import.meta.url)).mtimeMs)
+ if(fs.existsSync(naturalOutput)&&fs.statSync(naturalOutput).mtimeMs>=newest)return
+ const standing=PNG.sync.read(fs.readFileSync(standSource))
+ const walking=PNG.sync.read(fs.readFileSync(walkSource))
+ fs.writeFileSync(naturalOutput,PNG.sync.write(stabilizeShamanWalk(standing,walking)))
 }

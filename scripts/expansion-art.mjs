@@ -218,11 +218,14 @@ export function compileExpansionArt(registry){
    animations[name]={image,frames:count,fps,visibleBounds,...(directional?{rows:2}:{})}
   }
   if(id==='shaman'){
-   const frontBackStand=read('public/'+animations.stand.image)
-   const frontBackWalk=read('public/'+animations.walk.image)
-   write('public/'+animations.walk.image,stabilizeShamanWalk(frontBackStand,frontBackWalk))
+   const stand=read('public/'+animations.stand.image)
+   const sourceWalk=read('public/'+animations.walk.image)
+   const calm=stabilizeShamanWalk(stand,sourceWalk)
+   const image='tiny-swords/biomes/shaman-natural-walk.png'
+   write('public/'+image,calm)
+   animations.walk.image=image
    animations.walk.visibleBounds=Array.from({length:animations.walk.frames},(_,i)=>
-    bounds(read('public/'+animations.walk.image),i*192,0,192,192))
+    bounds(calm,i*192,0,192,192))
   }
   registry.assets[id]={kind:'actor',frame:[192,192],foot:[96,132],hitbox:[32,24],directional:true,animations}
   registry.generation[id]={source,scale,footPixels:Array.from({length:6},()=>[96,132])}
