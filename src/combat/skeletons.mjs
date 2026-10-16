@@ -107,24 +107,32 @@ export function createSkeletonController(owner, adapter, overrides = {}) {
    const config=adapter.config(map)
    if(!config) { remove(id); continue }
    const from=position(entity),home=position(owner)
-   // Whitelist authored enemies only: never sheep, players, NPCs or summons.
-   const enemies=adapter.enemies(map).filter(e=>hostile(e,config.monsterIds)&&
-    distance(position(e),home)<=rules.aggro&&distance(from,position(e))<=rules.leash)
-   const target=enemies.sort((a,b)=>distance(from,position(a))-distance(from,position(b)))[0]
-   const aim=target?position(target):{x:home.x+[-48,48,0][[...active.keys()].indexOf(id)],y:home.y+48}
-   const close=distance(from,aim)<(target?rules.attackRange:24)&&(!target||clearShot(config.nav,from,aim))
-   if(close) {
+   // Only authored, living hostile monsters may become combat targets.
+   // Once acquired, an enemy stays locked even when the owner runs away.
+   // The owner's distance is relevant ONLY when no combat target exists.
+   const threats=adapter.enemies(map).filter(e=>hostile(e,config.monsterIds))
+   const focused=entry.target&&threats.find(e=>e.id===entry.target&&
+    distance(from,position(e))<=rules.leash)
+   const target=focused||threats.filter(e=>
+    distance(from,position(e))<=rules.aggro)
+    .sort((a,b)=>distance(from,position(a))-distance(from,position(b)))[0]
+   const previousTarget=entry.target
+   entry.target=target?.id??null
+   if(previousTarget!==entry.target){entry.path=[];entry.repathAt=0}
+   const aim=target?position(target):
+    {x:home.x+[-48,48,0][[...active.keys()].indexOf(id)],y:home.y+48}
+   const close=distance(from,aim)<(target?rules.attackRange:24)&&
+    (!target||clearShot(config.nav,from,aim))
+   if(close){
     adapter.stop(entity)
-    if(target&&now>=entry.attackAt&&clearShot(config.nav,from,aim)) {
+    if(target&&now>=entry.attackAt&&clearShot(config.nav,from,aim)){
      entry.attackAt=now+rules.attackCooldown
-     // Set the cooldown before callbacks: synchronous defeat cannot double hit.
      adapter.attack(entity,target,owner)
     }
     continue
    }
-   if(now>=entry.repathAt || entry.target!==target?.id) {
+   if(now>=entry.repathAt || previousTarget!==entry.target){
     entry.repathAt=now+rules.repath
-    entry.target=target?.id
     entry.path=findRoute(config.nav,from,aim)
    }
    while(entry.path.length&&distance(from,entry.path[0])<10)entry.path.shift()

@@ -1,36 +1,43 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
-import {PNG} from 'pngjs'
-import {stabilizeShamanWalk} from '../scripts/natural-walk.mjs'
+import { PNG } from 'pngjs'
+import { stabilizeShamanWalk, WALK_CADENCE_FPS } from '../scripts/natural-walk.mjs'
 import registry from '../src/art/registry.json' with {type:'json'}
 
-test('shaman gait keeps the upper body calm while legs retain six real strides',()=>{
- const art=registry.assets.shaman
- const stand=PNG.sync.read(fs.readFileSync('public/'+art.animations.stand.image))
- const walk=PNG.sync.read(fs.readFileSync('public/'+art.animations.walk.image))
- assert.deepEqual([stand.width,stand.height],[1152,384])
- assert.deepEqual([walk.width,walk.height],[1152,384])
- assert.equal(art.animations.walk.fps,8)
- assert.equal(art.animations.walk.frames,6)
- const recomposed=stabilizeShamanWalk(stand,walk)
- // Idempotent: compiling the walk again is pixel-for-pixel identical.
- assert.deepEqual(recomposed.data,walk.data)
+test('shaman runs through six complete native-warrior-speed poses, both directions',()=>{
+ const asset=registry.assets.shaman, stand=PNG.sync.read(fs.readFileSync('public/'+asset.animations.stand.image))
+ const raw=PNG.sync.read(fs.readFileSync('public/tiny-swords/expansion/shaman-walk.png'))
+ const derived=PNG.sync.read(fs.readFileSync('public/'+asset.animations.walk.image))
+ assert.deepEqual([raw.width,raw.height],[1152,384])
+ assert.deepEqual([derived.width,derived.height],[1152,384])
+ assert.equal(WALK_CADENCE_FPS,12)
+ assert.equal(asset.animations.walk.fps,WALK_CADENCE_FPS)
+ assert.equal(asset.animations.walk.frames,6)
+ assert.deepEqual(stabilizeShamanWalk(stand,raw).data,derived.data)
  for(let row=0;row<2;row++){
-  let legDeltas=0
-  for(let f=0;f<6;f++){
-   for(let y=0;y<116;y++)for(let x=0;x<192;x++){
-    const stable=((row*192+y)*stand.width+x)*4
-    const moving=((row*192+y)*walk.width+f*192+x)*4
-    assert.equal(walk.data[moving+3],stand.data[stable+3],
-     'upper-body alpha wobbles at '+row+'/'+f+'/'+x+'/'+y)
+  const poses=new Set(),bounds=[]
+  for(let frame=0;frame<6;frame++){
+   let opaque=0,foot=0,weighted=0,count=0
+   // Compare entire authored silhouette: head/arms/cloak must genuinely
+   // animate, not be copied from the first standing frame every time.
+   const torso=[]
+   for(let y=0;y<192;y++)for(let x=0;x<192;x++){
+    const at=((row*192+y)*derived.width+frame*192+x)*4
+    if(derived.data[at+3]===0)continue
+    assert.equal(derived.data[at+3],255,'fractional edge alpha')
+    opaque++;foot=Math.max(foot,y)
+    if(y>=80&&y<116&&x>=72&&x<=120){weighted+=x;count++}
+    if(y<116)torso.push(x+':'+y+':'+derived.data[at]+':'+derived.data[at+1])
    }
-   for(let y=117;y<134;y++)for(let x=75;x<=117;x++){
-    const a=((row*192+y)*walk.width+x)*4
-    const b=((row*192+y)*walk.width+f*192+x)*4
-    if(walk.data[a+3]!==walk.data[b+3]||walk.data[a]!==walk.data[b])legDeltas++
-   }
+   assert.ok(opaque>400,'empty frame '+row+'/'+frame)
+   assert.ok(foot>=129&&foot<=134,'wrong ground contact '+row+'/'+frame+': '+foot)
+   assert.ok(count>80,'torso too small')
+   bounds.push(weighted/count)
+   poses.add(torso.join('|'))
   }
-  assert.ok(legDeltas>0,'no leg animation in direction row '+row)
+  assert.ok(poses.size>=4,'frozen shaman upper body in row '+row)
+  assert.ok(Math.max(...bounds)-Math.min(...bounds)<=3,
+   'torso jitter exceeds 3 native pixels '+row)
  }
 })

@@ -1,31 +1,56 @@
 import { PNG } from 'pngjs'
 import fs from 'node:fs'
 import path from 'node:path'
-import {fileURLToPath} from 'node:url'
+import { fileURLToPath } from 'node:url'
+
+const FRAME=192
+const COUNT=6
+const ROWS=2
+const WALK_CADENCE_FPS=12 // Matches the native Tiny Swords Warrior_Run animation.
+export { WALK_CADENCE_FPS }
 
 /**
- * Calm six-frame two-direction walk from the authored 192px Nobby shaman art.
- * Keep the character's upper body, man bun, face, and staff from one idle pose,
- * but preserve the already-authored alternating legs from the walking sheet.
- * Both compiled sheets already have identical [96,132] anchors.
+ * Use the SHAMAN'S SIX REAL WALKING POSES, not an idle torso pasted above
+ * animated legs. The prior version made the character stiff because the
+ * face, beard, clothing, staff and arms never moved at all.
+ *
+ * Native warrior-style cycle: six complete poses at 12 FPS, grounded on the
+ * fixed 192px sprite cell. Only remove accidental horizontal torso drift
+ * (a maximum of two original pixels) before each frame is displayed.
+ * Legs, cape, staff and arms are never cut out, frozen, or interpolated.
  */
-export function stabilizeShamanWalk(standing,walking) {
- const frames=6,cell=192,rows=2
- if(standing.width!==cell*frames||walking.width!==cell*frames||
-    standing.height!==cell*rows||walking.height!==cell*rows)
+export function stabilizeShamanWalk(standing, walking) {
+ if(standing.width!==FRAME*COUNT||walking.width!==FRAME*COUNT||
+    standing.height!==FRAME*ROWS||walking.height!==FRAME*ROWS)
    throw Error('Shaman walk requires two 6×192px directional sheets')
  const result=new PNG({width:walking.width,height:walking.height})
- for(let row=0;row<rows;row++)for(let n=0;n<frames;n++)
-  for(let y=0;y<cell;y++)for(let x=0;x<cell;x++){
-   // Torso stays calm; only cloak hem and left/right feet articulate.
-   // Keep the staff/hands untouched at the character's outer edges.
-   const inStride=x>=75&&x<=117&&y>=(x>=82&&x<=111?116:121)
-   const source=inStride?walking:standing
-   const sx=inStride?n*cell+x:x
-   const at=((row*cell+y)*source.width+sx)*4
-   const dst=((row*cell+y)*result.width+n*cell+x)*4
-   result.data.set(source.data.subarray(at,at+4),dst)
+ for(let row=0;row<ROWS;row++){
+  // A stable torso midpoint is more reliable than a changing sword/staff
+  // silhouette and does not erase the character's natural step cycle.
+  const centers=[]
+  for(let f=0;f<COUNT;f++){
+   let sum=0,opaque=0
+   for(let y=80;y<116;y++)for(let x=72;x<121;x++){
+    const i=((row*FRAME+y)*walking.width+f*FRAME+x)*4
+    if(walking.data[i+3]<128)continue
+    sum+=x;opaque++
+   }
+   if(opaque<80)throw Error('Shaman torso missing: '+row+'/'+f)
+   centers.push(sum/opaque)
   }
+  const sorted=[...centers].sort((a,b)=>a-b)
+  const anchor=(sorted[2]+sorted[3])/2
+  for(let f=0;f<COUNT;f++){
+   const shiftX=Math.max(-2,Math.min(2,Math.round(anchor-centers[f])))
+   for(let y=0;y<FRAME;y++)for(let x=0;x<FRAME;x++){
+    const fromX=x-shiftX
+    if(fromX<0||fromX>=FRAME)continue
+    const src=((row*FRAME+y)*walking.width+f*FRAME+fromX)*4
+    const dst=((row*FRAME+y)*result.width+f*FRAME+x)*4
+    result.data.set(walking.data.subarray(src,src+4),dst)
+   }
+  }
+ }
  return result
 }
 
@@ -34,8 +59,7 @@ const standSource=path.join(root,'public/tiny-swords/expansion/shaman-stand.png'
 const walkSource=path.join(root,'public/tiny-swords/expansion/shaman-walk.png')
 const naturalOutput=path.join(root,'public/tiny-swords/biomes/shaman-natural-walk.png')
 
-/** Produce a derived sprite in the already-ignored biome directory.
- * Never mutate the original tracked standing/running files during builds. */
+/** Always generate a derived image; leave the authored sprite atlas intact. */
 export function ensureNaturalShamanWalk(){
  if(!fs.existsSync(standSource)||!fs.existsSync(walkSource))
   throw Error('Source shaman animation sprites missing')
