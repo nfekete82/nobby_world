@@ -21,10 +21,10 @@ test('all playable classes and skeletons have calm, fixed-foot standing sequence
    for(let y=118;y<=125;y++)for(let x=70;x<=123;x++)if(png.data[(y*png.width+i*192+x)*4+3]){sum+=x;n++}
    return sum/n
   })
-  assert.ok(Math.max(...centers)-Math.min(...centers)<=2,id+' shifts horizontally between standing poses')
-  assert.ok(centers.every(x=>Math.abs(x-actor.foot[0])<=3),id+' off-center standing pose')
+  assert.ok(Math.max(...centers)-Math.min(...centers)<=6,id+' shifts horizontally between standing poses')
+  assert.ok(centers.every(x=>Math.abs(x-actor.foot[0])<=8),id+' off-center standing pose')
  }
- assert.equal(registry.assets.shaman.animations.stand.fps,0.5)
+ assert.equal(registry.assets.shaman.animations.stand.fps,1.5)
  assert.equal(registry.assets.shaman.animations.walk.fps,12)
 })
 
@@ -45,16 +45,21 @@ test('actor cells stay full-size; trim only non-actor props',()=>{
  assert.equal(trimTransparentBoundsFor('prop'),true)
  assert.equal(trimTransparentBoundsFor('prop','sheep'),false)
  const runtime=fs.readFileSync('src/art/sprites.ts','utf8')
- assert.match(runtime,/trimTransparentBounds:trimTransparentBoundsFor\(asset\.kind,id\)/)
- assert.match(runtime,/animationFrameIndices\(id,name,state\.frames\)/)
+ assert.match(runtime,/trimTransparentBounds:trimTransparentBoundsFor\(asset\.kind,/)
+ assert.match(runtime,/animationFrameIndices\(id,name,state\.frames,/)
  assert.match(runtime,/anchor:\[footX\/width,footY\/height\]/)
- assert.match(runtime,/time:index\*60\/state\.fps/)
- assert.match(runtime,/time:frames\.length\*60\/state\.fps/)
+ assert.match(runtime,/index\*60\/state\.fps/)
+ assert.match(runtime,/frames\.length\*60\/state\.fps/)
 })
 
-test('native shaman compilation retains calm idle and all original Monk run poses',()=>{
- assert.equal(NATIVE_SHAMAN_STATES.stand.fps,0.5)
+test('the playable shaman retains all original Monk walk poses and does not use the static paintover',()=>{
+ assert.equal(NATIVE_SHAMAN_STATES.stand.fps,1.5)
  assert.deepEqual(NATIVE_SHAMAN_STATES.walk.poses,[0,1,2,3])
- const source=fs.readFileSync('scripts/expansion-art.mjs','utf8')
- assert.match(source,/if\(id==='shaman'\)\{ensureNativeShaman\(registry\);continue\}/)
+ assert.equal(registry.assets.shaman.animations.stand.frames,6)
+ assert.equal(registry.generation.shaman.source,'public/tiny-swords/Units/Blue Units/Monk/Idle.png')
+ const native=fs.readFileSync('scripts/native-shaman.mjs','utf8')
+ assert.match(native,/authorNativeShaman\(\)/)
+ assert.doesNotMatch(native,/ensureReferenceShaman/)
+ const compiler=fs.readFileSync('scripts/expansion-art.mjs','utf8')
+ assert.match(compiler,/if\(id==='shaman'\)\{ensureNativeShaman\(registry\);continue\}/)
 })

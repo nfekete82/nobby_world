@@ -4,7 +4,9 @@ import fs from 'node:fs'
 import path from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {PNG} from 'pngjs'
-import {NATIVE_SHAMAN_STATES} from './native-shaman.mjs'
+import {NATIVE_SHAMAN_STATES} from './shaman-native-spec.mjs'
+import {atomicWrite} from './editor-storage.mjs'
+// Individual Monk-pose repaint; fixed frame size and original body stride.
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..')
 const base=path.join(root,'art/generated-source/expansion')
 const patches=JSON.parse(fs.readFileSync(path.join(base,'shaman-native-patches.json')))
@@ -24,6 +26,19 @@ function paint(p,ox,oy,lines,brush=1){
    p.data.set(c,(dy*192+dx)*4)
   }
  }
+}
+function addBeard(frame,dy){
+ // Dark, short front beard and moustache; back-facing frames keep their full hair.
+ const rows=[
+  '..ooobbboo...',
+  '.obbbbbbbbo..',
+  'obbbHHbbbbbo.',
+  'obbbbbbbbbbo.',
+  '.obbbbbbbbo..',
+  '..obbbbbbo...',
+  '....obbo.....'
+ ]
+ paint(frame,95,94+dy,rows,1)
 }
 function overlay(to,from){for(let i=0;i<from.data.length;i+=4)if(from.data[i+3])to.data.set(from.data.subarray(i,i+4),i)}
 function makePose(source,frame,rear,closed=false){
@@ -48,6 +63,7 @@ function makePose(source,frame,rear,closed=false){
  }
  paint(body,patches.headOrigin[0],patches.headOrigin[1]+headDy,rear?patches.headRear:closed?patches.headClosed:patches.headFront,patches.headBrush)
  paint(body,patches.bunOrigin[0],patches.bunOrigin[1]+headDy,patches.bun)
+ if(!rear)addBeard(body,headDy)
  const out=new PNG({width:192,height:192})
  if(handPixels){
   const hx=Math.round(handX/handPixels),hy=Math.round(handY/handPixels)
@@ -84,7 +100,8 @@ export function authorNativeShaman(){
    PNG.bitblt(pose,out,0,0,192,192,f*192,row*192)
   }
   const name=state==='walk'?'shaman-run.png':`shaman-native-${state}.png`
-  fs.writeFileSync(path.join(base,name),PNG.sync.write(out))
+  const dest=path.join(base,name),bytes=PNG.sync.write(out)
+  if(!fs.existsSync(dest)||!fs.readFileSync(dest).equals(bytes))atomicWrite(dest,bytes)
  }
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url))authorNativeShaman()

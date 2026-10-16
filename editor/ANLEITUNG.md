@@ -107,3 +107,12 @@ nicht überschrieben.
 
 Kartenänderungen verändern Spielinhalte, nicht automatisch gespeicherte Spielstände.
 Das alte 3D-Spiel und dessen Weltfortschritt sind nicht Teil dieses Editors.
+
+## Ingame-Grafik- und Animationseditor
+
+**Esc → Karteneditor → 🎨 Grafiken & Animationen** zeigt Figuren, Tiere, Gebäude,
+Effekte und Gelände. Frame-Upload, GIF-Import, Zeitleiste, eigene Objektvarianten
+und Papierkorb sind direkt integriert. Die vollständige Anleitung einschließlich
+Speichern, Backups und Konflikten steht in [ASSET_EDITOR.md](../docs/ASSET_EDITOR.md).
+Die produktive Docker-Spielversion und das optionale Docker-Editorprofil bleiben
+für Schreibzugriffe gesperrt; die lokale Mac-Vorschau auf 5173 kann speichern.

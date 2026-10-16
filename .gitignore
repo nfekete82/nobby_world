@@ -29,3 +29,11 @@ public/tiny-swords/biomes/
 
 # Locally rendered style reference gallery (reproducible)
 artifacts/art-direction/
+
+# Durable editor backups/journals stay local; user manifests and source revisions are versionable.
+art/editor-history/
+
+public/editor-catalog.json
+
+# Derived water tint, regenerated from the retained native pack
+src/tiled/tiny-swords/water-moss.png

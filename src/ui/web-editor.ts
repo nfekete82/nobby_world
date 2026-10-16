@@ -1,4 +1,7 @@
-import art from '../art/registry.json'
+import initialArt from '../art/registry.json'
+import {AssetEditor} from './asset-editor'
+import {EditorClient,SaveSnapshot,readDraft,writeDraft} from './editor-client.mjs'
+const art:any=structuredClone(initialArt)
 import './web-editor.css'
 import {expandLayerGrid,expansionFill,validateMapExpansion} from './map-resize.mjs'
 import {walkabilityChanges,repairPaintedWalkways} from './terrain-rules.mjs'
@@ -26,7 +29,7 @@ const setProp=(el:Element,name:string,value:string,kind='string')=>{
 }
 const getObj=(el:Element):EditObject=>{
  const kind=el.getAttribute('class')||'prop'
- const asset=kind==='prop'?prop(el,'asset'):kind==='npc'?'female':kind==='monster'?enemyGraphic(prop(el,'enemy')):'portal-marker'
+ const asset=kind==='prop'?prop(el,'asset'):kind==='npc'?(prop(el,'asset')||'female'):kind==='monster'?(prop(el,'asset')||enemyGraphic(prop(el,'enemy'))):'portal-marker'
  return {node:el,x:Number(el.getAttribute('x')||0),y:Number(el.getAttribute('y')||0),
   w:Number(el.getAttribute('width')||32),h:Number(el.getAttribute('height')||24),asset,kind}
 }
@@ -70,6 +73,16 @@ class MapEditor {
  private biomeTabs=elt<HTMLElement>('div','we-biomes')
  private pendingRefresh=false
  private saving=false
+ private client=new EditorClient(base)
+ private saveSession=new SaveSnapshot()
+ private saveController:AbortController|null=null
+ private future:string[]=[]
+ private assetEditor!:AssetEditor
+ private mapPane:HTMLElement|null=null
+ private mapToolbar:HTMLElement|null=null
+ private selectedPlayer=false
+ private draftTimer:any=null
+ private beforeUnload=(e:BeforeUnloadEvent)=>{if(this.dirty||this.assetEditor?.dirty||this.saving||this.assetEditor?.saving){e.preventDefault();e.returnValue=''}}
  private chosenGid=2
  private chosenAsset='tree-oak'
  private selected:Element|null=null
@@ -97,16 +110,20 @@ class MapEditor {
  private stage=elt<HTMLElement>('div','we-stage')
  private staticNotice=elt<HTMLElement>('div','we-static-notice',
   import.meta.env.DEV
-   ? 'Live-Editor aktiv (localhost:5173): Änderungen werden direkt in die TMX-Projektdateien gespeichert.'
-   : 'Fertige Spielversion: direkte Kartenbearbeitung nicht verfügbar. Bitte TMX exportieren oder den OrbStack-Editor auf localhost:5173 öffnen.')
+   ? 'Nobby World Studio aktiv: Änderungen werden direkt in die TMX-Projektdateien gespeichert.'
+   : 'Schreibgeschützte Vorschau: Bitte das lokale Nobby World Studio auf localhost:8088 starten oder TMX exportieren.')
  constructor(private engine:any){
   this.root.setAttribute('role','dialog');this.root.setAttribute('aria-modal','true')
   this.root.setAttribute('aria-label','Nobby World Karteneditor')
   const header=elt<HTMLElement>('header','we-header')
   header.append(elt('h2','','🗺 Nobby World · Karteneditor'),
    button('↶ Rückgängig',()=>this.undo()),
+   button('↷ Wiederholen',()=>this.redo()),
+   button('🎨 Grafiken & Animationen',()=>void this.openAssets()),
    button('↓ TMX exportieren',()=>this.export()),
-   button('💾 Speichern',()=>void this.save(),'we-primary'),
+   button('💾 Speichern',()=>void this.saveActive(),'we-primary'),
+   button('Speichern abbrechen',()=>this.saveController?.abort()),
+   button('Spiel aktualisieren',()=>void this.refreshAfterClose()),
    button('✕ Schließen',()=>this.close()))
   const toolbar=elt<HTMLElement>('div','we-toolbar')
   for(const [id,label] of [['select','↖ Objekte'],['object','🌲 Platzieren'],['tile','🖌 Kacheln'],['erase','⌫ Löschen']]){
@@ -152,11 +169,21 @@ class MapEditor {
   this.message.setAttribute('role','status')
   const footer=elt('footer','we-footer')
   footer.append(this.message,elt('span','','Esc: Schließen · ⌘S: Speichern · Rechtsklick: Karte verschieben'))
-  this.root.append(header,toolbar,pane,footer)
+  this.mapPane=pane;this.mapToolbar=toolbar
+  this.assetEditor=new AssetEditor(this.client,{
+   back:()=>{pane.hidden=false;toolbar.hidden=false},
+   context:()=>this.selected&&['prop','npc','monster'].includes(this.selected.getAttribute('class')||'')?this.selected.getAttribute('id'):null,
+   variant:id=>{if(!this.selected)return;this.saveHistory();setProp(this.selected,'asset',id);this.dirty=true;this.updateDetails();this.redraw();this.status('Objektvariante zugewiesen · Karte separat speichern.')},
+   changed:async catalog=>{this.pendingRefresh=true;art.assets=Object.fromEntries(catalog.assets.map((a:any)=>[a.id,a.definition]));this.spriteCache.clear();await this.preloadSprites();await this.loadUserTilesets(catalog);this.buildPalettes();this.updateDetails();this.redraw();this.status('Grafiken gespeichert, Spiel muss aktualisiert werden. Kartenansicht ist aktuell.')},
+   dirty:()=>this.root.dataset.dirty=String(this.dirty||this.assetEditor.dirty)
+  })
+  this.root.append(header,toolbar,pane,this.assetEditor.root,footer)
+  window.addEventListener('beforeunload',this.beforeUnload)
+  if(import.meta.env.DEV)void this.client.start().then(()=>this.staticNotice.textContent=this.client.writable?'Lokaler Editor aktiv · Backups und Versionsprüfung vor jedem Speichern.':'Schreibgeschützte Umgebung · Vorschau und Export möglich.').catch(()=>this.staticNotice.textContent='Keine lokale Schreibverbindung. Entwurf kann exportiert werden.')
   this.root.addEventListener('keydown',e=>{
    if(e.key==='Escape'){e.preventDefault();e.stopPropagation();this.close()}
-   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();e.stopPropagation();void this.save()}
-   if((e.key==='Delete'||e.key==='Backspace')&&this.selected&&!(e.target instanceof HTMLInputElement)){
+   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();e.stopPropagation();void this.saveActive()}
+   if(!this.assetEditor.visible&&(e.key==='Delete'||e.key==='Backspace')&&this.selected&&!(e.target instanceof HTMLInputElement)){
     e.preventDefault();this.removeSelected()
    }
   },true)
@@ -176,7 +203,7 @@ class MapEditor {
  private globalKey=(e:KeyboardEvent)=>{
   if(e.key==='Escape'||(e.metaKey&&e.key.toLowerCase()==='s')||(e.ctrlKey&&e.key.toLowerCase()==='s')){
    e.preventDefault();e.stopImmediatePropagation()
-   if(e.key==='Escape')this.close();else void this.save()
+   if(e.key==='Escape')this.close();else void this.saveActive()
   }
  }
  private status(text:string){this.message.textContent=text}
@@ -257,6 +284,7 @@ class MapEditor {
   }
  }
  private async load(){
+  this.root.setAttribute('aria-busy','true');this.mapPane.inert=true;this.mapToolbar.inert=true
   try{
    const live=String(this.engine?.sceneMap?.data?.()?.id||'simplemap').replace(/^map-/,'')
    this.id=/^[a-zA-Z0-9_-]+$/.test(live)?live:'simplemap'
@@ -284,12 +312,19 @@ class MapEditor {
    }))
    await this.loadExtraPathTilesets(map)
    this.parseLayers()
+   const recovery:any=await readDraft('map:'+this.id)
+   if(recovery?.updated&&confirm('Lokalen ungespeicherten Kartenentwurf wiederherstellen?')){
+    this.document=readXml(recovery.updated);const m=this.document.documentElement
+    this.w=Number(m.getAttribute('width'))*64;this.h=Number(m.getAttribute('height'))*64;this.canvas.width=this.w;this.canvas.height=this.h;this.parseLayers();this.dirty=true;this.saveSession.pending=recovery.pending||null
+   }
    await this.preloadSprites()
    this.buildPalettes()
    this.fitMap()
    this.redraw()
+   this.root.dataset.ready='true'
    this.status(this.id+' · '+this.w/64+' × '+this.h/64+' Kacheln · 64 px Raster')
   }catch(error){this.status('Fehler: '+String(error));this.root.querySelectorAll('button').forEach(b=>{if(b.textContent?.includes('Speichern'))b.disabled=true})}
+  finally{this.root.setAttribute('aria-busy','false');this.mapPane.inert=false;this.mapToolbar.inert=false}
  }
  private async loadExtraPathTilesets(map:Element){
   // No on-disk TMX migration: older 100x40 user maps remain untouched until
@@ -344,6 +379,7 @@ class MapEditor {
    const name=asset?.animations?.stand?.image
    if(name)images.add(name)
   }
+  const player=this.playerGraphic();const hero=art.assets[player]?.animations.stand.image;if(hero)images.add(hero)
   await Promise.all([...images].map(async name=>this.spriteCache.set(name,await image(pathUrl(name)))))
  }
  private buildPalettes(){
@@ -416,7 +452,8 @@ class MapEditor {
    if(cached)draw(cached)
    else void image(pathUrl(src)).then(img=>{
     this.spriteCache.set(src,img);draw(img)
-    if(img.naturalWidth)this.redraw()
+    // Gallery-only thumbnails do not change map pixels. Redrawing the full
+    // native-size map for every decoded thumbnail stalls software-rendered CI.
    })
   }
   this.refreshGallerySelection()
@@ -558,6 +595,8 @@ class MapEditor {
     ctx.strokeRect(obj.x-.5,obj.y-.5,Math.max(1,obj.w),Math.max(1,obj.h))
    }
   }
+  const player=this.playerPosition(),hero=art.assets[this.playerGraphic()],heroImage=hero?this.spriteCache.get(hero.animations.stand.image):null
+  if(player&&heroImage?.naturalWidth)ctx.drawImage(heroImage,0,0,...hero.frame,player.x+16-hero.foot[0],player.y+24-hero.foot[1],...hero.frame)
   if(this.tool==='tile'){
    ctx.strokeStyle='#ffffff50';ctx.lineWidth=1
    for(let x=0;x<=this.w;x+=64){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,this.h);ctx.stroke()}
@@ -582,7 +621,7 @@ class MapEditor {
   return {x:Math.max(0,Math.min(this.w-1,(e.clientX-rect.left)/this.zoom)),
    y:Math.max(0,Math.min(this.h-1,(e.clientY-rect.top)/this.zoom))}
  }
- private saveHistory(){this.history.push(new XMLSerializer().serializeToString(this.document));if(this.history.length>35)this.history.shift();this.dirty=true}
+ private saveHistory(){this.future=[];this.scheduleDraft();this.history.push(new XMLSerializer().serializeToString(this.document));if(this.history.length>35)this.history.shift();this.dirty=true}
  private updateLayerNode(layer:PaintLayer){
   const width=this.w/64
   const lines=[]
@@ -616,7 +655,9 @@ class MapEditor {
  }
  private selectAt(p:{x:number,y:number}){
   const objs=this.objects()
-  this.selected=[...objs].reverse().find(o=>p.x>=o.x-10&&p.x<=o.x+o.w+10&&p.y>=o.y-12&&p.y<=o.y+o.h+12)?.node||null
+  const player=this.playerPosition(),a=art.assets[this.playerGraphic()]
+  this.selectedPlayer=Boolean(player&&a&&p.x>=player.x+16-a.foot[0]+(a.animations.stand.visibleBounds?.[0]?.[0]||0)&&p.x<=player.x+16-a.foot[0]+(a.animations.stand.visibleBounds?.[0]?.[2]||a.frame[0])&&p.y>=player.y+24-a.foot[1]+(a.animations.stand.visibleBounds?.[0]?.[1]||0)&&p.y<=player.y+24)
+  this.selected=this.selectedPlayer?null:[...objs].sort((a,b)=>a.y+a.h-b.y-b.h).reverse().find(o=>{const a=art.assets[o.asset],b=a?.animations.stand.visibleBounds?.[0];return b?p.x>=o.x+o.w/2-a.foot[0]+b[0]&&p.x<=o.x+o.w/2-a.foot[0]+b[2]&&p.y>=o.y+o.h-a.foot[1]+b[1]&&p.y<=o.y+o.h:p.x>=o.x-10&&p.x<=o.x+o.w+10&&p.y>=o.y-12&&p.y<=o.y+o.h+12})?.node||null
   this.updateDetails();this.redraw()
  }
  private createObject(p:{x:number,y:number}){
@@ -647,7 +688,7 @@ class MapEditor {
   if(kind==='portal')setProp(el,'target',this.id==='wald'?'simplemap':'wald')
   group.append(el)
   // Placement remains active until the user explicitly selects another tool.
-  this.selected=el;this.updateDetails()
+  this.selectedPlayer=false;this.selected=el;this.updateDetails()
   const sprite=definition?.animations?.stand?.image
   if(sprite&&!this.spriteCache.has(sprite))
    void image(pathUrl(sprite)).then(img=>{this.spriteCache.set(sprite,img);this.redraw()})
@@ -688,8 +729,10 @@ class MapEditor {
  private endPointer(){this.dragging=false;this.panning=false;this.prev=null;this.paintLast=-1}
  private updateDetails(){
   this.detail.replaceChildren()
-  if(!this.selected){this.detail.append(elt('p','','Objekt auswählen, um Name, Grafik und Eigenschaften zu ändern.'));return}
+  if(this.selectedPlayer){this.detail.append(elt('h3','','Spieler · '+this.playerGraphic()),button('Grafiken bearbeiten',()=>void this.openAssets(this.playerGraphic())),elt('p','','Spielergrafiken betreffen die gesamte Klasse. Objektvarianten sind für platzierte Kartenobjekte verfügbar.'));return}
+  if(!this.selected){this.detail.append(button('Spieler-Grafiken bearbeiten',()=>void this.openAssets(this.playerGraphic())));this.detail.append(elt('p','','Objekt auswählen, um Name, Grafik und Eigenschaften zu ändern.'));return}
   const obj=this.selected
+  this.detail.append(button('Grafiken bearbeiten',()=>void this.openAssets(getObj(obj).asset)))
   const name=elt<HTMLInputElement>('input');name.value=obj.getAttribute('name')||''
   name.addEventListener('change',()=>{this.saveHistory();obj.setAttribute('name',name.value);this.redraw()})
   this.detail.append(field('Name',name))
@@ -736,14 +779,15 @@ class MapEditor {
  }
  private undo(){
   if(!this.history.length){this.status('Nichts rückgängig zu machen');return}
+  this.future.push(this.xml())
   const previous=this.history.pop()!
-  this.document=readXml(previous);this.selected=null
+  this.document=readXml(previous);this.selectedPlayer=false;this.selected=null
   const map=this.document.documentElement
   this.w=Number(map.getAttribute('width'))*64;this.h=Number(map.getAttribute('height'))*64
   this.canvas.width=this.w;this.canvas.height=this.h
   this.resizeWidth.value=String(this.w/64);this.resizeHeight.value=String(this.h/64)
   this.parseLayers();this.updateDetails()
-  this.redraw();this.updateStage();this.dirty=true;this.status('Letzten Schritt rückgängig gemacht')
+  this.redraw();this.updateStage();this.dirty=this.xml()!==this.source;this.scheduleDraft();this.status(this.dirty?'Ungespeichert · Letzten Schritt rückgängig gemacht':'Gespeichert · Ausgangsstand erreicht')
  }
  private xml(){return '<?xml version="1.0" encoding="UTF-8"?>\n'+new XMLSerializer().serializeToString(this.document.documentElement)+'\n'}
  private export(){
@@ -754,50 +798,54 @@ class MapEditor {
   setTimeout(()=>URL.revokeObjectURL(url),1000)
   this.status('TMX-Datei exportiert · kann in Tiled geöffnet werden')
  }
- private async save(){
-  if(!this.document)return
-  if(!this.dirty){this.status('Keine Änderungen vorhanden');return}
-  if(this.saving)return
-  this.saving=true
-  this.status('Karte wird geprüft und sicher gespeichert …')
-  try{
-   const edited=this.xml()
-   const reply=await fetch(base+'__nobby-editor/save',{
-    method:'POST',headers:{'Content-Type':'application/json','X-Nobby-Editor':'local-authoring'},
-    body:JSON.stringify({id:this.id,original:this.source,updated:edited})
-   })
-   const result=await reply.json()
-   if(!reply.ok)throw Error(result.error||'Speichern fehlgeschlagen')
-   this.source=edited;this.dirty=false;this.history=[]
-   this.pendingRefresh=Boolean(result.needsRefresh)||this.pendingRefresh
-   this.status('Gespeichert: '+(result.width??this.w/64)+' × '+(result.height??this.h/64)+' Kacheln. Zum Aktualisieren des Spiels Editor schließen.')
-  }catch(error){
-   this.status('Speichern fehlgeschlagen – Änderungen im Editor bleiben erhalten: '+String(error))
-  }finally{this.saving=false}
- }
- private async refreshAfterClose(){
-  this.status('Karte gespeichert. Spielwelt wird aktualisiert …')
-  try{
-   const reply=await fetch(base+'__nobby-editor/refresh',{
-    method:'POST',headers:{'X-Nobby-Editor':'local-authoring'}
-   })
-   const result=await reply.json()
-   if(!reply.ok)throw Error(result.error||'Neuaufbau fehlgeschlagen')
-   this.pendingRefresh=false
-   window.removeEventListener('keydown',this.globalKey,true)
-   this.root.remove()
-   window.location.reload()
-  }catch(error){
-   this.status('Karte ist gespeichert, aber das Aktualisieren schlug fehl: '+String(error)+' · erneut Schließen klicken.')
+ private playerGraphic(){const p=this.engine.getCurrentPlayer?.(),c=p?.nobbyClass;return (typeof c==='function'?c():c)==='shaman'?'shaman':'hero'}
+ private playerPosition(){const p=this.engine.getCurrentPlayer?.();if(!p)return null;return {x:typeof p.x==='function'?p.x():p.x||0,y:typeof p.y==='function'?p.y():p.y||0}}
+ private async openAssets(id?:string){this.mapPane!.hidden=true;this.mapToolbar!.hidden=true;await this.assetEditor.open(id)}
+ private async loadUserTilesets(catalog:any){
+  for(const entry of catalog.assets.filter((a:any)=>a.definition.kind==='terrain')){
+   const source=entry.definition.tilesetPath?.split('/').pop();if(!source)continue
+   const url=pathUrl('map/'+source),response=await fetch(url,{cache:'no-store'});if(!response.ok)continue
+   const tsx=readXml(await response.text()).documentElement,imgSource=tsx.querySelector('image')?.getAttribute('source')||''
+   const img=await image(new URL(imgSource,new URL(url,location.href)).href),existing=this.sheet.find(s=>s.source===source)
+   if(existing){existing.img=img;continue}
+   const first=Math.max(1,...this.sheet.map(s=>s.first+s.count)),count=Number(tsx.getAttribute('tilecount'))
+   const reference=this.document.createElement('tileset');reference.setAttribute('firstgid',String(first));reference.setAttribute('source',source);this.document.documentElement.insertBefore(reference,this.document.querySelector('map > layer'))
+   this.sheet.push({first,count,cols:Number(tsx.getAttribute('columns')),img,source,title:entry.name})
   }
  }
- private close(){
-  if(this.saving){this.status('Speichern läuft. Danach erneut schließen.');return}
-  if(this.dirty&&!window.confirm('Ungespeicherte Kartenänderungen verwerfen?'))return
-  if(this.pendingRefresh){void this.refreshAfterClose();return}
-  window.removeEventListener('keydown',this.globalKey,true)
-  this.root.remove()
+ private scheduleDraft(){clearTimeout(this.draftTimer);this.draftTimer=setTimeout(()=>{if(this.document)void writeDraft('map:'+this.id,{updated:this.xml(),source:this.source,pending:this.saveSession.pending})},250)}
+ private redo(){if(!this.future.length){this.status('Nichts zu wiederholen');return}const next=this.future.pop()!;this.history.push(this.xml());this.document=readXml(next);const m=this.document.documentElement;this.w=Number(m.getAttribute('width'))*64;this.h=Number(m.getAttribute('height'))*64;this.canvas.width=this.w;this.canvas.height=this.h;this.selectedPlayer=false;this.selected=null;this.parseLayers();this.updateDetails();this.redraw();this.updateStage();this.dirty=this.xml()!==this.source;this.scheduleDraft();this.status('Ungespeichert · Schritt wiederholt')}
+ private async saveActive(){if(this.assetEditor.visible)await this.assetEditor.save();else await this.save()}
+ private async save(){
+  if(!this.document||this.saving)return
+  if(!this.dirty){this.status('Gespeichert · Keine Änderungen vorhanden');return}
+  if(!this.client.writable){this.status('Keine lokale Schreibverbindung. Bitte TMX exportieren.');return}
+  const pending=this.saveSession.begin(this.id,this.source,this.xml());if(!pending)return
+  this.saving=true;this.saveController=new AbortController();this.status('Wird gespeichert · Entwurf wird geprüft …');this.scheduleDraft()
+  try{
+   const result=await this.client.request('save',pending,{signal:this.saveController.signal})
+   const ack=this.saveSession.acknowledge(this.xml());this.source=ack.source;this.dirty=ack.dirty
+   this.pendingRefresh=Boolean(result.needsRefresh)||this.pendingRefresh
+   this.status(this.dirty?'Gespeichert · Weitere Änderungen sind noch ungespeichert.':'Gespeichert, Spiel muss aktualisiert werden · '+(result.width??this.w/64)+' × '+(result.height??this.h/64)+' Kacheln.')
+   if(this.dirty)this.scheduleDraft();else void writeDraft('map:'+this.id,null)
+  }catch(error:any){if(error.status>=400&&error.status<500)this.saveSession.pending=null;this.status((error.status===409?'Externer Bearbeitungskonflikt':'Speichern fehlgeschlagen')+' · '+error.message+' · Entwurf bleibt erhalten. Speichern erneut ausführen oder TMX exportieren.');this.scheduleDraft()}
+  finally{this.saving=false;this.saveController=null;this.saveSession.finish()}
  }
+ private async refreshAfterClose(){
+  if(this.dirty||this.assetEditor.dirty||this.saving||this.assetEditor.saving){this.status('Vor dem Aktualisieren alle Entwürfe speichern oder ausdrücklich verwerfen.');return}
+  this.status('Gespeichert · Spielwelt wird aktualisiert …')
+  try{await this.client.request('refresh',{}, {timeout:25000});this.pendingRefresh=false;await this.dispose();window.location.reload()}
+  catch(error){this.status('Gespeichert, Spiel muss aktualisiert werden · Aktualisierung fehlgeschlagen: '+String(error)+' · Erneut „Spiel aktualisieren“ klicken.')}
+ }
+ private async dispose(){clearTimeout(this.draftTimer);window.removeEventListener('keydown',this.globalKey,true);window.removeEventListener('beforeunload',this.beforeUnload);this.assetEditor.destroy();await this.client.close();this.root.remove()}
+ private close(){
+  if(this.saving||this.assetEditor.saving){this.status('Speichern läuft. Abbrechen ist möglich; Entwurf bleibt erhalten.');return}
+  if((this.dirty||this.assetEditor.dirty)&&!window.confirm('Ungespeicherte Änderungen verwerfen und Editor schließen? Lokale Wiederherstellungsentwürfe bleiben verfügbar.'))return
+  this.dirty=false;this.assetEditor.dirty=false
+  if(this.pendingRefresh){void this.refreshAfterClose();return}
+  void this.dispose()
+ }
+
 }
 let active=false
 let latestEngine:any

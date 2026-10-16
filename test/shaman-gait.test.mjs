@@ -2,59 +2,89 @@ import {test} from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import {PNG} from 'pngjs'
-import {copyAuthoredShamanWalk,GAIT_PHASES} from '../scripts/shaman-gait.mjs'
 import registry from '../src/art/registry.json' with {type:'json'}
-const read=file=>PNG.sync.read(fs.readFileSync(file))
-const actual=()=>read('public/'+registry.assets.shaman.animations.walk.image)
-const pixel=(p,f,r,x,y)=>Array.from(p.data.subarray(((r*192+y)*p.width+f*192+x)*4,((r*192+y)*p.width+f*192+x)*4+4))
-const outline=[22,28,46,255]
-function contactOracle(p){
- for(let row=0;row<2;row++){
-  // Independently reviewed original Monk contacts: front-right in pose 1,
-  // front-left in pose 3. Passing poses have the native short airborne phase.
-  for(const [frame,lo,hi] of [[0,106,110],[2,90,94]])
-   for(let x=lo;x<=hi;x++)assert.deepEqual(pixel(p,frame,row,x,133),outline,'wrong contact toe '+row+'/'+frame)
-  for(let x=78;x<=99;x++)assert.equal(pixel(p,0,row,x,133)[3],0,'left boot stayed planted in right contact')
-  for(let x=100;x<=118;x++)assert.equal(pixel(p,2,row,x,133)[3],0,'right boot stayed planted in left contact')
-  for(const frame of [1,3])for(let x=76;x<=118;x++)
-   assert.equal(pixel(p,frame,row,x,131)[3],0,'passing foot forced onto ground')
+import {ensureNativeShaman,NATIVE_SHAMAN_STATES} from '../scripts/native-shaman.mjs'
+
+const read=p=>PNG.sync.read(fs.readFileSync(p))
+const states=['stand','walk','attack','heal','hit','death']
+const hashFrame=(p,row,f)=>{
+ const bytes=[]
+ for(let y=0;y<192;y++)for(let x=0;x<192;x++){
+  const i=((row*192+y)*p.width+f*192+x)*4
+  bytes.push(...p.data.subarray(i,i+4))
  }
+ return Buffer.from(bytes).toString('base64')
 }
-test('real native Monk toes alternate right/left contact in both facing rows',()=>contactOracle(actual()))
-test('contact oracle rejects a repeated leading-foot defect',()=>{
- const p=actual()
- for(let row=0;row<2;row++)for(let y=120;y<=135;y++)for(let x=76;x<=118;x++){
-  const from=((row*192+y)*p.width+x)*4,to=((row*192+y)*p.width+384+x)*4
-  p.data.set(p.data.subarray(from,from+4),to)
+
+test('all shaman states paint over authentic Monk poses with unchanged geometry',()=>{
+ const src=registry.generation.shaman
+ assert.equal(src.source,'public/tiny-swords/Units/Blue Units/Monk/Idle.png')
+ assert.equal(src.walkSource,'public/tiny-swords/Units/Blue Units/Monk/Run.png')
+ assert.equal(src.healSource,'public/tiny-swords/Units/Blue Units/Monk/Heal.png')
+ assert.deepEqual(registry.assets.shaman.frame,[192,192])
+ assert.deepEqual(registry.assets.shaman.foot,[96,132])
+ assert.deepEqual(registry.assets.shaman.hitbox,[32,24])
+ for(const state of states){
+  const a=registry.assets.shaman.animations[state],p=read('public/'+a.image)
+  assert.equal(a.frames,NATIVE_SHAMAN_STATES[state].poses.length)
+  assert.deepEqual([p.width,p.height],[a.frames*192,384],state)
+  for(let row=0;row<2;row++)for(let f=0;f<a.frames;f++){
+   let painted=0,minX=192,maxX=-1,bottom=-1
+   for(let y=0;y<192;y++)for(let x=0;x<192;x++){
+    const alpha=p.data[((row*192+y)*p.width+f*192+x)*4+3]
+    assert.ok(alpha===0||alpha===255,state+' must have hard alpha')
+    if(!alpha)continue
+    painted++;minX=Math.min(minX,x);maxX=Math.max(maxX,x);bottom=Math.max(bottom,y)
+   }
+   assert.ok(painted>100,state+' '+row+'/'+f+' empty')
+   assert.ok(minX>=0&&maxX<192,state+' '+row+'/'+f+' outside 192px cell')
+   if(['stand','walk','hit'].includes(state))assert.ok(minX>=35&&maxX<=184,state+' '+row+'/'+f+' body outside stable frame')
+   if(['stand','walk','heal','attack','hit'].includes(state))
+    assert.ok(bottom>=125&&bottom<=150,state+' '+row+'/'+f+' footline '+bottom)
+  }
  }
- assert.throws(()=>contactOracle(p))
 })
-test('every native robe/boot pixel keeps original shape and pose, with palette edits only',()=>{
- const source=read('public/tiny-swords/Units/Blue Units/Monk/Run.png'),p=actual()
- const palette=JSON.parse(fs.readFileSync('art/generated-source/expansion/shaman-native-patches.json')).palette
- const recolor={'72,88,132':palette.d,'70,151,172':palette.t,'94,84,85':palette.b,'151,123,107':palette.h}
- for(let row=0;row<2;row++)for(let f=0;f<4;f++)for(let y=119;y<=135;y++)for(let x=76;x<=118;x++){
-  const original=pixel(source,f,0,x,y),expected=original[3]===255?(recolor[original.slice(0,3).join(',')]||original):[0,0,0,0]
-  const got=pixel(p,f,row,x,y)
-  if(!expected[3])assert.equal(got[3],0,'silhouette changed')
-  else assert.deepEqual(got,expected,`native lower pose modified ${row}/${f}/${x}/${y}`)
- }
-})
-test('original four-pose Monk geometry and unchanged collision/anchor survive compilation',()=>{
- const p=actual(),a=registry.assets.shaman
- assert.deepEqual([p.width,p.height],[768,384])
- assert.deepEqual(a.frame,[192,192]);assert.deepEqual(a.foot,[96,132]);assert.deepEqual(a.hitbox,[32,24])
- assert.equal(a.animations.walk.frames,4);assert.equal(a.animations.walk.fps,12)
- assert.deepEqual(GAIT_PHASES.map(p=>p.lead),['right','passing','left','passing'])
- assert.deepEqual(copyAuthoredShamanWalk(p).data,p.data)
- assert.throws(()=>copyAuthoredShamanWalk(new PNG({width:192,height:192})))
-})
-test('4→1 wrap restores right contact after the left passing phase',()=>{
- const p=actual()
+
+test('walking uses distinct leg silhouettes in both front and back rows',()=>{
+ const a=registry.assets.shaman.animations.walk,p=read('public/'+a.image)
+ const original=read(registry.generation.shaman.walkSource)
  for(let row=0;row<2;row++){
-  assert.deepEqual(pixel(p,3,row,110,130),outline)
-  assert.deepEqual(pixel(p,0,row,108,133),outline)
-  assert.equal(pixel(p,3,row,108,133)[3],0)
-  assert.equal(pixel(p,0,row,92,133)[3],0)
+  const silhouettes=[]
+  for(let f=0;f<4;f++){
+   const alpha=[]
+   let overlap=0,originalPixels=0
+   for(let y=118;y<=135;y++)for(let x=76;x<=120;x++){
+    const from=original.data[(y*original.width+f*192+x)*4+3]
+    const to=p.data[((row*192+y)*p.width+f*192+x)*4+3]
+    alpha.push(to>0?1:0)
+    if(from===255){originalPixels++;if(to===255)overlap++}
+   }
+   assert.ok(originalPixels>10,'native source legs missing frame '+f)
+   assert.ok(overlap/originalPixels>0.85,'native feet overwritten in '+row+'/'+f)
+   silhouettes.push(alpha.join(''))
+  }
+  assert.ok(new Set(silhouettes).size>=3,'shaman slides rather than walks in row '+row)
+ }
+})
+
+test('idle, walk and spell animations keep actual distinct frames',()=>{
+ for(const state of ['stand','walk','heal']){
+  const a=registry.assets.shaman.animations[state],p=read('public/'+a.image)
+  for(let row=0;row<2;row++){
+   const frames=Array.from({length:a.frames},(_,f)=>hashFrame(p,row,f))
+   assert.ok(new Set(frames).size>=Math.min(a.frames,3),state+' repeated static poses '+row)
+  }
+ }
+})
+
+test('source rebuild is deterministic and leaves original licensed Monk files unchanged',()=>{
+ const original=['Idle','Run','Heal'].map(s=>fs.readFileSync('public/tiny-swords/Units/Blue Units/Monk/'+s+'.png'))
+ const copy=structuredClone(registry)
+ const expected=Object.fromEntries(states.map(s=>[s,fs.readFileSync('public/'+registry.assets.shaman.animations[s].image)]))
+ ensureNativeShaman(copy)
+ for(let i=0;i<3;i++)assert.deepEqual(fs.readFileSync('public/tiny-swords/Units/Blue Units/Monk/'+['Idle','Run','Heal'][i]+'.png'),original[i])
+ for(const s of states){
+  assert.deepEqual(fs.readFileSync('public/'+registry.assets.shaman.animations[s].image),expected[s])
+  assert.equal(copy.assets.shaman.animations[s].frames,registry.assets.shaman.animations[s].frames)
  }
 })

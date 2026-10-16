@@ -79,17 +79,18 @@ test('character screen shows XP within the current level and missing XP',()=>{
  assert.match(hud,/Noch .* EP bis Stufe/)
  assert.match(hud,/nobby-stats-xp/)
 })
-test('OrbStack live editor is optional, persistent and local-only',()=>{
+test('one persistent loopback-only Nobby World Studio serves the game and writable editor',()=>{
  const compose=fs.readFileSync('compose.yaml','utf8')
- assert.match(compose,/editor:/)
- assert.match(compose,/profiles: \["editor"\]/)
+ assert.match(compose,/game:/)
  assert.match(compose,/restart: unless-stopped/g)
- assert.match(compose,/127\.0\.0\.1:5173:5173/)
+ assert.match(compose,/127\.0\.0\.1:8088:8088/)
+ assert.match(compose,/NOBBY_EDITOR_READ_ONLY: "0"/)
  assert.match(compose,/\.\/:\/app/)
- assert.match(compose,/--host 0\.0\.0\.0 --port 5173 --strictPort/)
+ assert.match(compose,/--host 0\.0\.0\.0 --port 8088 --strictPort/)
+ assert.doesNotMatch(compose,/profiles: \["editor"\]/)
 })
 
-test('compose passes shell lock_hash literally to the editor container',()=>{
+test('compose passes shell lock_hash literally to the Studio container',()=>{
  const compose=fs.readFileSync('compose.yaml','utf8')
  const echoLine=compose.split('\n').find(line=>line.includes('node_modules/.nobby-lock')&&line.includes('echo'))
  assert.ok(echoLine,'lock file write must exist')

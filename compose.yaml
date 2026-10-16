@@ -1,31 +1,18 @@
 name: nobby-world
 services:
+  # Nobby World Studio: game, editors, live previews and durable authoring.
   game:
-    build: .
-    image: nobby-world:local
-    restart: unless-stopped
-    ports:
-      - "127.0.0.1:8088:80"
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/ || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-
-  # Optional, persistent live editor: OrbStack serves the Mac project directly.
-  # One-time setup: docker compose --profile editor up -d editor
-  editor:
     image: node:24-alpine
-    profiles: ["editor"]
     restart: unless-stopped
     init: true
     working_dir: /app
+    environment:
+      NOBBY_EDITOR_READ_ONLY: "0"
     ports:
-      - "127.0.0.1:5173:5173"
+      - "127.0.0.1:8088:8088"
     volumes:
       - ./:/app
-      - nobby_world_editor_modules:/app/node_modules
+      - nobby_world_studio_modules:/app/node_modules
     command:
       - sh
       - -ec
@@ -35,13 +22,13 @@ services:
           npm ci
           echo "$$lock_hash" > node_modules/.nobby-lock
         fi
-        exec npm run dev -- --host 0.0.0.0 --port 5173 --strictPort
+        exec npm run dev -- --host 0.0.0.0 --port 8088 --strictPort
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:5173/').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8088/').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
       interval: 20s
-      timeout: 5s
-      retries: 4
+      timeout: 10s
+      retries: 5
       start_period: 90s
 
 volumes:
-  nobby_world_editor_modules:
+  nobby_world_studio_modules:

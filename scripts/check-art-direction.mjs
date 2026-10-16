@@ -43,7 +43,7 @@ export function checkArtDirection() {
     assert.ok(!anchored.has(ref.id), `Duplicate reference ${ref.id}`)
     anchored.add(ref.id)
     assert.ok(['pack', 'authored'].includes(ref.origin), `Unknown reference origin for ${ref.id}`)
-    const asset = registry.assets[ref.id]
+    const asset = registry.assets[ref.id]?.editorManaged ? json('art/registry-base.json').assets[ref.id] : registry.assets[ref.id]
     assert.ok(asset, `Reference missing from registry: ${ref.id}`)
     const state = asset.animations?.stand
     assert.ok(state, `Reference without stand animation: ${ref.id}`)

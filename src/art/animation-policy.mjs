@@ -8,13 +8,13 @@ export const STABLE_IDLE_FRAMES=Object.freeze({
   // remain unchanged in the registry and sprite atlas for combat/save compatibility.
   hero:Object.freeze([1,3]),
   female:Object.freeze([3,5]),
-  shaman:Object.freeze([0,4]),
+  shaman:Object.freeze([0,1,2,3,4,5]),
   skeleton:Object.freeze([0,2])
 })
 
-export function animationFrameIndices(id,state,frameCount){
+export function animationFrameIndices(id,state,frameCount,userEdited=false){
   if(!Number.isInteger(frameCount)||frameCount<1)throw Error('Invalid sprite frame count')
-  const stable=state==='stand'?STABLE_IDLE_FRAMES[id]:null
+  const stable=state==='stand'&&!userEdited?STABLE_IDLE_FRAMES[id]:null
   if(!stable)return Array.from({length:frameCount},(_,index)=>index)
   for(const frame of stable)if(!Number.isInteger(frame)||frame<0||frame>=frameCount)
     throw Error(`Invalid stable pose ${id}/${state}: ${frame}`)

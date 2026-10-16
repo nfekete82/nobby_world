@@ -14,8 +14,8 @@ export function sheepEvent(object:any, world:any):EventDefinition{
   mass:100,
   onInit(){
    const sheep=this as any
-   sheep.setGraphic('sheep')
-   sheep.setHitbox(...ART.assets.sheep.hitbox as [number,number])
+   sheep.setGraphic(object.asset||'sheep')
+   sheep.setHitbox(...(ART.assets as any)[object.asset||'sheep'].hitbox as [number,number])
    sheep.through=true // Players can pass through sheep; never trap the hero.
    sheep.pushable=false
    sheep.setMass(100)

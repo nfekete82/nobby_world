@@ -18,9 +18,9 @@ export function worldEvent(object: any, world?: any): EventDefinition {
             ;(this as any).nobbyAggroRange=object.vision
             ;(this as any).nobbyNearestTargetId=''
             ;(this as any).nobbyRefreshTarget=()=>refreshEnemyTargetNow(this)
-            const graphic=enemyGraphic(object.enemy)
+            const graphic=object.asset||enemyGraphic(object.enemy)
             this.setGraphic(graphic)
-            this.setHitbox(...ART.actorHitbox as [number,number])
+            this.setHitbox(...(ART.assets as any)[graphic].hitbox as [number,number])
             this.setParameter(MAXHP, object.hp || 65 + (object.level - 1) * 25)
             this.paramsModifier = { atk: {value:8 + object.level * 3}, pdef: {value:2 + object.level} }
             this.allRecovery()
@@ -41,11 +41,11 @@ export function worldEvent(object: any, world?: any): EventDefinition {
     }
     if (object.kind === 'npc') return {
         name: object.name,
-        onInit() { this.setGraphic('female'); this.setHitbox(...ART.actorHitbox as [number,number]) },
+        onInit() { this.setGraphic(object.asset||'female'); this.setHitbox(...(ART.assets as any)[object.asset||'female'].hitbox as [number,number]) },
         async onAction(player) { await player.showText(object.text) }
     }
-    if(object.kind==='prop'&&object.asset==='sheep')return sheepEvent(object,world)
-    if(object.kind==='prop'&&object.asset==='desert-snake')return desertSnakeEvent(object,world)
+    if(object.kind==='prop'&&(object.asset==='sheep'||(ART.assets as any)[object.asset]?.editorBaseId==='sheep'))return sheepEvent(object,world)
+    if(object.kind==='prop'&&(object.asset==='desert-snake'||(ART.assets as any)[object.asset]?.editorBaseId==='desert-snake'))return desertSnakeEvent(object,world)
     if(object.kind==='prop')return {
         name:object.name,
         // Physics bodies normally have mass 100; even a non-moving event can
