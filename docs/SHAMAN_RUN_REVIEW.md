@@ -147,3 +147,57 @@ Ausgabenlimit. Der Job hatte keine ausgeführten Steps und keine Logs.
 Dies ist keine bestandene CI-Prüfung und kein gemeldeter Code-/Art-Testfehler.
 Die oben genannten Prüfergebnisse stammen aus den vollständig erfolgreichen
 lokalen Läufen. Billing-Einstellungen wurden nicht verändert.
+
+## Proportionskorrektur nach Rückmeldung
+
+Der erste gezeichnete Zyklus hatte zu dünne, zu lange wirkende Unterschenkel.
+Die Rückmeldung trifft zu: Die Lederstreifen waren etwa 5–6 Pixel breit und
+über rund zwölf Pixel sichtbar, während der ursprüngliche Schamane kompakte,
+breite Stiefel unter einer voluminöseren Kleidung trägt. Die erste Review hat
+zwar den Beinwechsel korrekt geprüft, diese Proportionen jedoch nicht gut
+genug beurteilt.
+
+Vor der Korrektur festgelegt: weiterhin 192×192, 6×2 Frames, [96,132] Anker,
+[32,24] Hitbox, bisherige Türkis-/Lederpalette und unveränderte Kontaktphasen.
+Neue Pixelzeichnungen sollen breitere, gebogene Hosenbeine mit etwa 9–12
+Pixeln Querschnitt und kurze, breite Stiefel mit etwa 6–8 sichtbaren Pixeln
+Höhe ergeben. Knie und Waden erhalten Volumen; der Stoff reicht tiefer über
+die Unterschenkel. Kein Strecken oder Skalieren der Figur.
+
+Referenzen bleiben der native `enemy-warrior` / `Warrior_Run.png` für kompakte
+Tiny-Swords-Proportionen sowie ursprüngliche `shaman`-Stand-/Laufposen für
+Kleidung, Körpergröße und Stiefelvolumen. Alte Prüfbilder werden bewahrt;
+aktuelle Nachweise entstehen separat in `artifacts/shaman-run-proportions/`.
+
+Ergebnis der Proportionskorrektur: Beide Ansichten wurden auf dem nativen
+Pixelraster neu gezeichnet. Die Standbeine haben jetzt 7–9 sichtbare Stoffpixel
+Querschnitt am unteren Knie-/Wadenbereich statt schmaler Lederstäbe; das Leder
+beginnt erst bei y=125/126 und bildet einen kurzen, breiten Stiefel. Die Knie
+biegen sich zwischen Hüfte und Fuß. Die Fußkontakte und der 6→1-Wechsel
+bleiben erhalten. Beim breiteren Knie musste der angehobene rechte Stiefel
+in Frame 4 ebenfalls neu platziert werden, damit beide Silhouetten getrennt
+bleiben. Alle Oberkörperpixel bleiben unverändert.
+
+Die neue Produktionsbild-Regression prüft zusätzlich Mindestbreite der
+Stoffwaden und maximale sichtbare Lederhöhe. Nach Korrektur des Prüffensters
+für den weiter außen liegenden rechten Stiefel bestehen **133 Tests**.
+`art:style:check`, Build, `art:references`, der Front-/Rücken-Browsertest und
+der vorhandene Expansion-Browsertest bestehen ebenfalls. Die gezeichnete
+Quelle lässt sich erneut byte-identisch zusammensetzen.
+
+`artifacts/shaman-run-proportions/proportion-comparison-3x.png` zeigt oben
+die beanstandete dünne Version, mittig die Korrektur und unten die ursprüngliche
+Schamanen-Laufgrafik vor dem ersten Fix. Die aktuelle Zwölfframe-Vorschau,
+Front-/Rücken-GIFs und Ingame-Aufnahmen liegen im selben neuen Ordner.
+Die Referenzgalerie und die tatsächlichen Ingame-Bildfolgen wurden nebeneinander
+geprüft: Die korrigierten Beine sind breiter und optisch kompakter, der
+Links-rechts-Wechsel bleibt sichtbar. Die zuvor dokumentierte höhere
+Detaildichte des Oberkörpers bleibt erhalten. Sämtliche vorgefundenen lokalen
+Änderungen und die früheren Screenshot-Nachweise bleiben unverändert.
+
+Für die neuen Aufnahmen:
+
+```sh
+NOBBY_ARTIFACT_DIR=artifacts/shaman-run-proportions npm run art:shaman:preview
+NOBBY_ARTIFACT_DIR=artifacts/shaman-run-proportions npm run test:shaman
+```

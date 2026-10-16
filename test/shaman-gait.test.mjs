@@ -15,7 +15,7 @@ const feet=[
  {left:[78,89,124],right:[101,112,132]},
  {left:[82,93,124],right:[97,108,132]},
  {left:[84,92,127],right:[93,103,131]},
- {left:[90,101,132],right:[99,110,124]},
+ {left:[90,101,132],right:[102,113,124]},
  {left:[86,97,132],right:[102,110,124]},
  {left:[82,92,131],right:[102,112,128]}
 ]
@@ -105,5 +105,23 @@ test('each visible sole remains connected through calf and knee to the torso',()
    for(let x=lo;x<=hi;x++)if(pixel(sheet,f,r,x,bottom-1).every((v,i)=>v===sole[i]))contacts.push((bottom-1)*192+x)
    assert.ok(contacts.length>=3&&contacts.every(i=>seen.has(i)),`detached ${side} boot ${r}/${f}`)
   }
+ }
+})
+
+test('stance legs retain broad cloth calves and short leather boots',()=>{
+ const sheet=actual()
+ const supportWindows=[[99,114],[94,110],[93,106],[88,101],[83,99],[82,95]]
+ const cloth=[[16,56,64,255],[24,72,72,255]]
+ const leather=[[56,40,32,255],[80,48,32,255],[104,72,40,255],[88,56,40,255]]
+ const is=(p,colors)=>colors.some(c=>p.every((v,i)=>v===c[i]))
+ for(let r=0;r<2;r++)for(let f=0;f<6;f++){
+  const [lo,hi]=supportWindows[f]
+  let calf=0,minLeather=192,maxLeather=-1
+  for(let x=lo;x<=hi;x++)if(is(pixel(sheet,f,r,x,122),cloth))calf++
+  assert.ok(calf>=7,`calf narrowed into a stick in ${r}/${f}: ${calf}`)
+  for(let y=120;y<=132;y++)for(let x=lo;x<=hi;x++)if(is(pixel(sheet,f,r,x,y),leather)){
+   minLeather=Math.min(minLeather,y);maxLeather=Math.max(maxLeather,y)
+  }
+  assert.ok(minLeather>=125&&maxLeather-minLeather<=6,`long exposed leather shin in ${r}/${f}`)
  }
 })

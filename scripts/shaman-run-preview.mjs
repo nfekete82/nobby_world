@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import {spawnSync} from 'node:child_process'
 import {PNG} from 'pngjs'
-const dir='artifacts/shaman-run'
+const dir=process.env.NOBBY_ARTIFACT_DIR||'artifacts/shaman-run'
 fs.mkdirSync(dir,{recursive:true})
 const actors={shaman:'public/tiny-swords/biomes/shaman-natural-walk.png',knight:'public/tiny-swords/Units/Red Units/Warrior/Warrior_Run.png'}
 for(const [id,file] of Object.entries(actors)){
