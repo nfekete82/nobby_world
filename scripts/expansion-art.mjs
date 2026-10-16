@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { PNG } from 'pngjs'
-import { stabilizeShamanWalk, WALK_CADENCE_FPS } from './natural-walk.mjs'
+import { ensureNaturalShamanWalk, WALK_CADENCE_FPS } from './natural-walk.mjs'
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..')
 const read=p=>PNG.sync.read(fs.readFileSync(path.join(root,p)))
@@ -218,17 +218,16 @@ export function compileExpansionArt(registry){
    animations[name]={image,frames:count,fps,visibleBounds,...(directional?{rows:2}:{})}
   }
   if(id==='shaman'){
-   const stand=read('public/'+animations.stand.image)
-   const sourceWalk=read('public/'+animations.walk.image)
-   const calm=stabilizeShamanWalk(stand,sourceWalk)
+   ensureNaturalShamanWalk()
    const image='tiny-swords/biomes/shaman-natural-walk.png'
-   write('public/'+image,calm)
+   const calm=read('public/'+image)
    animations.walk.image=image
    animations.walk.visibleBounds=Array.from({length:animations.walk.frames},(_,i)=>
     bounds(calm,i*192,0,192,192))
   }
   registry.assets[id]={kind:'actor',frame:[192,192],foot:[96,132],hitbox:[32,24],directional:true,animations}
-  registry.generation[id]={source,scale,footPixels:Array.from({length:6},()=>[96,132])}
+  registry.generation[id]={source,scale,footPixels:Array.from({length:6},()=>[96,132]),
+   ...(id==='shaman'?{walkSource:'art/generated-source/expansion/shaman-run.png'}:{})}
  }
  compileProps(registry)
  compileBuildings(registry)

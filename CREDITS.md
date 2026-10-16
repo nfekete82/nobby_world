@@ -29,3 +29,8 @@ project style references. Source atlases and deterministic native sprite packing
 are included in `art/generated-source/expansion/` and `scripts/expansion-art.mjs`.
 The supplied portrait was used only as a character reference, not bundled.
 See `docs/EXPANSION_ART_PROMPTS.md` for the prompt set and provenance.
+
+The shaman's revised six-phase run uses locally hand-authored native pixel
+legs/heels and the existing character's upper-body pixels. Editable sources,
+reference comparisons and provenance are documented in
+`docs/SHAMAN_RUN_REVIEW.md`; no additional external artwork was imported.

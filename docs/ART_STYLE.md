@@ -100,11 +100,15 @@ check idle/stride/junction transitions in the actual game, not just static PNGs.
 
 ## Natural walking (shaman and sheep)
 
-- Shaman walks at **8 FPS** using all six authored lower-leg poses, but a
-  fixed original torso/head/staff, composed identically in both facing rows
-  by `scripts/natural-walk.mjs`. No artificial sprite scaling, whole-body hop,
-  smooth interpolation, or changing feet/hitboxes. Source compiler and registry
-  must always agree; attacks/healing remain untouched.
+- Shaman walks at **12 FPS** through six individually painted full poses in
+  each facing row. `art/generated-source/expansion/shaman-run.png` is the
+  reviewed native 1152×384 source; `scripts/natural-walk.mjs` copies it without
+  transforms into both production paths. Its editable pixel layers and
+  preserved upper-body pixels are alongside it. Never mirror, shift or crop
+  old boots to manufacture new steps. Frames 1/4 plant opposite legs; frames
+  2/5 release the other heel; frames 3/6 pass the bent swing leg. The rear
+  uses separately painted heels. Keep 192px cells, [96,132] feet and [32,24]
+  hitboxes. Face, beard, bun, robe, arms and staff retain authored motion.
 - Sheep have an **independent eight-frame stepping sheet** from
   `scripts/sheep-art.mjs` (`sheep-walk.png`), which alternates two genuine
   moving hoof regions while fixing the original fleece, head and body.
@@ -116,11 +120,9 @@ check idle/stride/junction transitions in the actual game, not just static PNGs.
 
 ## Knight-reference gait and companion combat focus
 
-- **Shaman walking:** like native Tiny Swords `Warrior_Run.png`, use
-  **six complete poses at 12 FPS**. Retain animated head, staff, cloak and legs;
-  never freeze the upper half while animating only the lower half. Normalize
-  tiny source-art horizontal torso drift within two original pixels while
-  preserving the full 192×192 frame and grounding. See `scripts/natural-walk.mjs`.
+- **Shaman walking:** use native `Warrior_Run.png` as the six-phase movement
+  reference at 12 FPS. Do not freeze the torso or normalize individual poses
+  during compilation. See the authored source and `docs/SHAMAN_RUN_REVIEW.md`.
 - **Skeleton combat:** once engaged, a skeleton keeps its live enemy target
   even when Nobby moves far away. Never replace it with a nearer target
   while still alive and within the bounded per-skeleton `leash`. Acquire
@@ -128,18 +130,11 @@ check idle/stride/junction transitions in the actual game, not just static PNGs.
   Follow the owner only when no valid combat target remains. Neutral animals,
   other players, friendly skeletons and unreachable tiles are never targets.
 
-### Alternating shaman foot plants (correcting the fixed-right-leg bug)
+### Authored shaman gait regression coverage
 
-Frame count and 12 FPS are **not** evidence of walking if the generated art
-always shows the same leading leg. `scripts/shaman-gait.mjs` provides an
-explicit right / right / passing / left / left / passing cycle for the shaman's
-boots, with alternating grounded versus lifted foot. The full upper-body
-animation, beard, bun, robe, staff, native 192×192 cells and 12 FPS cadence
-are preserved. Only lower boot pixels are mirrored and shifted by a few native
-pixels; original authored sprite sheets are untouched.
-
-The separate `test/shaman-gait.test.mjs` includes a synthetic two-leg
-fixture verifying which foot actually touches the ground in both facing rows
-and checks that generated real sprites do not reuse one leg silhouette for all
-six frames. Review the new sprite and actual gameplay visually as well,
-because formal image checks alone cannot certify aesthetic quality.
+Frame count, FPS and changed pixels do not prove alternating legs. The tests
+inspect independently reviewed visible toe/sole coordinates in the real game
+PNG, test lifted versus grounded feet in both views, reject a deliberately
+repeated leading-leg cycle, check boot separation and check the 6→1 wrap.
+Open `artifacts/shaman-run/index.html` for the animated side-by-side reference
+and inspect actual movement screenshots before accepting future edits.

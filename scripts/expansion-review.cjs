@@ -5,7 +5,7 @@ const ensureDevServer=require('./ensure-dev-server.cjs')
 ;(async()=>{
  const stop=await ensureDevServer()
  let browser
- const output='artifacts/expansion'
+ const output=process.env.NOBBY_ARTIFACT_DIR||'artifacts/expansion'
  fs.mkdirSync(output,{recursive:true})
  const report={checks:[],errors:[],missing:[]}
  try{

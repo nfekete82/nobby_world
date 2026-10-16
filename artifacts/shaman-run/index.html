@@ -1,0 +1,8 @@
+<!doctype html><meta charset="utf-8"><title>Shaman gait review</title>
+<style>body{background:#364049;color:#fff;font:16px system-ui}img{image-rendering:pixelated;max-width:100%}.row{display:flex;gap:24px}.sprite{width:192px;height:192px;background-repeat:no-repeat;image-rendering:pixelated;animation:run .5s steps(6) infinite;zoom:2;background-color:#424a53}.rear{background-position-y:-192px}@keyframes run{to{background-position-x:-1152px}}button{padding:8px}</style>
+<h1>Shaman: hand-painted six-phase run</h1><p>12 FPS, native 192px cells; frames 1–6 left to right. Row 1 front, row 2 rear. Fixed anchor [96,132].</p>
+<button onclick="document.querySelectorAll('.sprite').forEach(s=>s.style.animationPlayState=s.style.animationPlayState==='paused'?'running':'paused')">Pause / resume</button>
+<div class="row"><div><h2>Front</h2><div class="sprite" style="background-image:url(../../public/tiny-swords/biomes/shaman-natural-walk.png)"></div></div><div><h2>Rear</h2><div class="sprite rear" style="background-image:url(../../public/tiny-swords/biomes/shaman-natural-walk.png)"></div></div><div><h2>Native warrior</h2><div class="sprite" style="background-image:url(../../public/tiny-swords/Units/Red%20Units/Warrior/Warrior_Run.png)"></div></div></div>
+<p>Contact R · support R · left passing · contact L · support L · right passing → contact R</p>
+<img src="shaman-frames-3x.png"><h2>Native movement reference</h2><img src="knight-frames-3x.png">
+<p>Persistent limb colours in the authored pixel source: turquoise trousers, brown leather, dark soles. Rear follows the same leg identities.</p>
