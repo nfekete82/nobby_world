@@ -156,11 +156,11 @@ export class AssetEditor{
   const layout=el('div','ae-editor-layout'),main=el('div','ae-preview-column');main.append(this.buttons,label('Direkter Vergleich',compare),this.stage,this.timeline)
   layout.append(main,this.details)
   this.detail.append(title)
-  if(!import.meta.env.DEV)this.detail.append(el('p','ae-readonly-note','Nur Vorschau: Port 8088 ist schreibgeschützt. Zum Bearbeiten den lokalen Entwicklungseditor auf Port 5173 starten.'))
+  if(!import.meta.env.DEV)this.detail.append(el('p','ae-readonly-note','Nur Vorschau: Port 8088 ist schreibgeschützt. Zum Bearbeiten die lokale Nobby-World-Studio-Version auf Port 8088 verwenden.'))
   if(this.draft.loadProblems?.length)this.detail.append(el('p','ae-load-warning','Nicht alle Animationen konnten geladen werden: '+this.draft.loadProblems.join(' · ')))
   this.detail.append(scopeNotice,this.tabs,layout,this.usage)
   this.renderTimeline();void this.draw()
-  if(!import.meta.env.DEV){for(const control of [...actions.querySelectorAll('button'),...this.details.querySelectorAll('input,select,button'),scope] as (HTMLInputElement|HTMLButtonElement|HTMLSelectElement)[])control.disabled=true;this.message('Schreibgeschützte Spielversion · Bearbeiten im lokalen Editor auf localhost:5173')}
+  if(!import.meta.env.DEV){for(const control of [...actions.querySelectorAll('button'),...this.details.querySelectorAll('input,select,button'),scope] as (HTMLInputElement|HTMLButtonElement|HTMLSelectElement)[])control.disabled=true;this.message('Schreibgeschützte Spielversion · Bearbeiten im lokalen Nobby World Studio auf localhost:8088')}
  }
  private required(){const base=this.catalog.assets.find((a:any)=>a.id===(this.draft.asset.editorBaseId||this.id));return base?.protected?Object.keys(base.definition.animations):['stand',...(this.draft.asset.kind==='actor'?['walk']:[])]}
  private renderMetadata(){
@@ -225,7 +225,7 @@ export class AssetEditor{
  private addAnimation(){if(this.draft.asset.kind==='terrain'){this.message('Gelände verwendet feste Kachelindizes.');return}const key=prompt('Animations-ID (z. B. cast, summon):','cast');if(!key)return;if(this.draft.asset.animations[key]){this.message('Animation existiert bereits');return}this.draft.asset.animations[key]=clone(this.current());this.draft.asset.animations[key].userEdited=true;this.state=key;this.frame=0;this.changed();this.render()}
  private deleteAnimation(){if(this.required().includes(this.state))return;if(!confirm('Animation '+this.state+' entfernen? Bilder bleiben in der Versionshistorie.'))return;delete this.draft.asset.animations[this.state];this.state='stand';this.frame=0;this.changed();this.render()}
  private async importFiles(files:File[],mode:string,rows?:number){
-  if(!import.meta.env.DEV){this.message('Schreibgeschützte Spielversion. Import im lokalen Editor auf localhost:5173.');return}
+  if(!import.meta.env.DEV){this.message('Schreibgeschützte Spielversion. Import im lokalen Nobby World Studio auf localhost:8088.');return}
   if(!this.draft){this.message('Zuerst ein Asset wählen oder anlegen.');return}
   try{
    if(files.length>256||files.some(f=>f.size>12*1024*1024)||files.reduce((n,f)=>n+f.size,0)>16*1024*1024)throw Error('Zu viele oder zu große Dateien. Maximal 12 MB je Datei und 16 MB insgesamt.');
@@ -262,7 +262,7 @@ export class AssetEditor{
  }
  async save(){
   if(this.saving||!this.draft)return
-  if(!this.client.writable){this.message('Schreibgeschützt: nur die lokale Mac-Vorschau kann speichern.');return}
+  if(!this.client.writable){this.message('Schreibgeschützt: nur das lokale Nobby World Studio kann speichern.');return}
   if(!this.dirty){this.message('Gespeichert · keine Änderungen.');return}
   if(this.scope==='global'&&this.draft.protected&&!this.pending&&!confirm('Diese Änderungen gelten für ALLE Instanzen von '+this.id+'. Als eigene Bearbeitung speichern? Originaldateien bleiben erhalten.'))return
   if(this.scope==='variant'&&!this.pending){

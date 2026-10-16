@@ -35,6 +35,11 @@ test('HTTP authority/session/read-only protection, malformed/aborted/oversized r
  const request=(route,body={},headers={})=>new Promise((resolve,reject)=>{const req=http.request({hostname:'127.0.0.1',port,path:'/__nobby-editor/'+route,method:'POST',headers:{host:'127.0.0.1:5173',origin:'http://127.0.0.1:5173','x-nobby-editor':'local-authoring',...headers}},res=>{let text='';res.on('data',c=>text+=c);res.on('end',()=>resolve({status:res.statusCode,body:JSON.parse(text)}))});req.on('error',reject);req.end(typeof body==='string'?body:JSON.stringify(body))})
  try{
   assert.equal((await request('session',{}, {origin:'https://evil.invalid'})).status,403);assert.equal((await request('save')).status,403)
+  assert.equal((await request('session',{}, {host:'127.0.0.1:8088',origin:'http://127.0.0.1:8088'})).status,200,'Studio session on port 8088')
+  assert.equal((await request('session',{}, {host:'localhost:8088',origin:'http://localhost:8088'})).status,200,'localhost studio session')
+  assert.equal((await request('session',{}, {host:'localhost:8088',origin:'http://127.0.0.1:8088'})).status,403,'mixed Host/Origin rejected')
+  assert.equal((await request('session',{}, {host:'evil.example:8088',origin:'http://evil.example:8088'})).status,403,'remote authority rejected')
+  assert.equal((await request('session',{}, {host:'127.0.0.1:9999',origin:'http://127.0.0.1:9999'})).status,403,'unregistered port rejected')
   const token=(await request('session')).body.token,h={'x-nobby-editor-token':token}
   assert.equal((await request('save','{',h)).status,422)
   assert.equal((await request('save',{id:'simplemap',original:simpleMap(),updated:simpleMap(1)},h)).status,200)

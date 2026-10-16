@@ -1,7 +1,7 @@
 # Karten, Grafiken und Animationen bearbeiten
 
-Die lokale Vorschau über `Spielvorschau.command` bzw. `npm run dev` auf
-http://localhost:5173 starten. **Esc → Karteneditor → Grafiken & Animationen**.
+Das lokale Studio mit `Spielvorschau.command` oder `docker compose up -d game`
+auf http://localhost:8088 starten. **Esc → Karteneditor → Grafiken & Animationen**.
 Im Karteneditor führt **Grafiken bearbeiten** direkt zum ausgewählten Objekt;
 auch der Spieler lässt sich über seine sichtbare Figur auswählen. Ohne Auswahl
 führt **Spieler-Grafiken bearbeiten** zur aktiven Klasse.
@@ -142,12 +142,12 @@ Backups und unveränderliche Revisionen bleiben deshalb erhalten.
 ## Zugriff und Tests
 
 Die API akzeptiert ausschließlich POST mit passendem Host **und** Origin auf
-localhost/127.0.0.1:5173, Editor-Header und zufälligem Sitzungstoken. Pfade werden
+localhost/127.0.0.1:8088 (historischer Testport 5173 weiterhin zulässig), Editor-Header und zufälligem Sitzungstoken. Pfade werden
 serverseitig bestimmt, Traversal und Symlinks abgelehnt. SVG und ausführbare
-Dateien erreichen keinen Bilddecoder. Die produktive Spielversion hat keine
-Schreib-API und zeigt die Bibliothek schreibgeschützt aus dem erzeugten Katalog.
-Das optionale Docker-Editorprofil setzt `NOBBY_EDITOR_READ_ONLY=1`; schreibender
-Containerbetrieb benötigt künftig eine eigene Authentifizierung.
+Dateien erreichen keinen Bilddecoder. Der separate Nginx-Produktionsbuild hat keine Schreib-API. Das lokale Docker-
+Studio auf 127.0.0.1:8088 liefert Vite und Editor-API aus derselben Mac-
+Arbeitskopie. Port 5173 und das frühere Editorprofil sind für den normalen
+Betrieb nicht mehr nötig. Nicht ins LAN/Internet oder per Reverse Proxy freigeben.
 
 `npm run test:web-editor` erstellt immer eine komplette temporäre Projektkopie,
 benutzt einen separaten Testport (Standard 5197) und entfernt sie anschließend.

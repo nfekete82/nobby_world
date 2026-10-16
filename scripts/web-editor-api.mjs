@@ -101,7 +101,9 @@ export function createEditorApi({rootDir=root,compile,refresh,bodyTimeout=15000,
  return async function editorApi(req,res,next){
   if(!req.url?.startsWith('/__nobby-editor/'))return next()
   const host=String(req.headers.host||''),origin=req.headers.origin
-  if(!/^(localhost|127\.0\.0\.1):5173$/.test(host)||!['http://localhost:5173','http://127.0.0.1:5173'].includes(origin)||req.headers['x-nobby-editor']!=='local-authoring')return reply(res,403,{error:'Bearbeitung nur im autorisierten lokalen Editor auf localhost:5173 erlaubt.'})
+  // Host and Origin must match; never allow an off-machine or proxied authority.
+  const localAuthority=/^(?:localhost|127\.0\.0\.1):(?:8088|5173)$/
+  if(!localAuthority.test(host)||origin!==`http://${host}`||req.headers['x-nobby-editor']!=='local-authoring')return reply(res,403,{error:'Bearbeitung nur in Nobby World Studio auf localhost:8088 erlaubt.'})
   if(req.method!=='POST')return reply(res,405,{error:'Nur POST erlaubt'})
   const route=req.url.slice('/__nobby-editor/'.length)
   if(route==='session'){const token=randomUUID();tokens.add(token);return reply(res,200,{token,writable:!readOnly,capabilities:['assets','animations','backups','trash']})}

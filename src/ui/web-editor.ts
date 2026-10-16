@@ -110,8 +110,8 @@ class MapEditor {
  private stage=elt<HTMLElement>('div','we-stage')
  private staticNotice=elt<HTMLElement>('div','we-static-notice',
   import.meta.env.DEV
-   ? 'Live-Editor aktiv (localhost:5173): Änderungen werden direkt in die TMX-Projektdateien gespeichert.'
-   : 'Fertige Spielversion: direkte Kartenbearbeitung nicht verfügbar. Bitte TMX exportieren oder den OrbStack-Editor auf localhost:5173 öffnen.')
+   ? 'Nobby World Studio aktiv: Änderungen werden direkt in die TMX-Projektdateien gespeichert.'
+   : 'Schreibgeschützte Vorschau: Bitte das lokale Nobby World Studio auf localhost:8088 starten oder TMX exportieren.')
  constructor(private engine:any){
   this.root.setAttribute('role','dialog');this.root.setAttribute('aria-modal','true')
   this.root.setAttribute('aria-label','Nobby World Karteneditor')
