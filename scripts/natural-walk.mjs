@@ -68,7 +68,8 @@ export function ensureNaturalShamanWalk(){
   throw Error('Source shaman animation sprites missing')
  fs.mkdirSync(path.dirname(naturalOutput),{recursive:true})
  const newest=Math.max(fs.statSync(standSource).mtimeMs,fs.statSync(walkSource).mtimeMs,
-  fs.statSync(fileURLToPath(import.meta.url)).mtimeMs)
+  fs.statSync(fileURLToPath(import.meta.url)).mtimeMs,
+  fs.statSync(new URL('./shaman-gait.mjs',import.meta.url)).mtimeMs)
  if(fs.existsSync(naturalOutput)&&fs.statSync(naturalOutput).mtimeMs>=newest)return
  const standing=PNG.sync.read(fs.readFileSync(standSource))
  const walking=PNG.sync.read(fs.readFileSync(walkSource))
