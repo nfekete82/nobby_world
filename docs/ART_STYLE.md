@@ -127,3 +127,19 @@ check idle/stride/junction transitions in the actual game, not just static PNGs.
   another authored hostile when a target dies or leaves the permitted radius.
   Follow the owner only when no valid combat target remains. Neutral animals,
   other players, friendly skeletons and unreachable tiles are never targets.
+
+### Alternating shaman foot plants (correcting the fixed-right-leg bug)
+
+Frame count and 12 FPS are **not** evidence of walking if the generated art
+always shows the same leading leg. `scripts/shaman-gait.mjs` provides an
+explicit right / right / passing / left / left / passing cycle for the shaman's
+boots, with alternating grounded versus lifted foot. The full upper-body
+animation, beard, bun, robe, staff, native 192×192 cells and 12 FPS cadence
+are preserved. Only lower boot pixels are mirrored and shifted by a few native
+pixels; original authored sprite sheets are untouched.
+
+The separate `test/shaman-gait.test.mjs` includes a synthetic two-leg
+fixture verifying which foot actually touches the ground in both facing rows
+and checks that generated real sprites do not reuse one leg silhouette for all
+six frames. Review the new sprite and actual gameplay visually as well,
+because formal image checks alone cannot certify aesthetic quality.
