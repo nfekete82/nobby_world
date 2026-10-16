@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import {ensureUserAssetRegistry} from './user-assets.mjs'
 import path from 'node:path'
 import { PNG } from 'pngjs'
 import { ensureBiomeProps } from './biome-props.mjs'
@@ -183,5 +184,5 @@ for(const asset of Object.values(assets))for(const state of Object.values(asset.
  state.visibleBounds=Array.from({length:state.frames},(_,i)=>bounds(p,i*fw,0,fw,fh))
 }
 fs.mkdirSync('src/art',{recursive:true})
-fs.writeFileSync('src/art/registry.json',JSON.stringify(compileExpansionArt({version:1,tileSize:64,pixelScale:1,actorHitbox:[32,24],palette:{outline:'#293544',grass:'#8ba86e',water:'#448f97',earth:'#d2ad65',cream:'#eee2c3',blue:'#487fa8'},assets,generation}),null,2)+'\n')
+ensureUserAssetRegistry(root,{baseRegistry:compileExpansionArt({version:1,tileSize:64,pixelScale:1,actorHitbox:[32,24],palette:{outline:'#293544',grass:'#8ba86e',water:'#448f97',earth:'#d2ad65',cream:'#eee2c3',blue:'#487fa8'},assets,generation})})
 console.log(`Art registry: ${Object.keys(assets).length} assets, fixed native frames, binary alpha, compiled pack UI and terrain.`)

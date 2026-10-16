@@ -1,3 +1,4 @@
+import {assetCatalog} from './editor-assets.mjs'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -9,10 +10,11 @@ import { ensureMossWater } from './moss-water.mjs'
 import { ensureBiomeProps } from './biome-props.mjs'
 import { makePastureMask } from '../src/wildlife/sheep-ai.mjs'
 import { ensureSheepGraze, ensureSheepWalk } from './sheep-art.mjs'
+import {ensureUserAssetRegistry} from './user-assets.mjs'
 import { ensureNaturalShamanWalk } from './natural-walk.mjs'
 
 export const projectRoot=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..')
-const art=JSON.parse(fs.readFileSync(path.join(projectRoot,'src/art/registry.json'),'utf8'))
+const art=ensureUserAssetRegistry(projectRoot)
 const list=value=>value==null?[]:Array.isArray(value)?value:[value]
 const attrs=node=>node?._attributes??{}
 const properties=node=>Object.fromEntries(list(node?.properties?.property).map(p=>[attrs(p).name,attrs(p).value??p._text??'']))
@@ -24,8 +26,8 @@ const number=(value,fallback,min,max,label)=>{
 }
 const safeId=value=>/^[a-zA-Z0-9_-]+$/.test(value)
 
-export function readWorld(file){
-  const map=read(file).map,ma=attrs(map),mp=properties(map)
+export function readWorld(file,{content}={}){
+  const map=(content===undefined?read(file):xml.xml2js(content,{compact:true})).map,ma=attrs(map),mp=properties(map)
   if(mp.nobbyWorld!=='true'&&mp.nobbyWorld!==true)return null
   const id=path.basename(file,'.tmx');if(!safeId(id))throw Error(`${id}: ungültiger Kartenname`)
   if(ma.orientation!=='orthogonal'||ma.infinite==='1')throw Error(`${id}: endliche orthogonale Karte erforderlich`)
@@ -62,6 +64,10 @@ export function readWorld(file){
         o.vision=number(p.vision,130,32,1000,`${id}/${a.id} Sichtweite`)
       }
       if(kind==='npc')o.text=p.text||'Hallo, Nobby!'
+      if(['npc','monster'].includes(kind)&&p.asset){
+        if(!art.assets[p.asset]||art.assets[p.asset].kind!=='actor')throw Error(`${id}/${a.id}: unbekannte Charaktergrafik ${p.asset}`)
+        o.asset=p.asset
+      }
       if(kind==='portal'){o.target=p.target||'';if(!safeId(o.target))throw Error(`${id}/${a.id}: Zielkarte fehlt`)}
       if(kind==='prop'){
         o.asset=p.asset||'tree-oak'
@@ -119,8 +125,9 @@ function buildNavigation(world,map,directory){
   return {cell,cols,rows,blocked:Buffer.from(bits).toString('hex')}
 }
 
-export function compileWorlds({writeOutput=true,sourceDirectory=path.join(projectRoot,'src/tiled')}={}){
+export function compileWorlds({writeOutput=true,sourceDirectory=path.join(projectRoot,'src/tiled'),overrides={},prepareArt=true}={}){
   // Generate derived Tiled images before Vite and validation resolve their TSX paths.
+  if(prepareArt){
   ensureDarkerGrass()
   preparePathArt()
   ensureBiomeTerrain()
@@ -129,10 +136,12 @@ export function compileWorlds({writeOutput=true,sourceDirectory=path.join(projec
   ensureSheepGraze()
   ensureSheepWalk()
   ensureNaturalShamanWalk()
+  }
   const directory=sourceDirectory
-  const worlds=fs.readdirSync(directory).filter(f=>f.endsWith('.tmx')).sort().map(f=>readWorld(path.join(directory,f))).filter(Boolean)
+  const worlds=fs.readdirSync(directory).filter(f=>f.endsWith('.tmx')).sort().map(f=>{const file=path.join(directory,f);return readWorld(file,{content:overrides[file]})}).filter(Boolean)
   for(const w of worlds){
-    const map=read(path.join(directory,w.id+'.tmx')).map
+    const filename=path.join(directory,w.id+'.tmx')
+    const map=(overrides[filename]===undefined?read(filename):xml.xml2js(overrides[filename],{compact:true})).map
     w.navigation=buildNavigation(w,map,directory)
     // Sheep may roam only on visibly grassy, collision-free land (not paths,
     // water, sand, snow or rocky ground). This mask follows user-edited maps.
@@ -160,8 +169,9 @@ export function compileWorlds({writeOutput=true,sourceDirectory=path.join(projec
   if(!worlds.some(w=>w.id==='simplemap'))throw Error('Startkarte simplemap fehlt')
   for(const w of worlds)for(const o of w.objects)if(o.kind==='portal'&&!worlds.some(t=>t.id===o.target))throw Error(`${w.id}/${o.id}: Zielkarte ${o.target} existiert nicht`)
   const output=path.join(projectRoot,'src/generated/worlds.json'),content=JSON.stringify(worlds,null,2)+'\n'
-  fs.mkdirSync(path.dirname(output),{recursive:true})
+  if(writeOutput)fs.mkdirSync(path.dirname(output),{recursive:true})
   if(writeOutput&&(!fs.existsSync(output)||fs.readFileSync(output,'utf8')!==content))fs.writeFileSync(output,content)
+  if(writeOutput&&prepareArt){const file=path.join(projectRoot,'public/editor-catalog.json'),text=JSON.stringify(assetCatalog(projectRoot));if(!fs.existsSync(file)||fs.readFileSync(file,'utf8')!==text)fs.writeFileSync(file,text)}
   return worlds
 }
 

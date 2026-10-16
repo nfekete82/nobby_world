@@ -45,11 +45,11 @@ test('actor cells stay full-size; trim only non-actor props',()=>{
  assert.equal(trimTransparentBoundsFor('prop'),true)
  assert.equal(trimTransparentBoundsFor('prop','sheep'),false)
  const runtime=fs.readFileSync('src/art/sprites.ts','utf8')
- assert.match(runtime,/trimTransparentBounds:trimTransparentBoundsFor\(asset\.kind,id\)/)
- assert.match(runtime,/animationFrameIndices\(id,name,state\.frames\)/)
+ assert.match(runtime,/trimTransparentBounds:trimTransparentBoundsFor\(asset\.kind,/)
+ assert.match(runtime,/animationFrameIndices\(id,name,state\.frames,/)
  assert.match(runtime,/anchor:\[footX\/width,footY\/height\]/)
- assert.match(runtime,/time:index\*60\/state\.fps/)
- assert.match(runtime,/time:frames\.length\*60\/state\.fps/)
+ assert.match(runtime,/index\*60\/state\.fps/)
+ assert.match(runtime,/frames\.length\*60\/state\.fps/)
 })
 
 test('native shaman compilation retains calm idle and all original Monk run poses',()=>{

@@ -21,6 +21,8 @@ services:
     restart: unless-stopped
     init: true
     working_dir: /app
+    environment:
+      NOBBY_EDITOR_READ_ONLY: "1"
     ports:
       - "127.0.0.1:5173:5173"
     volumes:

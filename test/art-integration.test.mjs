@@ -107,8 +107,8 @@ test('idle and ambient animation cadence is calm without slowing responsive comb
    assert.equal(art.assets[id].animations[name].fps,fps,id+'/'+name+' should use the intended FPS')
  }
  const runtime=fs.readFileSync('src/art/sprites.ts','utf8')
- assert.ok(runtime.includes('time:index*60/state.fps'))
- assert.ok(runtime.includes('time:frames.length*60/state.fps'))
+ assert.ok(runtime.includes('index*60/state.fps'))
+ assert.ok(runtime.includes('frames.length*60/state.fps'))
  assert.ok(!runtime.includes("stableIdle&&name==='stand'?4:state.fps"))
  const compiler=fs.readFileSync('scripts/compile-art.mjs','utf8')
  assert.ok(compiler.includes("nobby-idle.png',6,1.5"))

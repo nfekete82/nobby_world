@@ -11,7 +11,7 @@ const registry = json('src/art/registry.json')
 const manifest = json('art/style-references.json')
 const escape = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
 const cards = manifest.references.map(ref => {
-  const asset = registry.assets[ref.id], [width,height] = asset.frame
+  const asset = registry.assets[ref.id]?.editorManaged ? json('art/registry-base.json').assets[ref.id] : registry.assets[ref.id], [width,height] = asset.frame
   const image = asset.animations.stand.image
   const label = ref.origin === 'pack' ? 'NATIVE STYLE MASTER' : 'APPROVED EXTENSION'
   // Embed a real first-frame PNG. Gallery remains usable when downloaded from CI alone.

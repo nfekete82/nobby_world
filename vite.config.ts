@@ -2,11 +2,12 @@ import { defineConfig } from 'vite';
 import { rpgjs, tiledMapFolderPlugin } from '@rpgjs/vite';
 import startServer from './src/server';
 import { compileWorlds } from './scripts/world-data.mjs';
-import { editorApi, ignoreEditorFileChange } from './scripts/web-editor-api.mjs';
+import { editorApi, ignoreEditorFileChange, editorIsActive } from './scripts/web-editor-api.mjs';
 
 compileWorlds();
 
 export default defineConfig({
+  cacheDir: process.env.NOBBY_EDITOR_FIXTURE ? ".vite-editor-fixture" : "node_modules/.vite",
   optimizeDeps: {
     include: ['pixi.js > @xmldom/xmldom']
   },
@@ -23,7 +24,19 @@ export default defineConfig({
         if (ignoreEditorFileChange(ctx.file)) return [];
       },
       configureServer(server) {
+        // Runtime JSON is data, not server configuration. Vite otherwise restarts
+        // before hotUpdate hooks run, dropping in-flight saves and session tokens.
+        server.config.configFileDependencies=server.config.configFileDependencies.filter(file=>
+          !file.endsWith('/src/art/registry.json')&&!file.endsWith('/src/generated/worlds.json'));
         server.middlewares.use(editorApi);
+        // Neither Vite nor framework plugins may reload an open editor and
+        // discard its draft. The user's explicit refresh is the publication boundary.
+        const send=server.ws.send.bind(server.ws);
+        server.ws.send=((...args:any[])=>{
+          const event=args[0];
+          if(editorIsActive()&&event&&typeof event==='object'&&['full-reload','update'].includes(event.type))return;
+          return (send as any)(...args);
+        }) as any;
         const reload=(file: string)=>{
           if(!file.endsWith('.tmx')&&!file.endsWith('.tx'))return;
           if (ignoreEditorFileChange(file)) return;

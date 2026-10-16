@@ -8,3 +8,6 @@ artifacts
 .tools
 *.command
 art/map-backups
+
+art/editor-history
+.vite-editor-fixture
