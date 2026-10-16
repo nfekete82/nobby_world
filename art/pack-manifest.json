@@ -127,6 +127,14 @@
     {
       "file": "Units/Red Units/Warrior/Warrior_Run.png",
       "sha256": "74b9d13a4b57f75a048cb42af35ef5c0a20791f67a9b03f9e93c72790dbe2948"
+    },
+    {
+      "file": "Units/Blue Units/Monk/Run.png",
+      "sha256": "f7cdcef69ad17e9677bbf0b288b416cfd86ae0231f625a16c10000ec8ea375e6"
+    },
+    {
+      "file": "Units/Blue Units/Monk/Heal.png",
+      "sha256": "6620f483dcde826628e1754b57445b2fa4c36c077bac3fa1c6b3d828e55fbde5"
     }
   ]
 }

@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { PNG } from 'pngjs'
-import { ensureNaturalShamanWalk, WALK_CADENCE_FPS } from './natural-walk.mjs'
+import {ensureNativeShaman} from './native-shaman.mjs'
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..')
 const read=p=>PNG.sync.read(fs.readFileSync(path.join(root,p)))
@@ -166,7 +166,7 @@ function compileBuildings(registry){
  }
 }
 export const EXPANSION_ACTORS={
- shaman:{rows:6,height:70,states:{stand:[0,6,0.5],walk:[1,6,WALK_CADENCE_FPS],attack:[2,6,16],heal:[3,6,9],hit:[4,2,10],death:[4,4,8,2]}},
+ shaman:{native:true},
  skeleton:{rows:6,height:66,states:{stand:[0,6,4],walk:[1,6,10],attack:[2,6,16],spawn:[3,6,9],hit:[4,2,10],death:[4,4,8,2]}},
  'desert-scorpion':{rows:4,height:57,states:{stand:[0,6,4],walk:[1,6,10],attack:[2,6,14],hit:[3,2,10],death:[3,4,8,2]}},
  'desert-serpent':{rows:4,height:74,states:{stand:[0,6,4],walk:[1,6,10],attack:[2,6,14],hit:[3,2,10],death:[3,4,8,2]}},
@@ -176,6 +176,7 @@ export const EXPANSION_ACTORS={
  * One scale per atlas, nearest sampling, stable native 192px actor frames. */
 export function compileExpansionArt(registry){
  for(const [id,spec] of Object.entries(EXPANSION_ACTORS)){
+  if(id==='shaman'){ensureNativeShaman(registry);continue}
   const source=`art/generated-source/expansion/${id}.png`
   if(!fs.existsSync(path.join(root,source)))continue
   const rows=rowSlices(read(source),spec.rows,6),cw=Math.floor(rows[0].width/6)
@@ -217,17 +218,8 @@ export function compileExpansionArt(registry){
    write('public/'+image,out)
    animations[name]={image,frames:count,fps,visibleBounds,...(directional?{rows:2}:{})}
   }
-  if(id==='shaman'){
-   ensureNaturalShamanWalk()
-   const image='tiny-swords/biomes/shaman-natural-walk.png'
-   const calm=read('public/'+image)
-   animations.walk.image=image
-   animations.walk.visibleBounds=Array.from({length:animations.walk.frames},(_,i)=>
-    bounds(calm,i*192,0,192,192))
-  }
   registry.assets[id]={kind:'actor',frame:[192,192],foot:[96,132],hitbox:[32,24],directional:true,animations}
-  registry.generation[id]={source,scale,footPixels:Array.from({length:6},()=>[96,132]),
-   ...(id==='shaman'?{walkSource:'art/generated-source/expansion/shaman-run.png'}:{})}
+  registry.generation[id]={source,scale,footPixels:Array.from({length:6},()=>[96,132])}
  }
  compileProps(registry)
  compileBuildings(registry)

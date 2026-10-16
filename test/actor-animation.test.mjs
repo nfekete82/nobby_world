@@ -2,6 +2,8 @@ import {test} from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import {animationFrameIndices,trimTransparentBoundsFor,STABLE_IDLE_FRAMES} from '../src/art/animation-policy.mjs'
+import {NATIVE_SHAMAN_STATES} from '../scripts/native-shaman.mjs'
+import {PNG} from 'pngjs'
 import registry from '../src/art/registry.json' with {type:'json'}
 
 test('all playable classes and skeletons have calm, fixed-foot standing sequences',()=>{
@@ -11,7 +13,14 @@ test('all playable classes and skeletons have calm, fixed-foot standing sequence
   assert.deepEqual(actor.frame,[192,192])
   assert.deepEqual(actor.foot,[96,132])
   assert.deepEqual(animationFrameIndices(id,'stand',idle.frames),indices)
-  const centers=indices.map(i=>(idle.visibleBounds[i][0]+idle.visibleBounds[i][2])/2)
+  // A long staff changes the silhouette envelope, not the body's anchor.
+  const png=id==='shaman'?PNG.sync.read(fs.readFileSync('public/'+idle.image)):null
+  const centers=indices.map(i=>{
+   if(!png)return (idle.visibleBounds[i][0]+idle.visibleBounds[i][2])/2
+   let sum=0,n=0
+   for(let y=118;y<=125;y++)for(let x=70;x<=123;x++)if(png.data[(y*png.width+i*192+x)*4+3]){sum+=x;n++}
+   return sum/n
+  })
   assert.ok(Math.max(...centers)-Math.min(...centers)<=2,id+' shifts horizontally between standing poses')
   assert.ok(centers.every(x=>Math.abs(x-actor.foot[0])<=3),id+' off-center standing pose')
  }
@@ -43,7 +52,9 @@ test('actor cells stay full-size; trim only non-actor props',()=>{
  assert.match(runtime,/time:frames\.length\*60\/state\.fps/)
 })
 
-test('recompiling authored shaman art retains the corrected calm idle rate',()=>{
+test('native shaman compilation retains calm idle and all original Monk run poses',()=>{
+ assert.equal(NATIVE_SHAMAN_STATES.stand.fps,0.5)
+ assert.deepEqual(NATIVE_SHAMAN_STATES.walk.poses,[0,1,2,3])
  const source=fs.readFileSync('scripts/expansion-art.mjs','utf8')
- assert.match(source,/shaman:\{rows:6,height:70,states:\{stand:\[0,6,0\.5\]/)
+ assert.match(source,/if\(id==='shaman'\)\{ensureNativeShaman\(registry\);continue\}/)
 })

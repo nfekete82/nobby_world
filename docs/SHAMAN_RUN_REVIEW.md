@@ -1,4 +1,9 @@
-# Schamanen-Laufzyklus – Review vom 16. Oktober 2026
+# Historisch: Schamanen-Laufzyklus – Review vom 16. Oktober 2026
+
+Die folgenden zwei Entwürfe wurden visuell vom Nutzer abgelehnt und ersetzt.
+Der aktuelle Aufbau verwendet die originalen Monk-Lauf-/Zauberposen; siehe
+[aktuellen Review](SHAMAN_NATIVE_MONK_REBUILD.md). Frühere PNG-/GIF-Nachweise
+bleiben zur Nachvollziehbarkeit erhalten.
 
 Der aktive Laufzyklus verwendet vollständig gezeichnete Beinposen statt des
 bisherigen Knöchel-Spiegelpatches. Die beiden Kontaktposen zeigen jetzt sichtbar

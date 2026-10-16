@@ -32,6 +32,10 @@ export function checkArtDirection() {
 
   const anchored = new Set()
   const originals = new Map(pack.retained.map(entry => [entry.file,entry.sha256]))
+  // Also guard newly recovered native animation inputs, not just gallery cards.
+  for(const entry of pack.retained)
+    assert.equal(createHash('sha256').update(read('public/tiny-swords/'+entry.file)).digest('hex'),
+      entry.sha256,`Native pack input altered: ${entry.file}`)
   let native = 0, authored = 0
 
   for (const ref of refs.references) {

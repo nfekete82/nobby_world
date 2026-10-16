@@ -1,0 +1,8 @@
+# Intermediate full cells and local browser recordings; reviewed evidence stays tracked.
+shaman-[01]-[0-5].png
+knight-0-[0-5].png
+video/
+style-reference-browser.png
+expansion/*
+!expansion/report.json
+monk-0-[0-3].png
