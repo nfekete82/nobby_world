@@ -16,7 +16,7 @@ test('all playable classes and skeletons have calm, fixed-foot standing sequence
   assert.ok(centers.every(x=>Math.abs(x-actor.foot[0])<=3),id+' off-center standing pose')
  }
  assert.equal(registry.assets.shaman.animations.stand.fps,0.5)
- assert.equal(registry.assets.shaman.animations.walk.fps,8)
+ assert.equal(registry.assets.shaman.animations.walk.fps,12)
 })
 
 test('walk and all combat, casting and summoning frames stay complete',()=>{

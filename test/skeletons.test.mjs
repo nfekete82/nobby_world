@@ -147,3 +147,56 @@ test('navigation rejects water and enclosed spawn positions; attack cannot pass 
  f.nav.bits[index>>3]|=1<<(index&7)
  f.control.tick(2000);assert.equal(f.hits.length,0)
 })
+
+test('engaged skeleton keeps attacking its chosen enemy after owner moves away',async()=>{
+ const f=fixture()
+ await f.control.summon(1000)
+ const skeleton=f.entities[0],pos={x:skeleton.x(),y:skeleton.y()}
+ let awarded=0
+ const foe={id:'foe-locked',nobbyWorldObjectId:'foe',hp:100,
+  x:()=>pos.x+20,y:()=>pos.y,
+  battleAi:{handleDamage(){awarded++}}}
+ f.entities.push(foe)
+ f.control.tick(1000)
+ assert.equal(f.hits.length,1)
+ // Move the summoner beyond the former 300px aggro limit, still on same map.
+ f.owner.x=()=>580
+ f.owner.y=()=>560
+ f.control.tick(2100)
+ f.control.tick(3200)
+ assert.equal(f.hits.length,3,'leaving the battle should not cancel attacks')
+ assert.equal(f.hits[1],foe)
+ assert.ok(awarded>=3)
+})
+test('combat focus survives a nearer second enemy and resets after first dies',async()=>{
+ const f=fixture()
+ await f.control.summon(1000)
+ const s=f.entities[0],near={x:s.x(),y:s.y()}
+ const first={id:'locked',nobbyWorldObjectId:'foe',hp:80,
+  x:()=>near.x+23,y:()=>near.y,battleAi:{handleDamage(){}}}
+ f.entities.push(first)
+ f.control.tick(1000)
+ const second={id:'new',nobbyWorldObjectId:'foe',hp:80,
+  x:()=>near.x+12,y:()=>near.y,battleAi:{handleDamage(){}}}
+ f.entities.push(second)
+ f.control.tick(2100)
+ assert.equal(f.hits.at(-1),first,'stay on first foe until it is defeated')
+ first.hp=0
+ f.control.tick(3200)
+ assert.equal(f.hits.at(-1),second,'retarget after defeat')
+})
+test('skeleton combat focus remains bounded and never attacks neutral or forged entities',async()=>{
+ const f=fixture()
+ await f.control.summon(1000)
+ const s=f.entities[0],pos={x:s.x(),y:s.y()}
+ const enemy={id:'runner',nobbyWorldObjectId:'foe',hp:100,
+  x:()=>pos.x+24,y:()=>pos.y,battleAi:{handleDamage(){}}}
+ f.entities.push(enemy)
+ f.control.tick(1000)
+ const attacked=f.hits.length
+ enemy.x=()=>pos.x+SUMMON.leash+100
+ f.entities.push({id:'sheep',hp:100,x:()=>pos.x+12,y:()=>pos.y})
+ f.owner.x=()=>pos.x+500
+ f.control.tick(2100)
+ assert.equal(f.hits.length,attacked,'do not attack out-of-range or neutral')
+})

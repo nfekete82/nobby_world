@@ -113,3 +113,17 @@ check idle/stride/junction transitions in the actual game, not just static PNGs.
   never edit/re-commit the original source image.
 - Verify both row directions of shaman walking and observe sheep actually
   moving through pastures in a running browser, not solely PNG structural tests.
+
+## Knight-reference gait and companion combat focus
+
+- **Shaman walking:** like native Tiny Swords `Warrior_Run.png`, use
+  **six complete poses at 12 FPS**. Retain animated head, staff, cloak and legs;
+  never freeze the upper half while animating only the lower half. Normalize
+  tiny source-art horizontal torso drift within two original pixels while
+  preserving the full 192×192 frame and grounding. See `scripts/natural-walk.mjs`.
+- **Skeleton combat:** once engaged, a skeleton keeps its live enemy target
+  even when Nobby moves far away. Never replace it with a nearer target
+  while still alive and within the bounded per-skeleton `leash`. Acquire
+  another authored hostile when a target dies or leaves the permitted radius.
+  Follow the owner only when no valid combat target remains. Neutral animals,
+  other players, friendly skeletons and unreachable tiles are never targets.
