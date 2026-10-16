@@ -12,18 +12,18 @@ import { makePastureMask } from '../src/wildlife/sheep-ai.mjs'
 import { ensureSheepGraze, ensureSheepWalk } from './sheep-art.mjs'
 import {ensureUserAssetRegistry} from './user-assets.mjs'
 import { ensureNaturalShamanWalk } from './natural-walk.mjs'
-import {ensureReferenceShaman,SHAMAN_REFERENCE} from './reference-shaman.mjs'
+import {ensureNativeShaman} from './native-shaman.mjs'
 import {atomicWrite} from './editor-storage.mjs'
 
 export const projectRoot=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..')
-// Prepare the authored shaman sheet before the registry is read by Vite/tests.
-const paintover=path.join(projectRoot,SHAMAN_REFERENCE)
-if(fs.existsSync(paintover)){
+// Align sprite atlases and base registry to each original Monk pose before
+// the runtime Vite import reads src/art/registry.json.
+{
  const baseFile=path.join(projectRoot,'art/registry-base.json')
- const base=JSON.parse(fs.readFileSync(baseFile,'utf8'))
- ensureReferenceShaman(base)
- const content=JSON.stringify(base,null,2)+'\n'
- if(fs.readFileSync(baseFile,'utf8')!==content)atomicWrite(baseFile,content)
+ const registry=JSON.parse(fs.readFileSync(baseFile,'utf8'))
+ ensureNativeShaman(registry)
+ const updated=JSON.stringify(registry,null,2)+'\n'
+ if(fs.readFileSync(baseFile,'utf8')!==updated)atomicWrite(baseFile,updated)
 }
 const art=ensureUserAssetRegistry(projectRoot)
 const list=value=>value==null?[]:Array.isArray(value)?value:[value]
