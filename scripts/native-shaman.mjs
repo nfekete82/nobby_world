@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {PNG} from 'pngjs'
+import {ensureReferenceShaman,SHAMAN_REFERENCE} from './reference-shaman.mjs'
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..')
 export const NATIVE_SHAMAN_STATES=Object.freeze({
  stand:{source:'Idle',poses:[0,1,2,3,4,5],fps:0.5},
@@ -20,6 +21,7 @@ const bounds=(p,f)=>{
 }
 /** Reviewed native-sized source PNGs are copied without pose transforms. */
 export function ensureNativeShaman(registry){
+ if(fs.existsSync(path.join(root,SHAMAN_REFERENCE)))return ensureReferenceShaman(registry)
  const animations={}
  for(const [state,spec] of Object.entries(NATIVE_SHAMAN_STATES)){
   const file=state==='walk'?'shaman-run.png':`shaman-native-${state}.png`
