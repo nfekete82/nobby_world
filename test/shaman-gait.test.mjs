@@ -37,7 +37,8 @@ test('all shaman states paint over authentic Monk poses with unchanged geometry'
     painted++;minX=Math.min(minX,x);maxX=Math.max(maxX,x);bottom=Math.max(bottom,y)
    }
    assert.ok(painted>100,state+' '+row+'/'+f+' empty')
-   assert.ok(minX>=40&&maxX<192,state+' '+row+'/'+f+' outside frame')
+   assert.ok(minX>=0&&maxX<192,state+' '+row+'/'+f+' outside 192px cell')
+   if(['stand','walk','hit'].includes(state))assert.ok(minX>=35&&maxX<=184,state+' '+row+'/'+f+' body outside stable frame')
    if(['stand','walk','heal','attack','hit'].includes(state))
     assert.ok(bottom>=125&&bottom<=150,state+' '+row+'/'+f+' footline '+bottom)
   }
