@@ -24,6 +24,6 @@ export function spritesheets(){
         }))
         return {id,image:asset.animations.stand.image,framesWidth:asset.animations.stand.frames,
             framesHeight:(asset.animations.stand as any).rows??1,anchor:[footX/width,footY/height],x:boxW/2,y:boxH,
-            trimTransparentBounds:trimTransparentBoundsFor(asset.kind),textures}
+            trimTransparentBounds:trimTransparentBoundsFor(asset.kind,id),textures}
     })
 }

@@ -24,4 +24,7 @@ export function animationFrameIndices(id,state,frameCount){
 /** Actor atlases have 192×192 transparent cells with fixed [96,132] feet.
  * Trimming would change their frame geometry, causing visual jitter between poses.
  * Keep historical automatic trimming for props/decoration only. */
-export const trimTransparentBoundsFor=kind=>kind!=='actor'
+// Sheep are animated scenery with a fixed body and floor contact.
+// Preserve their native 128px cell as well: trimming by alpha across
+ // different head poses would make the entire animal appear to hop.
+export const trimTransparentBoundsFor=(kind,id)=>kind!=='actor'&&id!=='sheep'

@@ -34,7 +34,7 @@ function mount(engine: RpgClientEngine){
  summonButton=document.createElement('button')
  summonButton.type='button';summonButton.dataset.action='nobby:summon'
  summonButton.innerHTML='<span class="summon-icon" aria-hidden="true"></span><span>Skelett erwecken</span><small>10 Mana · <b>0/3</b></small><kbd>R</kbd>'
- summonButton.title='R · Skelett erwecken · 10 Mana · 60 Sekunden'
+ summonButton.title='R · Skelett sofort erwecken · 10 Mana · 120 Sekunden · maximal 3'
  root.querySelector('.nobby-actions')!.insertBefore(summonButton,healButton)
  hp=root.querySelector('.hp')!;mana=root.querySelector('.mana')!;xp=root.querySelector('.xp')!
  title=root.querySelector('.nobby-name')!;region=root.querySelector('.nobby-region strong')!;gold=root.querySelector('.nobby-region span')!

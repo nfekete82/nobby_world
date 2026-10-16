@@ -1,6 +1,6 @@
 import {test} from 'node:test'
 import assert from 'node:assert/strict'
-import {createSkeletonController,spawnPosition,hostile,skeletonImpact,SUMMON,companionTargetPermission} from '../src/combat/skeletons.mjs'
+import {createSkeletonController,spawnPosition,hostile,skeletonImpact,SUMMON,companionTargetPermission,skeletonMaxHP} from '../src/combat/skeletons.mjs'
 import {selectClass,restoreClass} from '../src/progression/character-class.mjs'
 const signal=v=>{const f=()=>v;f.set=n=>{v=n};return f}
 test('native combat target filter permits enemy retaliation and prevents player/ally friendly fire',()=>{
@@ -44,13 +44,31 @@ test('class restoration never unlocks movement for a defeated saved character',(
  restoreClass(p,{nobbyClass:'shaman'})
  assert.equal(p.canMove,false);assert.equal(p.hp,0)
 })
-test('successful summon costs exactly 10 and observes cooldown and three-skeleton limit',async()=>{
+test('summon three allies instantly for 10 mana each, no cooldown',async()=>{
  const {control,owner}=fixture()
- assert.equal(await control.summon(1000),true);assert.equal(owner.sp,90)
- assert.equal(await control.summon(1001),false);assert.equal(owner.sp,90)
- assert.equal(await control.summon(2800),true);assert.equal(await control.summon(4600),true)
- assert.equal(control.count,3);assert.equal(owner.nobbySkeletons(),3);assert.equal(owner.sp,70)
- assert.equal(await control.summon(6400),false);assert.equal(owner.sp,70)
+ assert.equal(SUMMON.cooldown,0);assert.equal(SUMMON.startup,0)
+ assert.equal(SUMMON.lifetime,120000)
+ assert.equal(skeletonMaxHP(1),85)
+ assert.equal(skeletonMaxHP(5),125)
+ for(let i=1;i<=3;i++){
+  assert.equal(await control.summon(1000),true)
+  assert.equal(owner.sp,100-i*10)
+ }
+ assert.equal(control.count,3);assert.equal(owner.nobbySkeletons(),3)
+ assert.equal(owner.nobbySummonUntil(),0)
+ assert.equal(await control.summon(1000),false)
+ assert.equal(owner.sp,70)
+})
+test('a new skeleton can fight on the first server tick',async()=>{
+ const f=fixture()
+ assert.equal(await f.control.summon(1000),true)
+ const ally=f.entities[0]
+ const foe={id:'foe',nobbyWorldObjectId:'foe',hp:80,
+  x:()=>ally.x()+20,y:()=>ally.y(),battleAi:{handleDamage(){}}}
+ f.entities.push(foe)
+ f.control.tick(1000)
+ assert.equal(f.hits.length,1)
+ assert.equal(foe.hp,70)
 })
 test('class, death, insufficient mana, locked movement and blocked positions never charge',async()=>{
  for(const mutate of [f=>f.owner.nobbyClass.set('mage'),f=>f.owner.hp=0,f=>f.owner.sp=9,
