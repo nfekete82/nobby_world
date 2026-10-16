@@ -5,10 +5,12 @@ on:
     branches:
       - feat/player-level-progression
       - feat/shaman-biome-expansion
+      - feat/integrated-asset-animation-editor
   push:
     branches:
       - feat/player-level-progression
       - feat/shaman-biome-expansion
+      - feat/integrated-asset-animation-editor
   workflow_dispatch:
 
 permissions:
