@@ -8,7 +8,8 @@ import { ensureBiomeTerrain } from './biome-art.mjs'
 import { ensureMossWater } from './moss-water.mjs'
 import { ensureBiomeProps } from './biome-props.mjs'
 import { makePastureMask } from '../src/wildlife/sheep-ai.mjs'
-import { ensureSheepGraze } from './sheep-art.mjs'
+import { ensureSheepGraze, ensureSheepWalk } from './sheep-art.mjs'
+import { ensureNaturalShamanWalk } from './natural-walk.mjs'
 
 export const projectRoot=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..')
 const art=JSON.parse(fs.readFileSync(path.join(projectRoot,'src/art/registry.json'),'utf8'))
@@ -126,6 +127,8 @@ export function compileWorlds({writeOutput=true,sourceDirectory=path.join(projec
   ensureMossWater()
   ensureBiomeProps()
   ensureSheepGraze()
+  ensureSheepWalk()
+  ensureNaturalShamanWalk()
   const directory=sourceDirectory
   const worlds=fs.readdirSync(directory).filter(f=>f.endsWith('.tmx')).sort().map(f=>readWorld(path.join(directory,f))).filter(Boolean)
   for(const w of worlds){

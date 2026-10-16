@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { PNG } from 'pngjs'
+import { stabilizeShamanWalk } from './natural-walk.mjs'
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..')
 const read=p=>PNG.sync.read(fs.readFileSync(path.join(root,p)))
@@ -165,7 +166,7 @@ function compileBuildings(registry){
  }
 }
 export const EXPANSION_ACTORS={
- shaman:{rows:6,height:70,states:{stand:[0,6,0.5],walk:[1,6,10],attack:[2,6,16],heal:[3,6,9],hit:[4,2,10],death:[4,4,8,2]}},
+ shaman:{rows:6,height:70,states:{stand:[0,6,0.5],walk:[1,6,8],attack:[2,6,16],heal:[3,6,9],hit:[4,2,10],death:[4,4,8,2]}},
  skeleton:{rows:6,height:66,states:{stand:[0,6,4],walk:[1,6,10],attack:[2,6,16],spawn:[3,6,9],hit:[4,2,10],death:[4,4,8,2]}},
  'desert-scorpion':{rows:4,height:57,states:{stand:[0,6,4],walk:[1,6,10],attack:[2,6,14],hit:[3,2,10],death:[3,4,8,2]}},
  'desert-serpent':{rows:4,height:74,states:{stand:[0,6,4],walk:[1,6,10],attack:[2,6,14],hit:[3,2,10],death:[3,4,8,2]}},
@@ -215,6 +216,16 @@ export function compileExpansionArt(registry){
    const image=`tiny-swords/expansion/${id}-${name}.png`
    write('public/'+image,out)
    animations[name]={image,frames:count,fps,visibleBounds,...(directional?{rows:2}:{})}
+  }
+  if(id==='shaman'){
+   const stand=read('public/'+animations.stand.image)
+   const sourceWalk=read('public/'+animations.walk.image)
+   const calm=stabilizeShamanWalk(stand,sourceWalk)
+   const image='tiny-swords/biomes/shaman-natural-walk.png'
+   write('public/'+image,calm)
+   animations.walk.image=image
+   animations.walk.visibleBounds=Array.from({length:animations.walk.frames},(_,i)=>
+    bounds(calm,i*192,0,192,192))
   }
   registry.assets[id]={kind:'actor',frame:[192,192],foot:[96,132],hitbox:[32,24],directional:true,animations}
   registry.generation[id]={source,scale,footPixels:Array.from({length:6},()=>[96,132])}

@@ -97,3 +97,19 @@ check idle/stride/junction transitions in the actual game, not just static PNGs.
   still costing 10 mana each, limited to three companions and one pending server
   spawn operation. Base health and level scaling are stronger; lifespan is two
   minutes unless defeated or cleaned up at a map/player transition.
+
+## Natural walking (shaman and sheep)
+
+- Shaman walks at **8 FPS** using all six authored lower-leg poses, but a
+  fixed original torso/head/staff, composed identically in both facing rows
+  by `scripts/natural-walk.mjs`. No artificial sprite scaling, whole-body hop,
+  smooth interpolation, or changing feet/hitboxes. Source compiler and registry
+  must always agree; attacks/healing remain untouched.
+- Sheep have an **independent eight-frame stepping sheet** from
+  `scripts/sheep-art.mjs` (`sheep-walk.png`), which alternates two genuine
+  moving hoof regions while fixing the original fleece, head and body.
+  Walking and grazing are distinct states. Build/pretest regenerate this
+  deterministic derived image from the already-licensed Tiny Swords sheep,
+  never edit/re-commit the original source image.
+- Verify both row directions of shaman walking and observe sheep actually
+  moving through pastures in a running browser, not solely PNG structural tests.

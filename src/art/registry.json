@@ -1318,10 +1318,22 @@
           ]
         },
         "walk": {
-          "image": "tiny-swords/Terrain/Resources/Meat/Sheep/Sheep_Idle.png",
-          "frames": 6,
-          "fps": 4,
+          "image": "tiny-swords/biomes/sheep-walk.png",
+          "frames": 8,
+          "fps": 8,
           "visibleBounds": [
+            [
+              41,
+              40,
+              85,
+              79
+            ],
+            [
+              41,
+              40,
+              85,
+              79
+            ],
             [
               41,
               40,
@@ -3014,44 +3026,44 @@
           "rows": 2
         },
         "walk": {
-          "image": "tiny-swords/expansion/shaman-walk.png",
+          "image": "tiny-swords/biomes/shaman-natural-walk.png",
           "frames": 6,
-          "fps": 10,
+          "fps": 8,
           "visibleBounds": [
             [
-              61,
-              61,
-              131,
+              64,
+              64,
+              129,
               132
             ],
             [
-              62,
-              60,
-              131,
+              64,
+              64,
+              129,
               132
             ],
             [
-              59,
-              63,
-              134,
+              64,
+              64,
+              129,
               132
             ],
             [
-              60,
-              62,
-              132,
+              64,
+              64,
+              129,
               132
             ],
             [
-              57,
-              62,
-              135,
+              64,
+              64,
+              129,
               132
             ],
             [
-              58,
-              62,
-              134,
+              64,
+              64,
+              129,
               132
             ]
           ],
