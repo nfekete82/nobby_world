@@ -27,8 +27,8 @@ function lock(root){
  const file=safePath(root,'art/editor-history/write.lock');fs.mkdirSync(path.dirname(file),{recursive:true})
  try{const fd=fs.openSync(file,'wx');fs.writeFileSync(fd,JSON.stringify({pid:process.pid,created:Date.now()}));return()=>{fs.closeSync(fd);fs.unlinkSync(file)}}catch(e){
   if(e.code!=='EEXIST')throw e
-  let stale=false;try{const owner=JSON.parse(fs.readFileSync(file));try{process.kill(owner.pid,0)}catch(err){stale=err.code==='ESRCH'}}catch{stale=Date.now()-fs.statSync(file).mtimeMs>60000}
-  if(stale){fs.unlinkSync(file);return lock(root)}
+  let stale=false;try{const owner=JSON.parse(fs.readFileSync(file));try{process.kill(owner.pid,0)}catch(err){stale=err.code==='ESRCH'}}catch{try{stale=Date.now()-fs.statSync(file).mtimeMs>60000}catch(err){if(err.code==='ENOENT')return lock(root);throw err}}
+  if(stale){try{fs.unlinkSync(file)}catch(err){if(err.code!=='ENOENT')throw err}return lock(root)}
   throw new EditorError('Eine andere Editor-Instanz schreibt gerade. Bitte erneut versuchen.',423)
  }
 }
@@ -88,4 +88,20 @@ export function recoverTransactions(root){
  }}finally{release()}
 }
 
-export function withStorageLock(root,fn){const release=lock(root);try{return fn()}finally{release()}}
+/** Short-lived generated registry synchronization may overlap across Node test
+ * workers. Give only these idempotent operations a bounded opportunity to
+ * acquire the lock; user/editor writes still report HTTP 423 immediately.
+ * This is synchronous because registry assembly runs during module import. */
+export function withStorageLock(root,fn,{waitMs=0}={}){
+ const deadline=Date.now()+waitMs
+ let release
+ for(;;){
+  try{release=lock(root);break}
+  catch(error){
+   if(!(error instanceof EditorError)||error.status!==423||Date.now()>=deadline)throw error
+   const remaining=deadline-Date.now()
+   if(remaining>0)Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,Math.min(20,remaining))
+  }
+ }
+ try{return fn()}finally{release()}
+}

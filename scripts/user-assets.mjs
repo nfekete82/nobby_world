@@ -16,5 +16,5 @@ export function ensureUserAssetRegistry(root,{baseRegistry}={}){
  const result=applyUserAssets(base,userManifest(root)),bytes=JSON.stringify(result,null,2)+'\n'
  if(!fs.existsSync(runtime)||fs.readFileSync(runtime,'utf8')!==bytes)atomicWrite(runtime,bytes)
  return result
- })
+ },{waitMs:2000})
 }
