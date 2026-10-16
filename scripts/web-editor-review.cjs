@@ -19,11 +19,16 @@ const xml=require('xml-js')
   let delayAssetSave=false
   const errors=[]
   page.on('pageerror',e=>errors.push(e.message))
+  page.on('response',async response=>{if(response.url().endsWith('/assets/save')){try{console.log('Asset save HTTP',response.status(),(await response.json()).error||'OK')}catch{}}})
+  async function waitAssetSaved(){try{await page.waitForFunction(()=>document.querySelector('.ae-status')?.textContent.startsWith('Gespeichert, Spiel'),{},{timeout:30000})}catch(error){console.error('Asset save UI:',await page.locator('.ae-status').innerText(),'Page errors:',errors);await page.screenshot({path:'artifacts/editor-workshop/save-failure.png'});throw error}}
   page.on('dialog',d=>void d.accept(d.type()==='prompt'?d.defaultValue():undefined))
-  await page.route('**/src/modules/main/display.ts*',async route=>{const response=await route.fetch();const source=await response.text();await route.fulfill({response,body:source.replace('onStep(engine) {','onStep(engine) { window.__editorReviewEngine=engine;')})})
+  // Keep real rendering and game updates, but reduce the hidden game's GPU
+  // load on software-rendered CI while exercising the full-screen editor.
+  await page.route('**/src/modules/main/display.ts*',async route=>{const response=await route.fetch();const source=await response.text();await route.fulfill({response,body:source.replace('onStep(engine) {','onStep(engine) { window.__editorReviewEngine=engine;'+(process.env.CI?' if(engine.canvasApp?.ticker)engine.canvasApp.ticker.maxFPS=10;':''))})})
   await page.goto(('http://127.0.0.1:'+(process.env.NOBBY_TEST_PORT||5173)+'/'))
  await page.waitForSelector('#nobby-character-select[open] [data-class="shaman"]',{timeout:20000});await page.locator('#nobby-character-select[open] [data-class="shaman"]').click();
   await page.waitForSelector('#nobby-hud:not([hidden])',{timeout:20000})
+  if(process.env.CI)console.log('CI game ticker maxFPS',await page.evaluate(()=>window.__editorReviewEngine?.canvasApp?.ticker?.maxFPS))
   // Give the standalone game focus before dispatching the same Escape
   // action a player uses. Some headless Chrome runs begin without canvas focus.
   await page.locator('#rpg canvas').first().click({position:{x:20,y:20}})
@@ -134,7 +139,7 @@ const xml=require('xml-js')
   await assets.locator('.ae-detail').evaluate(e=>e.scrollTop=0)
   await page.screenshot({path:'artifacts/editor-workshop/animation-editor.png'})
   await assets.getByRole('button',{name:'💾 Asset speichern',exact:true}).click()
-  await page.waitForFunction(()=>document.querySelector('.ae-status')?.textContent.startsWith('Gespeichert, Spiel'),{},{timeout:30000})
+  await waitAssetSaved()
   console.log('Shaman frame saved')
   const registrySaved=JSON.parse(fs.readFileSync('src/art/registry.json','utf8')),savedSheet=PNG.sync.read(fs.readFileSync('public/'+registrySaved.assets.shaman.animations.walk.image)),savedFrame=new PNG({width:a.frame[0],height:a.frame[1]})
   PNG.bitblt(savedSheet,savedFrame,3*a.frame[0],0,...a.frame,0,0);assert.deepEqual(savedFrame.data,replacement.data,'uploaded frame must be published without resizing')
@@ -159,7 +164,7 @@ const xml=require('xml-js')
   await page.waitForFunction(()=>document.querySelector('.ae-status')?.textContent.includes('weitere Änderungen sind noch ungespeichert'),{},{timeout:30000})
   assert.notEqual(JSON.parse(fs.readFileSync('art/user-assets/manifest.json','utf8')).assets['sheep-kopie'].name,'Schaf mit späterer Änderung')
   await assets.getByRole('button',{name:'💾 Asset speichern',exact:true}).click()
-  await page.waitForFunction(()=>document.querySelector('.ae-status')?.textContent.startsWith('Gespeichert, Spiel'),{},{timeout:30000})
+  await waitAssetSaved()
   assert.equal(JSON.parse(fs.readFileSync('art/user-assets/manifest.json','utf8')).assets['sheep-kopie'].name,'Schaf mit späterer Änderung')
   // Reopen to get persisted ownership and verify the imported metadata roundtrip.
   await assets.locator('[data-asset-id="sheep-kopie"]').click()
