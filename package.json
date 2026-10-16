@@ -31,12 +31,15 @@
     "test:aggro": "node scripts/nearest-hostile-review.cjs",
     "art:style:check": "node scripts/preflight-art.mjs && node scripts/check-art-direction.mjs",
     "art:references": "node scripts/art-reference-sheet.mjs",
-    "preart:style:check": "node scripts/world-data.mjs"
+    "preart:style:check": "node scripts/world-data.mjs",
+    "art:shaman:author": "node scripts/author-shaman-run.mjs",
+    "art:shaman:preview": "node scripts/shaman-run-preview.mjs",
+    "test:shaman": "node scripts/shaman-run-review.cjs"
   },
   "keywords": [],
   "author": "",
   "license": "UNLICENSED",
-  "description": "Nobby World — local Tiny Swords pixel-art RPG and map workshop",
+  "description": "Nobby World \u2014 local Tiny Swords pixel-art RPG and map workshop",
   "devDependencies": {
     "@canvasengine/compiler": "2.4.0",
     "@vitejs/plugin-vue": "^6.0.10",
