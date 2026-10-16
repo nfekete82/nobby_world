@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import {PNG} from 'pngjs'
 import {compileWorlds} from '../scripts/world-data.mjs'
-import {makeSheepGrazingFrames,ensureSheepGraze,SHEEP_GRAZE_FRAMES,SHEEP_GRAZE_DIP} from '../scripts/sheep-art.mjs'
+import {makeSheepGrazingFrames,ensureSheepGraze,SHEEP_GRAZE_FRAMES,SHEEP_GRAZE_DIP,makeSheepWalkingFrames,ensureSheepWalk,SHEEP_WALK_FRAMES,SHEEP_WALK_FPS} from '../scripts/sheep-art.mjs'
 import {makePastureMask,unpackPasture,pastureHas,sheepStep,seedSheep} from '../src/wildlife/sheep-ai.mjs'
 const L=(name,gids)=>({name,gids})
 test('compiled authored grass layers produce a nonempty grazing mask',()=>{
@@ -124,4 +124,31 @@ test('grazing sprites preserve frame geometry and render a visible head-dip cycl
  assert.match(event,/Move\.wait/)
  assert.match(event,/setGraphicAnimation\('graze'/)
  assert.doesNotMatch(event,/setInterval\(/)
+})
+
+test('sheep walking contains actual alternating hoof movement with an unmoving body',()=>{
+ const original=PNG.sync.read(fs.readFileSync('public/tiny-swords/Terrain/Resources/Meat/Sheep/Sheep_Idle.png'))
+ const output=makeSheepWalkingFrames(original)
+ assert.deepEqual([output.width,output.height],[128*SHEEP_WALK_FRAMES,128])
+ assert.equal(SHEEP_WALK_FRAMES,8);assert.equal(SHEEP_WALK_FPS,8)
+ const changed=[]
+ for(let f=0;f<SHEEP_WALK_FRAMES;f++){
+  let diff=0
+  for(let y=0;y<128;y++)for(let x=0;x<128;x++){
+   const at=(y*original.width+x)*4,b=(y*output.width+f*128+x)*4
+   if(y<69) assert.deepEqual([...output.data.subarray(b,b+4)],
+    [...original.data.subarray(at,at+4)],'upper body moved frame '+f)
+   if(y>=67&&([...output.data.subarray(b,b+4)].some((v,k)=>v!==original.data[at+k]))) diff++
+  }
+  changed.push(diff)
+ }
+ assert.ok(changed.filter(v=>v>0).length>=4,'no visible alternation of the hooves')
+ assert.notEqual(changed[1],0,'first stride must differ from stand')
+ ensureSheepWalk()
+ const generated=PNG.sync.read(fs.readFileSync('public/tiny-swords/biomes/sheep-walk.png'))
+ assert.deepEqual([generated.width,generated.height],[1024,128])
+ const registry=JSON.parse(fs.readFileSync('src/art/registry.json','utf8'))
+ assert.equal(registry.assets.sheep.animations.walk.frames,8)
+ assert.equal(registry.assets.sheep.animations.walk.fps,8)
+ assert.match(registry.assets.sheep.animations.walk.image,/sheep-walk\.png$/)
 })

@@ -1318,10 +1318,22 @@
           ]
         },
         "walk": {
-          "image": "tiny-swords/Terrain/Resources/Meat/Sheep/Sheep_Idle.png",
-          "frames": 6,
-          "fps": 4,
+          "image": "tiny-swords/biomes/sheep-walk.png",
+          "frames": 8,
+          "fps": 8,
           "visibleBounds": [
+            [
+              41,
+              40,
+              85,
+              79
+            ],
+            [
+              41,
+              40,
+              85,
+              79
+            ],
             [
               41,
               40,
@@ -3016,7 +3028,7 @@
         "walk": {
           "image": "tiny-swords/expansion/shaman-walk.png",
           "frames": 6,
-          "fps": 10,
+          "fps": 8,
           "visibleBounds": [
             [
               61,
